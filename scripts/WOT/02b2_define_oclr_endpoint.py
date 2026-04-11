@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-02b2_define_oclr_endpoint.py  —  OCLR-based iPS terminal-cell endpoint definition.
+02b2_define_oclr_endpoint.py  —  OCLR-based dual terminal-endpoint definition.
 
 Project : Comparative Study of Trajectory Inference Models for Chemical iPSC Reprogramming
 Dataset : GSE230659 (human, Liuyang et al. 2023 Cell Stem Cell)
-Step    : 2b-2 — Load / generate OCLR stemness scores for GSM7230012_hCiPSCs-0618,
-          threshold to a high-confidence iPS terminal set, and save the barcode list.
+Step    : 2b-2 — Load OCLR stemness scores for GSM7230012_hCiPSCs-0618,
+          define SUCCESS (top-10%) and FAILURE (bottom-10%) endpoints, and save
+          barcode lists and per-cell labels.  Middle 80% = ambiguous (excluded
+          from the primary evaluation set in script 05).
 
 Method reference
 ----------------
@@ -40,10 +42,13 @@ Input
 
 Outputs (all timestamped, in data/processed/)
 ---------------------------------------------------------------------------
-  YYYYMMDD_HHMM_oclr_endpoint_barcodes.txt       — final selected barcode list
-  YYYYMMDD_HHMM_oclr_score_all_hcipsc.csv        — OCLR scores for all 9,142 hCiPSC cells
-  YYYYMMDD_HHMM_oclr_threshold_summary.csv        — distribution + threshold candidates
-  YYYYMMDD_HHMM_oclr_score_distribution.png       — diagnostic histogram + threshold lines
+  YYYYMMDD_HHMM_oclr_success_endpoint_barcodes.txt  — SUCCESS (top-10%) barcode list
+  YYYYMMDD_HHMM_oclr_failure_endpoint_barcodes.txt  — FAILURE (bottom-10%) barcode list
+  YYYYMMDD_HHMM_oclr_endpoint_labels_hcipsc.tsv     — per-cell label table (all hCiPSC)
+  YYYYMMDD_HHMM_oclr_endpoint_barcodes.txt           — LEGACY alias = success barcodes
+  YYYYMMDD_HHMM_oclr_score_all_hcipsc.csv            — OCLR scores for all hCiPSC cells
+  YYYYMMDD_HHMM_oclr_threshold_summary.csv            — distribution + threshold candidates
+  YYYYMMDD_HHMM_oclr_score_distribution.png           — diagnostic histogram + threshold lines
 
 Usage
 -----
@@ -98,31 +103,34 @@ BARCODE_PREFIX: str = "GSM7230012_hCiPSCs-0618_"
 
 # ── Thresholding candidates to evaluate ──────────────────────────────────────
 # Each entry: (label, quantile_of_hcipsc_oclr_scores)
-# We will evaluate all of them and choose the final threshold explicitly.
+# We will evaluate all of them and tabulate; the two used for the benchmark are
+# SUCCESS_THRESHOLD_KEY (top tail) and FAILURE_THRESHOLD_KEY (bottom tail).
 THRESHOLD_CANDIDATES = [
-    ("top_5pct",  0.95),   # top 5% — high specificity
-    ("top_10pct", 0.90),   # top 10% — primary candidate
-    ("top_15pct", 0.85),   # top 15%
-    ("top_20pct", 0.80),   # top 20%
+    ("top_5pct",    0.95),   # top 5% — high specificity
+    ("top_10pct",   0.90),   # top 10% — SUCCESS endpoint
+    ("top_15pct",   0.85),   # top 15%
+    ("top_20pct",   0.80),   # top 20%
+    ("bottom_10pct", 0.10),  # bottom 10% — FAILURE endpoint
+    ("bottom_20pct", 0.20),  # bottom 20%
 ]
 
-# ── Final threshold choice ────────────────────────────────────────────────────
-# PROJECT-SPECIFIC CUTOFF — NOT a threshold defined by the OCLR paper.
+# ── Dual endpoint threshold keys ─────────────────────────────────────────────
+# PROJECT-SPECIFIC CUTOFFS — NOT thresholds defined by the OCLR paper.
 #
-# The original OCLR method (Mäkinen V-P et al.) provides per-cell stemness
-# scores but does NOT define a universal binary threshold for "terminal iPSC".
-# The top-10% cutoff below is a project decision made here to create a
-# high-confidence evaluation set for trajectory benchmarking.
+# SUCCESS = top-10% OCLR score among hCiPSC cells
+#           High-pluripotency criterion for trajectory benchmarking.
+# FAILURE = bottom-10% OCLR score among hCiPSC cells
+#           Low-pluripotency control: reprogramming-failed / low-stemness cells.
+# AMBIGUOUS = middle 80% — excluded from the PRIMARY evaluation set in script 05.
 #
-# Rationale: top-10% balances specificity (high-pluripotency requirement)
-# against sufficient cell count (≥ MIN_TERMINAL_CELLS).  This threshold is
-# independent of WOT and CellRank2 outputs — no circularity.  If the score
-# distribution shows a clear bimodal upper tail, switch to "top_5pct" and
-# re-run.
-FINAL_THRESHOLD_KEY: str = "top_10pct"
+# All three classes live within the day-30 hCiPSC sample only.
+# WOT fate probabilities (p_oclr_success, p_oclr_failure) are computed by 02c
+# using these two endpoint sets as competing fates.
+SUCCESS_THRESHOLD_KEY: str = "top_10pct"
+FAILURE_THRESHOLD_KEY: str = "bottom_10pct"
 
-# Minimum cells in the final terminal set (safety check)
-MIN_TERMINAL_CELLS: int = 50
+# Minimum cells required in each endpoint set (safety check)
+MIN_ENDPOINT_CELLS: int = 50
 
 # ── OCLR score column name(s) to try ─────────────────────────────────────────
 # We try these column names in the CSV, in order.
@@ -444,67 +452,101 @@ print(f"    [{_stats['min']:.4f}, {_stats['q25']:.4f}, {_stats['median']:.4f}, "
 # =============================================================================
 print("\n--- Threshold candidates (computed on scored cells only) ---")
 print(f"  {'Label':<15}  {'Quantile':>9}  {'Cutoff':>10}  "
-      f"{'N scored (≥)':>13}  {'% of scored':>11}")
+      f"{'N cells':>10}  {'% of scored':>11}  {'Role':>14}")
 
 _threshold_rows = []
 for _label, _q in THRESHOLD_CANDIDATES:
-    _cutoff  = float(np.quantile(_scores_scored, _q))       # scored cells only
-    _n_above = int((_scores_scored >= _cutoff).sum())        # scored cells only
-    _pct     = 100.0 * _n_above / max(n_scored, 1)
-    _marker  = " ← FINAL" if _label == FINAL_THRESHOLD_KEY else ""
-    print(f"  {_label:<15}  {_q:>9.3f}  {_cutoff:>10.4f}  {_n_above:>12,}  {_pct:>9.1f}%{_marker}")
+    _cutoff = float(np.quantile(_scores_scored, _q))
+    # For bottom-X%: count cells BELOW cutoff; for top-X%: count cells ABOVE
+    if _label.startswith("bottom_"):
+        _n_sel = int((_scores_scored <= _cutoff).sum())
+        _role  = "FAILURE endpoint" if _label == FAILURE_THRESHOLD_KEY else ""
+    else:
+        _n_sel = int((_scores_scored >= _cutoff).sum())
+        _role  = "SUCCESS endpoint" if _label == SUCCESS_THRESHOLD_KEY else ""
+    _pct    = 100.0 * _n_sel / max(n_scored, 1)
+    print(f"  {_label:<15}  {_q:>9.3f}  {_cutoff:>10.4f}  {_n_sel:>10,}  "
+          f"{_pct:>9.1f}%  {_role}")
     _threshold_rows.append({
-        "threshold_key":   _label,
-        "quantile":        _q,
-        "cutoff_value":    _cutoff,
-        "n_selected":      _n_above,
-        "pct_selected":    _pct,
-        "is_final":        (_label == FINAL_THRESHOLD_KEY),
-        "note":            (
-            "FINAL SELECTION: high-specificity endpoint for trajectory benchmarking"
-            if _label == FINAL_THRESHOLD_KEY
-            else ""
-        ),
+        "threshold_key": _label,
+        "quantile":      _q,
+        "cutoff_value":  _cutoff,
+        "n_selected":    _n_sel,
+        "pct_selected":  _pct,
+        "role":          _role,
     })
 
-# Extract the final threshold
-_final_thr_row = next(r for r in _threshold_rows if r["is_final"])
-FINAL_CUTOFF        = _final_thr_row["cutoff_value"]
-FINAL_N_SELECTED    = _final_thr_row["n_selected"]
-FINAL_PCT_SELECTED  = _final_thr_row["pct_selected"]
+# ── Extract SUCCESS and FAILURE thresholds ───────────────────────────────────
+_success_row = next(r for r in _threshold_rows if r["threshold_key"] == SUCCESS_THRESHOLD_KEY)
+_failure_row = next(r for r in _threshold_rows if r["threshold_key"] == FAILURE_THRESHOLD_KEY)
 
-print(f"\n  Final threshold selected  : {FINAL_THRESHOLD_KEY}")
-print(f"  Final OCLR score cutoff   : {FINAL_CUTOFF:.4f}")
-print(f"  Final terminal-set size   : {FINAL_N_SELECTED:,} cells "
-      f"({FINAL_PCT_SELECTED:.1f}% of {n_scored:,} scored cells"
-      f"{f', out of {n_hcipsc} total hCiPSC in pool' if n_unscored > 0 else ''})")
+SUCCESS_CUTOFF   = _success_row["cutoff_value"]
+SUCCESS_N        = _success_row["n_selected"]
+SUCCESS_PCT      = _success_row["pct_selected"]
 
-if FINAL_N_SELECTED < MIN_TERMINAL_CELLS:
-    raise RuntimeError(
-        f"Final terminal set has only {FINAL_N_SELECTED} cells "
-        f"(minimum required: {MIN_TERMINAL_CELLS}).\n"
-        f"Consider using a less restrictive FINAL_THRESHOLD_KEY."
-    )
+FAILURE_CUTOFF   = _failure_row["cutoff_value"]
+FAILURE_N        = _failure_row["n_selected"]
+FAILURE_PCT      = _failure_row["pct_selected"]
+
+print(f"\n  SUCCESS endpoint  ({SUCCESS_THRESHOLD_KEY}): "
+      f"score ≥ {SUCCESS_CUTOFF:.4f}  →  {SUCCESS_N:,} cells ({SUCCESS_PCT:.1f}%)")
+print(f"  FAILURE endpoint  ({FAILURE_THRESHOLD_KEY}): "
+      f"score ≤ {FAILURE_CUTOFF:.4f}  →  {FAILURE_N:,} cells ({FAILURE_PCT:.1f}%)")
+print(f"  AMBIGUOUS (middle 80%): remaining cells "
+      f"({n_scored - SUCCESS_N - FAILURE_N:,} scored cells)")
+
+for _key, _n, _min in [("SUCCESS", SUCCESS_N, MIN_ENDPOINT_CELLS),
+                        ("FAILURE", FAILURE_N, MIN_ENDPOINT_CELLS)]:
+    if _n < _min:
+        raise RuntimeError(
+            f"{_key} endpoint set has only {_n} cells "
+            f"(minimum required: {_min}).\n"
+            f"Consider adjusting SUCCESS_THRESHOLD_KEY / FAILURE_THRESHOLD_KEY."
+        )
 
 # =============================================================================
-# 6.  DEFINE TERMINAL SET
+# 6.  DEFINE DUAL ENDPOINTS
 # =============================================================================
-# is_oclr_terminal:  True  ↔  cell has a real OCLR score (scored_mask)
-#                              AND oclr_score ≥ FINAL_CUTOFF
+# Endpoint labels (per scored hCiPSC cell):
+#   is_oclr_success_endpoint  — score ≥ SUCCESS_CUTOFF  AND  matched_in_csv
+#   is_oclr_failure_endpoint  — score ≤ FAILURE_CUTOFF  AND  matched_in_csv
+#   is_oclr_ambiguous_endpoint— scored but neither success nor failure
+#   oclr_endpoint_label       — 'success' | 'failure' | 'ambiguous' | 'unscored'
 #
-# Unmatched cells are explicitly excluded even if their filled score of 0.0
-# happened to satisfy the cutoff (which cannot happen for a q90 cutoff, but
-# we guard against it explicitly for correctness).
-_above_cutoff = (oclr_df["oclr_score"].values >= FINAL_CUTOFF)
-oclr_df["is_oclr_terminal"] = (_above_cutoff & _scored_mask).astype(int)
+# Unmatched cells (matched_in_csv == 0) receive label = 'unscored' and all
+# is_* columns = 0.  They are NOT placed in any endpoint.
 
-# Barcode list for the terminal set
-_terminal_barcodes = oclr_df.index[oclr_df["is_oclr_terminal"] == 1].tolist()
+_scores_01 = oclr_df["oclr_score"].values.astype(float)
 
-print(f"\n  Sanity check:")
-print(f"    is_oclr_terminal == 1 : {int(oclr_df['is_oclr_terminal'].sum()):,}")
-print(f"    is_oclr_terminal == 0 : {int((oclr_df['is_oclr_terminal'] == 0).sum()):,}")
-print(f"    Sum = total hCiPSC    : {len(oclr_df):,}  ({'✓' if len(oclr_df) == n_hcipsc else '!!'})")
+_success_mask = _scored_mask & (_scores_01 >= SUCCESS_CUTOFF)
+_failure_mask = _scored_mask & (_scores_01 <= FAILURE_CUTOFF)
+_ambig_mask   = _scored_mask & (~_success_mask) & (~_failure_mask)
+
+oclr_df["is_oclr_success_endpoint"]  = _success_mask.astype(int)
+oclr_df["is_oclr_failure_endpoint"]  = _failure_mask.astype(int)
+oclr_df["is_oclr_ambiguous_endpoint"]= _ambig_mask.astype(int)
+
+_label_arr = np.where(_success_mask, "success",
+             np.where(_failure_mask, "failure",
+             np.where(_ambig_mask,   "ambiguous", "unscored")))
+oclr_df["oclr_endpoint_label"] = _label_arr
+
+# Legacy alias: is_oclr_terminal = is_oclr_success_endpoint
+oclr_df["is_oclr_terminal"] = oclr_df["is_oclr_success_endpoint"]
+
+_success_barcodes = oclr_df.index[oclr_df["is_oclr_success_endpoint"] == 1].tolist()
+_failure_barcodes = oclr_df.index[oclr_df["is_oclr_failure_endpoint"] == 1].tolist()
+
+print(f"\n  Sanity check (dual endpoint):")
+print(f"    is_oclr_success_endpoint   : {int(oclr_df['is_oclr_success_endpoint'].sum()):,}")
+print(f"    is_oclr_failure_endpoint   : {int(oclr_df['is_oclr_failure_endpoint'].sum()):,}")
+print(f"    is_oclr_ambiguous_endpoint : {int(oclr_df['is_oclr_ambiguous_endpoint'].sum()):,}")
+print(f"    unscored (no CSV match)    : {int((oclr_df['oclr_endpoint_label'] == 'unscored').sum()):,}")
+print(f"    Sum = total hCiPSC         : {len(oclr_df):,}  "
+      f"({'✓' if len(oclr_df) == n_hcipsc else '!!'})")
+_overlap = int((oclr_df["is_oclr_success_endpoint"] & oclr_df["is_oclr_failure_endpoint"]).sum())
+assert _overlap == 0, f"BUG: {_overlap} cells in both success and failure endpoint"
+print(f"    Success ∩ failure overlap  : 0  ✓")
 
 # =============================================================================
 # 7.  DIAGNOSTIC PLOT
@@ -513,59 +555,47 @@ print("\n--- Generating diagnostic plot ---")
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-# ── Left: histogram of scored cells only ────────────────────────────────────
-# _scores_scored contains only cells with a real OCLR score (matched_in_csv==1
-# for the CSV path, or all cells for the proxy path).  This is exactly the
-# distribution used for quantile thresholding, so the plot is consistent with
-# the actual terminal-set definition.
+# ── Left: histogram — shade success / failure / ambiguous regions ─────────────
 ax0 = axes[0]
 _bins = np.linspace(0, 1, 60)
 ax0.hist(_scores_scored, bins=_bins,
-         color="#7fbbe3", edgecolor="white", linewidth=0.3, alpha=0.9)
+         color="#adb5bd", edgecolor="white", linewidth=0.3, alpha=0.85)
 ax0.set_xlabel("OCLR stemness score (rescaled [0, 1])")
 ax0.set_ylabel("Cell count")
 ax0.set_title(f"OCLR score distribution — scored cells\n"
               f"{ENDPOINT_SAMPLE_ID}  (n={n_scored:,})")
 
-# Add threshold candidate lines — cutoffs re-computed from _scores_scored
-# to guarantee exact consistency with the thresholding section above.
-_colors = ["#e63946", "#f77f00", "#457b9d", "#2a9d8f"]
-for (_lbl, _q), _color in zip(THRESHOLD_CANDIDATES, _colors):
-    _cut = float(np.quantile(_scores_scored, _q))
-    _lw  = 2.5 if _lbl == FINAL_THRESHOLD_KEY else 1.0
-    _ls  = "-"  if _lbl == FINAL_THRESHOLD_KEY else "--"
-    ax0.axvline(_cut, color=_color, linewidth=_lw, linestyle=_ls,
-                label=f"{_lbl}  (≥{_cut:.3f})")
-
+# Shade failure (red) and success (green) regions
+ax0.axvspan(0, FAILURE_CUTOFF, alpha=0.15, color="#e63946",
+            label=f"failure ≤{FAILURE_CUTOFF:.3f}  (n={FAILURE_N:,})")
+ax0.axvspan(SUCCESS_CUTOFF, 1, alpha=0.15, color="#2a9d8f",
+            label=f"success ≥{SUCCESS_CUTOFF:.3f}  (n={SUCCESS_N:,})")
+ax0.axvline(FAILURE_CUTOFF, color="#e63946", linewidth=2.0, linestyle="-")
+ax0.axvline(SUCCESS_CUTOFF, color="#2a9d8f", linewidth=2.0, linestyle="-")
 ax0.legend(fontsize=9, loc="upper left")
 
 # ── Right: empirical CDF of scored cells only ────────────────────────────────
 ax1 = axes[1]
 _sorted_scores = np.sort(_scores_scored)
 _cdf = np.arange(1, len(_sorted_scores) + 1) / len(_sorted_scores)
-ax1.plot(_sorted_scores, 1 - _cdf, color="#1d3557", linewidth=1.5)
+ax1.plot(_sorted_scores, _cdf, color="#1d3557", linewidth=1.5,
+         label="CDF")
 ax1.set_xlabel("OCLR stemness score (rescaled [0, 1])")
-ax1.set_ylabel("Fraction of scored cells with score ≥ x  (1 − CDF)")
-ax1.set_title(f"OCLR score complementary CDF — scored cells\n{ENDPOINT_SAMPLE_ID}")
+ax1.set_ylabel("Cumulative fraction of scored cells")
+ax1.set_title(f"OCLR score CDF — scored cells\n{ENDPOINT_SAMPLE_ID}")
 
-for (_lbl, _q), _color in zip(THRESHOLD_CANDIDATES, _colors):
-    _cut  = float(np.quantile(_scores_scored, _q))
-    _frac = 1 - _q
-    _lw   = 2.5 if _lbl == FINAL_THRESHOLD_KEY else 1.0
-    _ls   = "-"  if _lbl == FINAL_THRESHOLD_KEY else "--"
-    ax1.axvline(_cut, color=_color, linewidth=_lw, linestyle=_ls,
-                label=f"{_lbl}  ({100*_frac:.0f}% of scored)")
-
-ax1.set_ylim(0, 0.50)
+ax1.axvline(FAILURE_CUTOFF, color="#e63946", linewidth=2.0, linestyle="-",
+            label=f"failure cutoff ({FAILURE_THRESHOLD_KEY})")
+ax1.axvline(SUCCESS_CUTOFF, color="#2a9d8f", linewidth=2.0, linestyle="-",
+            label=f"success cutoff ({SUCCESS_THRESHOLD_KEY})")
 ax1.legend(fontsize=9)
 
 _pool_note = (f"  [{n_unscored:,} unscored / unmatched cells excluded from plot]"
               if n_unscored > 0 else "")
 fig.suptitle(
-    f"OCLR-based iPS terminal endpoint — {ENDPOINT_SAMPLE_ID}\n"
-    f"Final selection: {FINAL_THRESHOLD_KEY}  "
-    f"(cutoff={FINAL_CUTOFF:.4f},  n={FINAL_N_SELECTED:,} / {n_scored:,} scored cells, "
-    f"{FINAL_PCT_SELECTED:.1f}%){_pool_note}",
+    f"OCLR dual-endpoint definition — {ENDPOINT_SAMPLE_ID}\n"
+    f"SUCCESS: {SUCCESS_THRESHOLD_KEY} (≥{SUCCESS_CUTOFF:.4f}, n={SUCCESS_N:,})  |  "
+    f"FAILURE: {FAILURE_THRESHOLD_KEY} (≤{FAILURE_CUTOFF:.4f}, n={FAILURE_N:,}){_pool_note}",
     fontsize=11,
 )
 fig.tight_layout()
@@ -579,86 +609,111 @@ print(f"  Saved → {_plot_path}")
 # =============================================================================
 print("\n--- Saving outputs ---")
 
-# 8a: All hCiPSC cells with OCLR scores
+# 8a: All hCiPSC cells with OCLR scores + endpoint labels
+oclr_df.index.name = "barcode"
 _scores_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_score_all_hcipsc.csv"
 oclr_df.to_csv(str(_scores_out))
 print(f"  OCLR scores (all hCiPSC) → {_scores_out.name}")
 
-# 8b: Threshold summary table
+# 8b: Per-cell endpoint label table (authoritative for downstream scripts)
+# Columns: barcode (index), oclr_score, oclr_endpoint_label,
+#          is_oclr_success_endpoint, is_oclr_failure_endpoint,
+#          is_oclr_ambiguous_endpoint, matched_in_csv
+_label_cols = ["oclr_score", "oclr_score_raw", "matched_in_csv",
+               "oclr_endpoint_label",
+               "is_oclr_success_endpoint", "is_oclr_failure_endpoint",
+               "is_oclr_ambiguous_endpoint"]
+_label_df = oclr_df[_label_cols].copy()
+_label_df.index.name = "barcode"
+_label_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_endpoint_labels_hcipsc.tsv"
+_label_df.to_csv(str(_label_out), sep="\t")
+print(f"  Endpoint labels (all hCiPSC) → {_label_out.name}")
+print(f"    success={int(oclr_df['is_oclr_success_endpoint'].sum()):,}  "
+      f"failure={int(oclr_df['is_oclr_failure_endpoint'].sum()):,}  "
+      f"ambiguous={int(oclr_df['is_oclr_ambiguous_endpoint'].sum()):,}  "
+      f"unscored={int((oclr_df['oclr_endpoint_label']=='unscored').sum()):,}")
+
+# 8c: SUCCESS endpoint barcode list
+_suc_df = oclr_df[oclr_df["is_oclr_success_endpoint"] == 1][["oclr_score"]].copy()
+_suc_df.index.name = "barcode"
+_suc_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_success_endpoint_barcodes.txt"
+_suc_df.to_csv(str(_suc_out), sep="\t")
+print(f"  SUCCESS endpoint barcodes → {_suc_out.name}  (n={len(_suc_df):,})")
+for _bc in _suc_df.head(3).itertuples():
+    print(f"    {_bc.Index}  oclr={_bc.oclr_score:.4f}")
+
+# 8d: FAILURE endpoint barcode list
+_fail_df = oclr_df[oclr_df["is_oclr_failure_endpoint"] == 1][["oclr_score"]].copy()
+_fail_df.index.name = "barcode"
+_fail_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_failure_endpoint_barcodes.txt"
+_fail_df.to_csv(str(_fail_out), sep="\t")
+print(f"  FAILURE endpoint barcodes → {_fail_out.name}  (n={len(_fail_df):,})")
+for _bc in _fail_df.head(3).itertuples():
+    print(f"    {_bc.Index}  oclr={_bc.oclr_score:.4f}")
+
+# 8e: LEGACY barcode file — kept for backward compatibility with any script
+# that still reads *_oclr_endpoint_barcodes.txt.  Content = SUCCESS barcodes.
+_bc_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_endpoint_barcodes.txt"
+_suc_df.to_csv(str(_bc_out), sep="\t")
+print(f"  LEGACY barcode list (= success)  → {_bc_out.name}  (n={len(_suc_df):,})")
+
+# 8f: Threshold summary table
 _thr_df = pd.DataFrame(_threshold_rows)
 _thr_df["method_note"] = (
     "OCLR stemness score thresholding within GSM7230012_hCiPSCs-0618.\n"
-    "Top-N% defined by quantile of the score distribution in this sample."
+    "Success = top-N%, Failure = bottom-N%; both computed on scored cells only."
 )
-_thr_df["barcode_prefix"]   = BARCODE_PREFIX
-_thr_df["n_hcipsc_total"]   = n_hcipsc
-_thr_df["n_csv_matched"]    = n_matched
-_thr_df["n_csv_unmatched"]  = n_unmatched
-_thr_df["score_min"]        = _stats["min"]
-_thr_df["score_max"]        = _stats["max"]
-_thr_df["score_mean"]       = _stats["mean"]
-_thr_df["score_median"]     = _stats["median"]
-_thr_df["oclr_score_source"] = "real_csv"
-_thr_df["pool_method"]       = _POOL_METHOD
+_thr_df["barcode_prefix"]        = BARCODE_PREFIX
+_thr_df["n_hcipsc_total"]        = n_hcipsc
+_thr_df["n_csv_matched"]         = n_matched
+_thr_df["n_csv_unmatched"]       = n_unmatched
+_thr_df["score_min"]             = _stats["min"]
+_thr_df["score_max"]             = _stats["max"]
+_thr_df["score_mean"]            = _stats["mean"]
+_thr_df["score_median"]          = _stats["median"]
+_thr_df["oclr_score_source"]     = "real_csv"
+_thr_df["pool_method"]           = _POOL_METHOD
+_thr_df["success_threshold_key"] = SUCCESS_THRESHOLD_KEY
+_thr_df["failure_threshold_key"] = FAILURE_THRESHOLD_KEY
 
 _thr_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_threshold_summary.csv"
 _thr_df.to_csv(str(_thr_out), index=False)
 print(f"  Threshold summary         → {_thr_out.name}")
 
-# 8c: Final terminal barcode list
-# Format: one barcode per line (full project barcode)
-# Column header: "barcode"
-# Extra column: oclr_score  (for traceability)
-_bc_df = oclr_df[oclr_df["is_oclr_terminal"] == 1][["oclr_score"]].copy()
-_bc_df.index.name = "barcode"
-_bc_out = PROCESSED_DIR / f"{TIMESTAMP}_oclr_endpoint_barcodes.txt"
-_bc_df.to_csv(str(_bc_out), sep="\t")
-print(f"  Terminal barcode list     → {_bc_out.name}")
-print(f"    N terminal cells : {len(_bc_df):,}")
-print(f"    Sample entries   :")
-for _bc in _bc_df.head(5).itertuples():
-    print(f"      {_bc.Index}  oclr={_bc.oclr_score:.4f}")
-
 # =============================================================================
 # 9.  SUMMARY
 # =============================================================================
-print(f"\n{'='*65}")
-print(f"[{TIMESTAMP}]  Step 02b2 COMPLETE")
-print(f"\n  OCLR Endpoint Definition Summary")
-print(f"  ─────────────────────────────────────────────────────────────")
-print(f"  Source dataset          : {ENDPOINT_SAMPLE_ID}")
+print(f"\n{'='*70}")
+print(f"[{TIMESTAMP}]  Step 02b2 COMPLETE  —  Dual-endpoint OCLR definition")
+print(f"\n  Source dataset          : {ENDPOINT_SAMPLE_ID}")
 print(f"  OCLR score source       : PROVIDED CSV (real published scores)")
 print(f"  CSV file                : {_oclr_found.name}")
 print(f"  CSV barcodes matched    : {n_matched:,} / {n_hcipsc:,}")
 print(f"  Unmatched in project    : {n_unmatched:,}")
 print(f"\n  Score distribution      : [{_stats['min']:.3f}, {_stats['max']:.3f}]")
 print(f"  Median OCLR score       : {_stats['median']:.4f}")
-print(f"\n  Threshold candidates evaluated:")
-for _r in _threshold_rows:
-    _marker = "← FINAL" if _r["is_final"] else ""
-    print(f"    {_r['threshold_key']:<15}  q={_r['quantile']:.2f}  "
-          f"cut={_r['cutoff_value']:.4f}  n={_r['n_selected']:>5,}  "
-          f"({_r['pct_selected']:.1f}%)  {_marker}")
-print(f"\n  FINAL terminal set:")
-print(f"    Key         : {FINAL_THRESHOLD_KEY}")
-print(f"    Cutoff      : {FINAL_CUTOFF:.4f}")
-print(f"    N cells     : {FINAL_N_SELECTED:,} / {n_scored:,} scored cells  "
-      f"({FINAL_PCT_SELECTED:.1f}% of scored)"
-      + (f"\n               out of {n_hcipsc:,} total hCiPSC cells in pool"
-         if n_unscored > 0 else ""))
-print(f"    Barcodes    : {_bc_out.name}")
-print(f"\n  Project-specific cutoff note")
-print(f"    The top-{int((1-THRESHOLD_CANDIDATES[1][1])*100)}% threshold is a PROJECT DECISION, not a threshold")
-print(f"    specified by the original OCLR paper (Mäkinen V-P et al.).")
-print(f"    It defines a high-confidence binary evaluation set for")
-print(f"    trajectory benchmarking, independent of WOT / CellRank2.")
-print(f"    The continuous OCLR score is the primary biological signal.")
-print(f"    If the distribution is clearly bimodal in the upper tail,")
-print(f"    switch to FINAL_THRESHOLD_KEY='top_5pct' and re-run.")
+print(f"\n  Dual endpoint summary:")
+print(f"    SUCCESS ({SUCCESS_THRESHOLD_KEY}): "
+      f"score ≥ {SUCCESS_CUTOFF:.4f}  →  {SUCCESS_N:,} cells  ({SUCCESS_PCT:.1f}%)")
+print(f"    FAILURE ({FAILURE_THRESHOLD_KEY}): "
+      f"score ≤ {FAILURE_CUTOFF:.4f}  →  {FAILURE_N:,} cells  ({FAILURE_PCT:.1f}%)")
+print(f"    AMBIGUOUS (middle 80%): "
+      f"{int(oclr_df['is_oclr_ambiguous_endpoint'].sum()):,} cells  "
+      f"(excluded from PRIMARY in script 05)")
+print(f"    UNSCORED              : "
+      f"{int((oclr_df['oclr_endpoint_label']=='unscored').sum()):,} cells")
+print(f"\n  Project-specific cutoff note:")
+print(f"    SUCCESS top-10% and FAILURE bottom-10% are PROJECT DECISIONS,")
+print(f"    not thresholds from Mäkinen V-P et al. (OCLR paper).")
+print(f"    Scripts 02c, 04, 05 use these endpoints as competing WOT fates")
+print(f"    and as the PRIMARY evaluation set for trajectory benchmarking.")
 print(f"\n  Output files:")
 print(f"    {_scores_out.name}")
+print(f"    {_label_out.name}  ← PRIMARY downstream input")
+print(f"    {_suc_out.name}")
+print(f"    {_fail_out.name}")
+print(f"    {_bc_out.name}  (LEGACY = success)")
 print(f"    {_thr_out.name}")
-print(f"    {_bc_out.name}")
 print(f"    {_plot_path.name}")
-print(f"\n  Next: run 02c_compute_transport.py  (reads the barcode file above)")
-print(f"{'='*65}")
+print(f"\n  Next: run 02c_compute_transport.py")
+print(f"{'='*70}")

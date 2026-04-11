@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-04_cellrank2.py  [v11 — standard GPCCA flow, OCLR-based iPSC lineage annotation]
+04_cellrank2.py  [v12 — standard GPCCA flow, OCLR dual-endpoint lineage annotation]
 ==========================================================================================
 Project : Comparative Study of Trajectory Inference Models for Chemical iPSC
           Reprogramming
@@ -19,28 +19,38 @@ This script implements Problem B: CellRank2 RealTimeKernel as a WOT extension.
   Therefore RealTimeKernel.from_wot() is used deliberately, and the same tmaps
   produced by script 02c are the primary input.
 
-Standard GPCCA flow (v11)
+Standard GPCCA flow (v12)
 --------------------------
   STEP 10: predict_terminal_states() — standard GPCCA method to identify
            biologically terminal macrostates.  NOT all macrostates are set as
            terminal (that was Scheme B — a non-standard rescue heuristic).
 
   STEP 11: compute_fate_probabilities() — standard CellRank2 API.
-           After computing per-lineage fate probabilities, the OCLR stemness
-           score (from 02b2/02c) is used as an EXTERNAL ANNOTATION to identify
-           the most iPSC-enriched terminal lineage:
+           After computing per-lineage fate probabilities, the OCLR dual-endpoint
+           labels (from 02b2) are used as EXTERNAL ANNOTATION to identify
+           the SUCCESS and FAILURE lineages:
              - For each terminal lineage l:
-                 Spearman(fate_prob_l, oclr_score) among hCiPSC cells
-             - The lineage with the highest Spearman r is cr2_ips_lineage.
-             - cr2_ips_fate_prob = fate probability toward that lineage.
-           OCLR scores are NOT used to define the GPCCA terminal states.
-           This avoids circularity and follows the original paper's evaluation
-           logic (OCLR as external biological anchor).
+                 mean_fp_success(l) = mean(fate_prob_l among success endpoint cells)
+                 mean_fp_failure(l) = mean(fate_prob_l among failure endpoint cells)
+             - cr2_success_lineage = lineage with highest mean_fp_success
+             - cr2_failure_lineage = lineage with highest mean_fp_failure
+               (if same as success, use second-best)
+           Also retained: Spearman(fate_prob_l, oclr_score) for diagnostics.
 
-  Key output column:
-    cr2_ips_fate_prob     = fate probability toward the most iPSC-enriched
-                            terminal state (identified post-hoc via OCLR)
-    cr2_ips_lineage_name  = name of the selected terminal lineage
+  Key output columns:
+    cr2_p_oclr_success   = P(cell → success lineage)  [PRIMARY metric]
+    cr2_p_oclr_failure   = P(cell → failure lineage)
+    cr2_oclr_margin      = cr2_p_oclr_success − cr2_p_oclr_failure  [PRIMARY]
+    cr2_ips_fate_prob    = alias for cr2_p_oclr_success  (legacy)
+    cr2_ips_lineage_name = alias for cr2_success_lineage_name  (legacy)
+
+Changelog v12
+-------------------------------------------------------------
+Extend OCLR annotation to dual-endpoint: mean(fate_prob in success/failure cells).
+Add: cr2_p_oclr_success, cr2_p_oclr_failure, cr2_oclr_margin,
+     cr2_success_lineage_name, cr2_failure_lineage_name.
+Load OCLR endpoint labels from *_oclr_endpoint_labels_hcipsc.tsv (02b2 v14).
+Keep cr2_ips_fate_prob = cr2_p_oclr_success (legacy alias).
 
 Changelog v11
 -------------------------------------------------------------
@@ -1078,100 +1088,231 @@ def main() -> None:
         _safe = _lin.replace(" ", "_").replace(",", "").replace("/", "_")
         adata_work.obs[f"cr2_fp_{_safe}"] = _fp_arr
 
-    # ── OCLR-based post-hoc annotation: find most iPSC-enriched lineage ───────
+    # ── OCLR dual-endpoint post-hoc annotation ───────────────────────────────
     #
-    # Compute Spearman(fate_prob_l, oclr_score) among hCiPSC cells.
-    # The lineage with the highest Spearman r is identified as cr2_ips_lineage.
-    # This uses OCLR as an external biological anchor AFTER the GPCCA analysis.
-    _cr2_ips_lineage_name: str | None = None
-    _cr2_ips_oclr_spearman_r: float   = np.nan
-    _oclr_annotation_rows: list[dict] = []
+    # Load the OCLR endpoint labels produced by 02b2_define_oclr_endpoint.py.
+    # For each terminal lineage l:
+    #   mean_fp_success(l)       = mean(fate_prob_l among success-endpoint cells)
+    #   mean_fp_failure(l)       = mean(fate_prob_l among failure-endpoint cells)
+    #   delta_success_failure(l) = mean_fp_success(l) − mean_fp_failure(l)
+    #
+    # Lineage selection (symmetric around the separation metric):
+    #   cr2_success_lineage = lineage with LARGEST  delta_success_failure
+    #                         (most enriched in success over failure)
+    #   cr2_failure_lineage = lineage with SMALLEST delta_success_failure
+    #                         (most enriched in failure over success)
+    # If success and failure collapse to the same lineage (only one lineage total),
+    # failure is left unresolved: cr2_p_oclr_failure = NaN, cr2_oclr_margin = NaN.
+    # Also retain: Spearman(fate_prob_l, oclr_score) for diagnostics.
+    _cr2_ips_lineage_name:     str | None = None
+    _cr2_success_lineage_name: str | None = None
+    _cr2_failure_lineage_name: str | None = None
+    _cr2_ips_oclr_spearman_r: float       = np.nan
+    _oclr_annotation_rows: list[dict]     = []
 
-    # Mask for hCiPSC cells
-    _hcipsc_mask_bool = (
-        adata_work.obs["stage"].apply(
-            lambda s: "ips" in str(s).lower()
-        ).values if _ips_stage_label is not None
-        else (adata_work.obs["stage"] == _ips_stage_label).values
-            if _ips_stage_label else np.zeros(adata_work.n_obs, dtype=bool)
-    )
+    # ── Load OCLR endpoint labels ─────────────────────────────────────────────
+    _oclr_label_files = sorted(PROCESSED_DIR.glob("*_oclr_endpoint_labels_hcipsc.tsv"))
+    if _oclr_label_files:
+        _ldf = pd.read_csv(str(_oclr_label_files[-1]), sep="\t", index_col=0)
+        _ldf.index = _ldf.index.astype(str)
+        _adata_bc = adata_work.obs_names.astype(str)
+        _suc_set  = set(_ldf.index[_ldf.get(
+            "is_oclr_success_endpoint",
+            _ldf.get("is_oclr_terminal", pd.Series(0, index=_ldf.index))) == 1
+        ].tolist())
+        _fail_set = set(_ldf.index[
+            _ldf["is_oclr_failure_endpoint"] == 1
+        ].tolist()) if "is_oclr_failure_endpoint" in _ldf.columns else set()
+        _suc_mask_bool  = np.array([bc in _suc_set  for bc in _adata_bc])
+        _fail_mask_bool = np.array([bc in _fail_set for bc in _adata_bc])
+        print(f"  OCLR endpoint labels loaded: {_ldf.shape[0]:,} cells")
+        print(f"    success endpoint in adata : {int(_suc_mask_bool.sum()):,}")
+        print(f"    failure endpoint in adata : {int(_fail_mask_bool.sum()):,}")
+    else:
+        # Fallback: use obs columns if present (loaded from wot_fates.h5ad)
+        _suc_mask_bool  = (adata_work.obs.get(
+            "oclr_success_endpoint_mask",
+            adata_work.obs.get("oclr_ips_subset_mask", pd.Series(0, index=adata_work.obs.index))
+        ) == 1).values
+        _fail_mask_bool = (adata_work.obs.get(
+            "oclr_failure_endpoint_mask", pd.Series(0, index=adata_work.obs.index)
+        ) == 1).values
+        print(f"  [FALLBACK] OCLR endpoint labels from obs columns  "
+              f"(success: {int(_suc_mask_bool.sum()):,}  "
+              f"failure: {int(_fail_mask_bool.sum()):,})")
+
+    # Continuous OCLR score for Spearman diagnostics
     _oclr_scores_work = adata_work.obs.get(
         "oclr_score", pd.Series(np.nan, index=adata_work.obs.index)
     ).values.astype(float)
 
-    print(f"\n  OCLR annotation: hCiPSC cells = {int(_hcipsc_mask_bool.sum()):,}  "
-          f"with finite OCLR scores = "
-          f"{int((np.isfinite(_oclr_scores_work) & _hcipsc_mask_bool).sum()):,}")
+    # Mask for hCiPSC cells (broad — includes all OCLR-labeled cells)
+    _hcipsc_mask_bool = _suc_mask_bool | _fail_mask_bool
+    if not _hcipsc_mask_bool.any():
+        # Fall back to stage label
+        _hcipsc_mask_bool = adata_work.obs["stage"].apply(
+            lambda s: "ips" in str(s).lower()
+        ).values.astype(bool)
+
+    print(f"\n  OCLR dual-endpoint annotation:")
+    print(f"    hCiPSC cells (suc|fail)   : {int(_hcipsc_mask_bool.sum()):,}")
+    print(f"    success endpoint cells    : {int(_suc_mask_bool.sum()):,}")
+    print(f"    failure endpoint cells    : {int(_fail_mask_bool.sum()):,}")
 
     try:
         from scipy.stats import spearmanr as _spearmanr_fn
         for _lin in _fp_names:
-            _fp_arr  = _all_fp_arrays[_lin]
-            _valid   = _hcipsc_mask_bool & np.isfinite(_oclr_scores_work) & np.isfinite(_fp_arr)
-            _n_valid = int(_valid.sum())
-            if _n_valid >= 10:
-                _r_sp, _p_sp = _spearmanr_fn(_fp_arr[_valid], _oclr_scores_work[_valid])
-                _r_sp = float(_r_sp)
-                _p_sp = float(_p_sp)
+            _fp_arr = _all_fp_arrays[_lin]
+
+            # Mean fate_prob among success / failure endpoint cells
+            _suc_valid  = _suc_mask_bool  & np.isfinite(_fp_arr)
+            _fail_valid = _fail_mask_bool & np.isfinite(_fp_arr)
+            _mean_suc   = float(_fp_arr[_suc_valid].mean())  if _suc_valid.any()  else np.nan
+            _mean_fail  = float(_fp_arr[_fail_valid].mean()) if _fail_valid.any() else np.nan
+            _delta_sf   = (_mean_suc - _mean_fail) if (
+                np.isfinite(_mean_suc) and np.isfinite(_mean_fail)) else np.nan
+
+            # Spearman vs continuous score (diagnostic)
+            _sp_valid = _hcipsc_mask_bool & np.isfinite(_oclr_scores_work) & np.isfinite(_fp_arr)
+            _n_sp     = int(_sp_valid.sum())
+            if _n_sp >= 10:
+                _r_sp, _p_sp = _spearmanr_fn(
+                    _fp_arr[_sp_valid], _oclr_scores_work[_sp_valid])
+                _r_sp, _p_sp = float(_r_sp), float(_p_sp)
             else:
-                _r_sp = np.nan
-                _p_sp = np.nan
+                _r_sp = _p_sp = np.nan
+
             _oclr_annotation_rows.append({
-                "lineage":           _lin,
-                "n_hcipsc_valid":    _n_valid,
-                "oclr_spearman_r":   _r_sp,
-                "oclr_spearman_p":   _p_sp,
-                "fp_mean_hcipsc":    float(_fp_arr[_hcipsc_mask_bool].mean())
-                                     if _hcipsc_mask_bool.any() else np.nan,
-                "fp_mean_all":       float(_fp_arr.mean()),
+                "lineage":             _lin,
+                "n_success_valid":     int(_suc_valid.sum()),
+                "n_failure_valid":     int(_fail_valid.sum()),
+                "mean_fp_success":     _mean_suc,
+                "mean_fp_failure":     _mean_fail,
+                "delta_success_failure": _delta_sf,
+                "n_spearman_valid":    _n_sp,
+                "oclr_spearman_r":     _r_sp,
+                "oclr_spearman_p":     _p_sp,
+                "fp_mean_hcipsc":      float(_fp_arr[_hcipsc_mask_bool].mean())
+                                       if _hcipsc_mask_bool.any() else np.nan,
+                "fp_mean_all":         float(_fp_arr.mean()),
             })
 
         _oclr_ann_df = pd.DataFrame(_oclr_annotation_rows)
 
-        print(f"\n  Per-lineage OCLR annotation:")
-        _disp = ["lineage", "n_hcipsc_valid", "oclr_spearman_r",
-                 "fp_mean_hcipsc", "fp_mean_all"]
+        print(f"\n  Per-lineage dual-endpoint annotation:")
+        _disp = ["lineage", "n_success_valid", "mean_fp_success",
+                 "n_failure_valid", "mean_fp_failure",
+                 "delta_success_failure", "oclr_spearman_r"]
         print(_oclr_ann_df[[c for c in _disp if c in _oclr_ann_df.columns]].to_string(
             index=False))
 
-        # Select lineage with highest Spearman r
-        _valid_r = _oclr_ann_df["oclr_spearman_r"].dropna()
-        if not _valid_r.empty:
-            _best_idx = _valid_r.idxmax()
-            _cr2_ips_lineage_name    = str(_oclr_ann_df.loc[_best_idx, "lineage"])
-            _cr2_ips_oclr_spearman_r = float(_oclr_ann_df.loc[_best_idx, "oclr_spearman_r"])
-            print(f"\n  Most iPSC-enriched lineage (highest OCLR Spearman r):")
-            print(f"    cr2_ips_lineage_name  = '{_cr2_ips_lineage_name}'")
-            print(f"    oclr_spearman_r       = {_cr2_ips_oclr_spearman_r:.4f}")
+        # ── Select success lineage: largest delta_success_failure ────────────
+        # Uses the separation metric (success_enrichment − failure_enrichment),
+        # which is symmetric and directly interpretable as benchmark alignment.
+        _valid_delta = _oclr_ann_df["delta_success_failure"].dropna()
+        if not _valid_delta.empty:
+            _suc_best_idx = _valid_delta.idxmax()
+            _cr2_success_lineage_name = str(
+                _oclr_ann_df.loc[_suc_best_idx, "lineage"])
+            print(f"\n  cr2_success_lineage_name = '{_cr2_success_lineage_name}'  "
+                  f"(delta_sf={_valid_delta[_suc_best_idx]:.4f}  "
+                  f"mean_fp_success="
+                  f"{_oclr_ann_df.loc[_suc_best_idx, 'mean_fp_success']:.4f})")
         else:
-            # Fallback: use lineage whose name contains 'ips' if available
             _name_match = [l for l in _fp_names if "ips" in l.lower()]
-            _cr2_ips_lineage_name = _name_match[0] if _name_match else _fp_names[0]
-            print(f"\n  [WARN] All OCLR Spearman r values are NaN — using name heuristic.")
-            print(f"  cr2_ips_lineage_name = '{_cr2_ips_lineage_name}' (fallback)")
+            _cr2_success_lineage_name = _name_match[0] if _name_match else (
+                _fp_names[0] if _fp_names else None)
+            print(f"\n  [WARN] delta_success_failure all NaN — name fallback: "
+                  f"'{_cr2_success_lineage_name}'")
+
+        # ── Select failure lineage: smallest delta_success_failure ────────────
+        # Symmetric to success: most failure-enriched lineage.
+        # If it matches success (only one lineage), failure is left unresolved.
+        if not _valid_delta.empty:
+            _fail_best_idx    = _valid_delta.idxmin()
+            _fail_candidate   = str(_oclr_ann_df.loc[_fail_best_idx, "lineage"])
+            if _fail_candidate != _cr2_success_lineage_name:
+                _cr2_failure_lineage_name = _fail_candidate
+                print(f"  cr2_failure_lineage_name = '{_cr2_failure_lineage_name}'  "
+                      f"(delta_sf={_valid_delta[_fail_best_idx]:.4f}  "
+                      f"mean_fp_failure="
+                      f"{_oclr_ann_df.loc[_fail_best_idx, 'mean_fp_failure']:.4f})")
+            else:
+                # Collision: only one distinct lineage — dual-endpoint unresolvable.
+                # Do NOT reuse the success lineage for failure; leave failure as NaN.
+                _cr2_failure_lineage_name = None
+                print(f"  [WARN] Dual-endpoint separation UNRESOLVED: success and failure "
+                      f"both map to '{_cr2_success_lineage_name}'.\n"
+                      f"         Likely cause: GPCCA identified only one terminal lineage.\n"
+                      f"         cr2_p_oclr_failure and cr2_oclr_margin will be NaN.\n"
+                      f"         This dataset may not support a dual-endpoint benchmark.")
+        else:
+            _cr2_failure_lineage_name = None
+            print(f"  [WARN] delta_success_failure all NaN — failure lineage not assigned.")
+
+        # ── Get Spearman r for the success lineage (diagnostic) ──────────────
+        _suc_row = _oclr_ann_df[
+            _oclr_ann_df["lineage"] == _cr2_success_lineage_name]
+        if not _suc_row.empty:
+            _cr2_ips_oclr_spearman_r = float(
+                _suc_row["oclr_spearman_r"].values[0])
+
+        # Legacy alias
+        _cr2_ips_lineage_name = _cr2_success_lineage_name
 
     except Exception as _e_ann:
-        print(f"  [WARN] OCLR annotation failed: {_e_ann}")
+        print(f"  [WARN] OCLR dual-endpoint annotation failed: {_e_ann}")
+        import traceback; traceback.print_exc()
         _oclr_ann_df = pd.DataFrame()
-        # Last-resort fallback
-        _name_match = [l for l in _fp_names if "ips" in l.lower()]
-        _cr2_ips_lineage_name = _name_match[0] if _name_match else (_fp_names[0] if _fp_names else None)
+        _name_match  = [l for l in _fp_names if "ips" in l.lower()]
+        _cr2_success_lineage_name = (
+            _name_match[0] if _name_match else (_fp_names[0] if _fp_names else None))
+        _cr2_failure_lineage_name = None
+        _cr2_ips_lineage_name     = _cr2_success_lineage_name
 
-    # ── Attach cr2_ips_fate_prob to adata_work ────────────────────────────────
-    if _cr2_ips_lineage_name is not None and _cr2_ips_lineage_name in _all_fp_arrays:
-        adata_work.obs["cr2_ips_fate_prob"] = _all_fp_arrays[_cr2_ips_lineage_name]
-        adata_work.obs["cr2_ips_lineage_name"] = _cr2_ips_lineage_name
-        _cr2_ips_fp = adata_work.obs["cr2_ips_fate_prob"].values.astype(float)
-        _fin_cr2    = np.isfinite(_cr2_ips_fp)
-        print(f"\n  cr2_ips_fate_prob  "
+    # ── Attach dual-endpoint columns to adata_work ───────────────────────────
+    # cr2_p_oclr_success / cr2_p_oclr_failure / cr2_oclr_margin
+    if _cr2_success_lineage_name and _cr2_success_lineage_name in _all_fp_arrays:
+        _suc_fp = _all_fp_arrays[_cr2_success_lineage_name]
+        adata_work.obs["cr2_p_oclr_success"]    = _suc_fp
+        adata_work.obs["cr2_success_lineage_name"] = _cr2_success_lineage_name
+    else:
+        _suc_fp = np.full(adata_work.n_obs, np.nan)
+        adata_work.obs["cr2_p_oclr_success"]    = np.nan
+        adata_work.obs["cr2_success_lineage_name"] = ""
+
+    if _cr2_failure_lineage_name and _cr2_failure_lineage_name in _all_fp_arrays:
+        _fail_fp = _all_fp_arrays[_cr2_failure_lineage_name]
+        adata_work.obs["cr2_p_oclr_failure"]    = _fail_fp
+        adata_work.obs["cr2_failure_lineage_name"] = _cr2_failure_lineage_name
+    else:
+        _fail_fp = np.full(adata_work.n_obs, np.nan)
+        adata_work.obs["cr2_p_oclr_failure"]    = np.nan
+        adata_work.obs["cr2_failure_lineage_name"] = ""
+
+    _fin_both = np.isfinite(_suc_fp) & np.isfinite(_fail_fp)
+    _margin   = np.where(_fin_both, _suc_fp - _fail_fp, np.nan)
+    adata_work.obs["cr2_oclr_margin"] = _margin
+
+    # Legacy aliases
+    adata_work.obs["cr2_ips_fate_prob"]    = _suc_fp
+    adata_work.obs["cr2_ips_lineage_name"] = _cr2_success_lineage_name or ""
+
+    _cr2_ips_fp = adata_work.obs["cr2_ips_fate_prob"].values.astype(float)
+    _fin_cr2    = np.isfinite(_cr2_ips_fp)
+    if _fin_cr2.any():
+        print(f"\n  cr2_p_oclr_success  "
               f"min={_cr2_ips_fp[_fin_cr2].min():.4f}  "
               f"median={np.median(_cr2_ips_fp[_fin_cr2]):.4f}  "
               f"max={_cr2_ips_fp[_fin_cr2].max():.4f}")
+        _fin_m = np.isfinite(_margin)
+        if _fin_m.any():
+            print(f"  cr2_oclr_margin     "
+                  f"min={float(np.nanmin(_margin)):.4f}  "
+                  f"median={float(np.nanmedian(_margin)):.4f}  "
+                  f"max={float(np.nanmax(_margin)):.4f}")
     else:
-        adata_work.obs["cr2_ips_fate_prob"]   = np.nan
-        adata_work.obs["cr2_ips_lineage_name"] = ""
-        _cr2_ips_fp = np.full(adata_work.n_obs, np.nan)
-        print(f"  [WARN] cr2_ips_fate_prob not set — no valid lineage identified.")
+        print(f"  [WARN] cr2_p_oclr_success not set — no valid lineage identified.")
 
     # ── Save OCLR annotation table ────────────────────────────────────────────
     _enrich_path = (
@@ -1184,25 +1325,34 @@ def main() -> None:
     except Exception as _e:
         print(f"  [WARN] Cannot save OCLR annotation table: {_e}")
 
-    # ── UMAP: cr2_ips_fate_prob vs WOT p_hcipsc ──────────────────────────────
+    # ── UMAP: cr2_oclr_margin vs WOT p_oclr_margin (primary benchmark scores) ─
     try:
         _ncols = 2
         _fig_fp, _axes_fp = plt.subplots(1, _ncols, figsize=(7 * _ncols, 6))
         _axf = list(_axes_fp)
 
-        sc.pl.umap(adata_work, color="cr2_ips_fate_prob", ax=_axf[0],
+        _cr2_umap_col = ("cr2_oclr_margin" if "cr2_oclr_margin" in adata_work.obs.columns
+                         else "cr2_ips_fate_prob")
+        _wot_umap_col = ("p_oclr_margin" if "p_oclr_margin" in adata_work.obs.columns
+                         else "p_hcipsc")
+        sc.pl.umap(adata_work, color=_cr2_umap_col, ax=_axf[0],
                    show=False, size=UMAP_SIZE, alpha=UMAP_ALPHA,
-                   cmap="viridis",
-                   title=f"CR2 cr2_ips_fate_prob\n('{_cr2_ips_lineage_name}')")
-        if "p_hcipsc" in adata_work.obs.columns:
-            sc.pl.umap(adata_work, color="p_hcipsc", ax=_axf[1],
+                   cmap="RdBu_r",
+                   title=f"CR2 {_cr2_umap_col}\n"
+                         f"(suc: '{_cr2_success_lineage_name}'  "
+                         f"fail: '{_cr2_failure_lineage_name or 'unresolved'}')")
+        if _wot_umap_col in adata_work.obs.columns:
+            sc.pl.umap(adata_work, color=_wot_umap_col, ax=_axf[1],
                        show=False, size=UMAP_SIZE, alpha=UMAP_ALPHA,
-                       cmap="viridis", title="WOT p_hcipsc")
+                       cmap="RdBu_r", title=f"WOT {_wot_umap_col}")
         else:
             _axf[1].set_visible(False)
 
-        plt.suptitle(f"Fate probabilities: CellRank2  vs  WOT  [{_MODE_TAG}]",
-                     fontsize=13)
+        plt.suptitle(
+            f"Primary benchmark scores: CR2 vs WOT  [{_MODE_TAG}]\n"
+            f"margin = p_oclr_success − p_oclr_failure",
+            fontsize=12,
+        )
         plt.tight_layout()
         savefig(_fig_fp, f"{TIMESTAMP}_{_MODE_TAG}_cr2_vs_wot_fate_umap", FIGURES_DIR)
     except Exception as _e:
@@ -1218,22 +1368,34 @@ def main() -> None:
         print(f"  [WARN] plot_fate_probabilities skipped: {_e}")
 
     # =========================================================================
-    # STEP 12  —  Compare CR2 fate prob vs WOT p_hcipsc
+    # STEP 12  —  Primary benchmark: CR2 cr2_oclr_margin  vs  WOT p_oclr_margin
     # =========================================================================
+    # PRIMARY comparison uses the margin scores (success − failure), which are
+    # the main benchmark metric for the OCLR dual-endpoint terminal benchmark.
+    # Legacy success-only columns (cr2_ips_fate_prob, p_hcipsc) are NOT the
+    # primary comparison here; they are retained as aliases only.
     print(f"\n{_SEP}")
-    print("STEP 12  —  Compare CR2 cr2_ips_fate_prob  vs  WOT p_hcipsc")
+    print("STEP 12  —  Primary benchmark: CR2 cr2_oclr_margin  vs  WOT p_oclr_margin")
     print(_SEP)
 
     _pr = _sr = np.nan
     try:
         from scipy.stats import pearsonr, spearmanr
 
-        _cr2_p   = adata_work.obs["cr2_ips_fate_prob"].values.astype(float)
-        _wot_p   = adata_work.obs["p_hcipsc"].values.astype(float)
-        # Compare on ALL cells — cr2_ips_fate_prob is the fate probability toward
-        # the single OCLR-annotated iPSC terminal lineage (identified post-hoc in
-        # Step 11).  p_hcipsc is the WOT fate probability toward all hCiPSC cells.
-        # We also report the non-iPSC-stage subset separately.
+        # Use margin columns if available; fall back to success-only with a clear label
+        _cr2_cmp_col = ("cr2_oclr_margin"  if "cr2_oclr_margin"  in adata_work.obs.columns
+                        else "cr2_ips_fate_prob")
+        _wot_cmp_col = ("p_oclr_margin"    if "p_oclr_margin"    in adata_work.obs.columns
+                        else "p_hcipsc")
+        _using_legacy = (_cr2_cmp_col == "cr2_ips_fate_prob" or
+                         _wot_cmp_col == "p_hcipsc")
+        if _using_legacy:
+            print(f"  [NOTE] Margin columns not found; comparing legacy success-only scores "
+                  f"({_wot_cmp_col} vs {_cr2_cmp_col}). "
+                  f"This is a supplementary comparison, not the primary benchmark.")
+
+        _cr2_p   = adata_work.obs[_cr2_cmp_col].values.astype(float)
+        _wot_p   = adata_work.obs[_wot_cmp_col].values.astype(float)
         _all_fin = np.isfinite(_cr2_p) & np.isfinite(_wot_p)
         _n_all   = int(_all_fin.sum())
 
@@ -1242,9 +1404,10 @@ def main() -> None:
             if _ips_stage_label is not None
             else pd.Series(True, index=adata_work.obs.index)
         )
-        _mask    = (_non_ips & _all_fin)
-        _n_cmp   = int(_mask.sum())
+        _mask  = (_non_ips & _all_fin)
+        _n_cmp = int(_mask.sum())
 
+        print(f"  Comparing: WOT {_wot_cmp_col}  vs  CR2 {_cr2_cmp_col}")
         print(f"  All finite pairs: {_n_all:,}  |  Non-iPSC-stage: {_n_cmp:,}")
 
         _pr, _pp = pearsonr(_cr2_p[_all_fin], _wot_p[_all_fin])
@@ -1260,18 +1423,21 @@ def main() -> None:
 
         _corr_df = pd.DataFrame({
             "metric": [
+                "wot_score_col", "cr2_score_col",
                 "pearson_r_all", "pearson_p_all",
                 "spearman_r_all", "spearman_p_all",
                 "pearson_r_nonips", "pearson_p_nonips",
                 "spearman_r_nonips", "spearman_p_nonips",
                 "n_cells_all", "n_cells_nonips",
-                "cr2_ips_lineage_name",
+                "cr2_success_lineage_name", "cr2_failure_lineage_name",
             ],
             "value": [
+                _wot_cmp_col, _cr2_cmp_col,
                 _pr, _pp, _sr, _sp,
                 _pr2, _pp2, _sr2, _sp2,
                 _n_all, _n_cmp,
-                str(_cr2_ips_lineage_name),
+                str(_cr2_success_lineage_name or ""),
+                str(_cr2_failure_lineage_name or ""),
             ],
         })
         _corr_path = (
@@ -1289,12 +1455,11 @@ def main() -> None:
             _ax_sc.scatter(_wot_p[_m2], _cr2_p[_m2],
                            s=1.5, alpha=0.3, color=_cmap_s(_si),
                            label=_stg, rasterized=True)
-        _ax_sc.set_xlabel("WOT p_hcipsc", fontsize=11)
-        _ax_sc.set_ylabel("CR2 cr2_ips_fate_prob", fontsize=11)
+        _ax_sc.set_xlabel(f"WOT {_wot_cmp_col}", fontsize=11)
+        _ax_sc.set_ylabel(f"CR2 {_cr2_cmp_col}", fontsize=11)
         _ax_sc.set_title(
-            f"CR2 vs WOT [{_MODE_TAG}]\n"
-            f"Pearson r={_pr:.3f}  Spearman r={_sr:.3f}  "
-            f"(lineage: '{_cr2_ips_lineage_name}')",
+            f"CR2 vs WOT  [{_MODE_TAG}]\n"
+            f"Pearson r={_pr:.3f}  Spearman r={_sr:.3f}",
             fontsize=9,
         )
         _ax_sc.legend(markerscale=5, fontsize=7, loc="lower right",
@@ -1509,46 +1674,57 @@ def main() -> None:
     except Exception as _e:
         print(f"  [WARN] h5ad save failed: {_e}")
 
-    _cr2_ips_fp_vals = adata_work.obs.get("cr2_ips_fate_prob", pd.Series(dtype=float)).values
+    _cr2_ips_fp_vals = adata_work.obs.get(
+        "cr2_p_oclr_success",
+        adata_work.obs.get("cr2_ips_fate_prob", pd.Series(dtype=float))
+    ).values
     _fin_cr2 = np.isfinite(_cr2_ips_fp_vals.astype(float))
-    _cr2_ips_fp_median = (
+    _cr2_suc_fp_median = (
         float(np.median(_cr2_ips_fp_vals[_fin_cr2])) if _fin_cr2.any() else np.nan
     )
+    _cr2_margin_vals = adata_work.obs.get(
+        "cr2_oclr_margin", pd.Series(np.nan, index=adata_work.obs.index)
+    ).values.astype(float)
+    _fin_m = np.isfinite(_cr2_margin_vals)
+    _cr2_margin_median = float(np.nanmedian(_cr2_margin_vals[_fin_m])) if _fin_m.any() else np.nan
 
     _rows = [
-        ("script",                   "04_cellrank2.py v11 (standard GPCCA + OCLR post-hoc annotation)"),
-        ("run_mode",                 RUN_MODE),
-        ("mode_tag",                 _MODE_TAG),
-        ("is_final_result",          "YES — hpc_full full-dataset"
-                                     if RUN_MODE == "hpc_full"
-                                     else "NO — local_debug subset (pipeline smoke-test only)"),
-        ("timestamp",                TIMESTAMP),
-        ("input_h5ad",               fates_h5ad.name),
-        ("tmaps_dir_original",       str(tmaps_dir)),
-        ("tmaps_dir_work",           str(tmaps_dir_work)),
-        ("n_tmap_files_work",        len(_tmap_files_work)),
-        ("n_cells_full",             adata.n_obs),
-        ("n_cells_work",             adata_work.n_obs),
-        ("n_genes",                  adata_work.n_vars),
-        ("n_timepoints",             len(_day_cats_work)),
-        ("ips_stage_label",          str(_ips_stage_label)),
-        ("conn_weight",              CONN_WEIGHT),
-        ("threshold",                THRESHOLD),
-        ("n_macrostates",            N_MACROSTATES),
-        ("all_macrostate_names",     str(_ms_names)),
-        ("n_terminal_lineages",      len(_fp_names)),
-        ("terminal_state_method",    "predict_terminal_states() — standard GPCCA"),
-        ("cr2_ips_lineage_name",     str(_cr2_ips_lineage_name)),
-        ("cr2_ips_oclr_spearman_r",  f"{_cr2_ips_oclr_spearman_r:.4f}"),
-        ("cr2_ips_fate_prob_median", f"{_cr2_ips_fp_median:.4f}"),
-        ("fate_prob_n_jobs",         str(FATE_PROB_N_JOBS)),
-        ("n_driver_genes",           len(_drivers) if _drivers is not None else "N/A"),
-        ("driver_corr_col",          _corr_col),
-        ("pearson_r_all",            f"{_pr:.4f}"),
-        ("spearman_r_all",           f"{_sr:.4f}"),
-        ("oclr_annotation_tsv",      _enrich_path.name),
-        ("petsc_ok",                 str(_petsc_ok)),
-        ("slepc_ok",                 str(_slepc_ok)),
+        ("script",                    "04_cellrank2.py v12 (standard GPCCA + OCLR dual-endpoint annotation)"),
+        ("run_mode",                  RUN_MODE),
+        ("mode_tag",                  _MODE_TAG),
+        ("is_final_result",           "YES — hpc_full full-dataset"
+                                      if RUN_MODE == "hpc_full"
+                                      else "NO — local_debug subset (pipeline smoke-test only)"),
+        ("timestamp",                 TIMESTAMP),
+        ("input_h5ad",                fates_h5ad.name),
+        ("tmaps_dir_original",        str(tmaps_dir)),
+        ("tmaps_dir_work",            str(tmaps_dir_work)),
+        ("n_tmap_files_work",         len(_tmap_files_work)),
+        ("n_cells_full",              adata.n_obs),
+        ("n_cells_work",              adata_work.n_obs),
+        ("n_genes",                   adata_work.n_vars),
+        ("n_timepoints",              len(_day_cats_work)),
+        ("ips_stage_label",           str(_ips_stage_label)),
+        ("conn_weight",               CONN_WEIGHT),
+        ("threshold",                 THRESHOLD),
+        ("n_macrostates",             N_MACROSTATES),
+        ("all_macrostate_names",      str(_ms_names)),
+        ("n_terminal_lineages",       len(_fp_names)),
+        ("terminal_state_method",     "predict_terminal_states() — standard GPCCA"),
+        ("cr2_success_lineage_name",  str(_cr2_success_lineage_name)),
+        ("cr2_failure_lineage_name",  str(_cr2_failure_lineage_name)),
+        ("cr2_ips_lineage_name",      str(_cr2_ips_lineage_name)),
+        ("cr2_ips_oclr_spearman_r",   f"{_cr2_ips_oclr_spearman_r:.4f}"),
+        ("cr2_p_oclr_success_median", f"{_cr2_suc_fp_median:.4f}"),
+        ("cr2_oclr_margin_median",    f"{_cr2_margin_median:.4f}"),
+        ("fate_prob_n_jobs",          str(FATE_PROB_N_JOBS)),
+        ("n_driver_genes",            len(_drivers) if _drivers is not None else "N/A"),
+        ("driver_corr_col",           _corr_col),
+        ("pearson_r_all",             f"{_pr:.4f}"),
+        ("spearman_r_all",            f"{_sr:.4f}"),
+        ("oclr_annotation_tsv",       _enrich_path.name),
+        ("petsc_ok",                  str(_petsc_ok)),
+        ("slepc_ok",                  str(_slepc_ok)),
     ]
     _sum_df   = pd.DataFrame(_rows, columns=["parameter", "value"])
     _sum_path = CR2_OUT_DIR / (TIMESTAMP + f"_{_MODE_TAG}_cr2_summary.tsv")
@@ -1561,7 +1737,7 @@ def main() -> None:
     # =========================================================================
     print(f"\n{_SEP}")
     _elapsed = _time.time() - T0
-    print(f"04_cellrank2.py v11  [{_MODE_TAG}]  COMPLETE  ({_elapsed:.1f} s total)")
+    print(f"04_cellrank2.py v12  [{_MODE_TAG}]  COMPLETE  ({_elapsed:.1f} s total)")
     print(_SEP)
     print(f"\n  Outputs in : {CR2_OUT_DIR}")
     print(f"  Figures in : {FIGURES_DIR}")
@@ -1570,8 +1746,11 @@ def main() -> None:
     print(f"    {TIMESTAMP}_{_MODE_TAG}_cr2_driver_genes.tsv")
     print(f"    {TIMESTAMP}_{_MODE_TAG}_cr2_oclr_annotation.tsv")
     print(f"    {TIMESTAMP}_{_MODE_TAG}_cr2_summary.tsv")
-    print(f"\n  OCLR-annotated iPSC lineage : '{_cr2_ips_lineage_name}'")
-    print(f"    OCLR Spearman r = {_cr2_ips_oclr_spearman_r:.4f}")
+    print(f"\n  OCLR dual-endpoint annotation:")
+    print(f"    SUCCESS lineage : '{_cr2_success_lineage_name}'")
+    print(f"    FAILURE lineage : '{_cr2_failure_lineage_name}'")
+    print(f"    OCLR Spearman r (success lineage) = {_cr2_ips_oclr_spearman_r:.4f}")
+    print(f"    cr2_oclr_margin median = {_cr2_margin_median:.4f}")
 
     if RUN_MODE == "local_debug":
         print(

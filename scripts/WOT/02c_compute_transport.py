@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-02c_compute_transport.py  [v13 — multi-fate biological terminal design]
+02c_compute_transport.py  [v14 — OCLR-anchored dual-endpoint terminal design]
 ==========================================================================================
 Project : Comparative Study of Trajectory Inference Models for Chemical iPSC
           Reprogramming
@@ -8,43 +8,41 @@ Dataset : GSE230659 (human, Liuyang et al. 2023 Cell Stem Cell)
 Step    : 2c — WOT transport-map computation, fate probabilities, trajectory trends
 Env     : conda activate traj_env
 
-Multi-fate terminal design (v13)
-----------------------------------
-  This version follows the original WOT reprogramming paper logic (Schiebinger et al.
-  2019 Cell) in which multiple biologically distinct terminal populations compete as
-  fate targets, making the backward propagation non-degenerate without relying on any
-  scoring model to split the terminal pool.
+OCLR-anchored dual-endpoint design (v14)
+-----------------------------------------
+  Two competing fate sets are defined within the hCiPSC endpoint sample using the
+  OCLR stemness labels produced by 02b2_define_oclr_endpoint.py:
 
-  Terminal fate sets (biological, independent of OCLR / WOT outputs):
-    fate_hcipsc        — ALL hCiPSC cells (stage_std == "hCiPSC")
-    fate_stageIII_late — StageIII cells at their latest observed timepoint
+    fate_oclr_success  — top-10% OCLR score within hCiPSC  (high-stemness)
+    fate_oclr_failure  — bottom-10% OCLR score within hCiPSC  (low-stemness)
 
-  Because the two fate sets partition (or at least cover) the terminal cells, the
-  backward-propagated fate probabilities p_hcipsc and p_stageIII_late are non-degenerate
-  and sum to ≤ 1 for all earlier cells.
+  Both sets are at the same timepoint (day30 hCiPSC sample), satisfying the WOT
+  fates() single-timepoint constraint.  The middle 80% (ambiguous) cells are NOT
+  used as a fate target.
 
-  OCLR scores (Mäkinen V-P et al.) are loaded from the pre-computed file produced by
-  02b2_define_oclr_endpoint.py and attached as obs annotations ONLY — they serve as an
-  external biological anchor for downstream evaluation (script 05) and are NOT used to
-  define or split any terminal fate set in this script.
+  Backward-propagated fate probabilities:
+    p_oclr_success(i)  = P(cell i trajectory → high-stemness hCiPSC)
+    p_oclr_failure(i)  = P(cell i trajectory → low-stemness hCiPSC)
+    p_oclr_margin(i)   = p_oclr_success(i) − p_oclr_failure(i)  [main benchmark metric]
+
+  Legacy alias: p_hcipsc = p_oclr_success  (kept for backward compatibility).
 
   Fate computation uses the WOT Python API:
-    wot.tmap.TransportMapModel.from_directory()  +  .get_fate_probabilities()
+    wot.tmap.TransportMapModel.from_directory()  +  .fates(populations)
+  where populations are built with population_from_cell_sets(cell_sets, at_time).
 
-  This is the canonical WOT approach and correctly handles fate sets defined at different
-  timepoints (e.g. fate_hcipsc at day30, fate_stageIII_late at day21).
-
-  Run 02b2_define_oclr_endpoint.py BEFORE this script (for OCLR annotation).
+  Run 02b2_define_oclr_endpoint.py BEFORE this script.
 
 Version history
 ---------------
-  v9 : Two-fate design introduced (partition final cells into ips/other).
+  v9 : Two-fate design introduced.
   v10: 6-class UMAP label.
   v11: CLI OT pipeline unchanged.
-  v12: Endpoint replaced from marker genes → OCLR stemness scores (OCLR split).
-  v13: OCLR no longer defines the fate split.  Multi-fate biological design using
-       hCiPSC + StageIII_late as competing fates.  WOT Python API for fate computation.
-       OCLR scores attached as obs annotation only.
+  v12: Endpoint replaced from marker genes → OCLR stemness scores.
+  v13: Multi-fate biological design (hCiPSC + StageIII_late).
+  v14: OCLR-anchored dual-endpoint design.  fate_oclr_success / fate_oclr_failure
+       replace hCiPSC + StageIII_late.  Uses fates() API.
+       p_oclr_margin added as primary benchmark metric.
 
 Usage
 -----
@@ -107,43 +105,31 @@ DEBUG_ONLY_FIRST_N_PAIRS:      int | None = None
 FORCE_DENSE_FLOAT64:           bool       = False
 
 # ══════════════════════════════════════════════════════════════════════════════
-# FATE COMPUTATION PARAMETERS  (multi-fate biological design)
+# FATE COMPUTATION PARAMETERS  (OCLR-anchored dual-endpoint design)
 # ══════════════════════════════════════════════════════════════════════════════
 #
-# TERMINAL FATE SETS (biological, no OCLR split)
-# -----------------------------------------------
-# Two biologically distinct terminal populations are defined using the stage
-# annotation in adata.obs["stage_std"].  This follows the WOT reprogramming
-# paper design (Schiebinger et al. 2019 Cell) in which multiple cell types at
-# the endpoint serve as competing fate targets.
+# TERMINAL FATE SETS (OCLR-anchored, loaded from 02b2 output)
+# ------------------------------------------------------------
+# Both fate sets are within the hCiPSC endpoint sample at day30.
+# This satisfies WOT fates() single-timepoint constraint.
 #
-#   fate_hcipsc        — ALL cells with stage_std == "hCiPSC"
-#                        (fully reprogrammed iPSCs; typically at day30)
-#   fate_stageIII_late — StageIII cells at their LATEST observed timepoint
-#                        (the most advanced non-iPSC intermediate; may be
-#                         at a different day than hCiPSC)
+#   fate_oclr_success  — top-10% OCLR score within hCiPSC (is_oclr_success_endpoint == 1)
+#   fate_oclr_failure  — bottom-10% OCLR score within hCiPSC (is_oclr_failure_endpoint == 1)
 #
-# WHY THIS DESIGN IS NON-DEGENERATE
-# ----------------------------------
-# If the entire terminal pool were one fate (e.g., all day30 cells), the
-# backward propagation collapses to p=1 for all cells.  Having two distinct
-# competing fates makes p_hcipsc non-trivial and biologically interpretable:
-#   p_hcipsc(i)        = probability that cell i eventually becomes hCiPSC
-#   p_stageIII_late(i) = probability that cell i terminates as StageIII
+# WHY THIS IS NON-DEGENERATE
+# ---------------------------
+# Both fate sets are subsets of the same sample, so they partition a biologically
+# meaningful within-sample axis (stemness level).  The backward-propagated
+# probabilities are:
+#   p_oclr_success(i)  = P(cell i trajectory → high-stemness hCiPSC endpoint)
+#   p_oclr_failure(i)  = P(cell i trajectory → low-stemness hCiPSC endpoint)
+#   p_oclr_margin(i)   = p_oclr_success − p_oclr_failure  ← primary benchmark metric
 #
-# ROLE OF OCLR SCORES
-# --------------------
-# OCLR scores (Mäkinen V-P et al.) are loaded as obs annotations for external
-# evaluation only.  They are NOT used to define or split any fate set here.
-# Use script 05 (compare_wot_cr2_oclr.py) to correlate p_hcipsc with OCLR.
-
 # Minimum number of cells required in each fate set.
 # If either falls below this the script stops with a clear error.
 MIN_FATE_CELLS: int = 20
 
-# ── OCLR endpoint sample ID (for annotation only) ────────────────────────────
-# OCLR scores are loaded by load_oclr_endpoint() and attached to adata.obs.
-# This constant is used only for validation / logging.
+# ── OCLR endpoint sample ID ──────────────────────────────────────────────────
 OCLR_ENDPOINT_SAMPLE_ID: str = "GSM7230012_hCiPSCs-0618"
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -157,8 +143,8 @@ GR_CLIP = 1.0
 # =============================================================================
 # PLOTTING PALETTE  (stage-based, no OCLR split)
 # =============================================================================
-# hCiPSC   — all fully reprogrammed cells (fate_hcipsc target)
-# StageIII — StageIII cells (fate_stageIII_late target at latest day)
+# hCiPSC   — fully reprogrammed cells (contains OCLR success/failure endpoints)
+# StageIII — intermediate reprogramming stage
 # StageI/II — early-intermediate cells
 # Other    — any other stage label
 STAGE_PALETTE = {
@@ -203,7 +189,7 @@ except Exception:
 _SEP  = "─" * 70
 _SEP2 = "· " * 35
 
-print(f"[{TIMESTAMP}]  WOT Transport Map Computation  (v13 — multi-fate biological design)")
+print(f"[{TIMESTAMP}]  WOT Transport Map Computation  (v14 — OCLR dual-endpoint design)")
 print(f"  wot version     : {_wot_ver}")
 print(f"  Input AnnData   : {H5AD_PATH.name}")
 print(f"  Output dir      : {TMAPS_DIR}")
@@ -212,12 +198,13 @@ print(f"    EPSILON          : {EPSILON}")
 print(f"    LAMBDA1/LAMBDA2  : {LAMBDA1} / {LAMBDA2}")
 print(f"    LOCAL_PCA        : {LOCAL_PCA}")
 print(f"    USE_GROWTH_RATES : {USE_GROWTH_RATES}")
-print(f"\n  Fate computation design (multi-fate biological, WOT Python API)")
-print(f"    fate_hcipsc        : ALL hCiPSC cells  (stage_std == 'hCiPSC')")
-print(f"    fate_stageIII_late : StageIII cells at their latest timepoint")
-print(f"    p_hcipsc           : probability of joining the hCiPSC fate")
-print(f"    p_stageIII_late    : probability of joining the StageIII_late fate")
-print(f"    OCLR scores        : loaded as obs annotation only (external anchor)")
+print(f"\n  Fate computation design (OCLR dual-endpoint, WOT fates() API)")
+print(f"    fate_oclr_success  : top-10% OCLR within GSM7230012_hCiPSCs-0618")
+print(f"    fate_oclr_failure  : bottom-10% OCLR within GSM7230012_hCiPSCs-0618")
+print(f"    p_oclr_success     : P(cell → high-stemness hCiPSC endpoint)")
+print(f"    p_oclr_failure     : P(cell → low-stemness hCiPSC endpoint)")
+print(f"    p_oclr_margin      : p_oclr_success − p_oclr_failure  [PRIMARY metric]")
+print(f"    p_hcipsc           : legacy alias = p_oclr_success")
 print(f"\n  Debug controls")
 print(f"    DEBUG_SUBSAMPLE_PER_TIMEPOINT : {DEBUG_SUBSAMPLE_PER_TIMEPOINT}")
 print(f"    DEBUG_ONLY_FIRST_N_PAIRS      : {DEBUG_ONLY_FIRST_N_PAIRS}")
@@ -264,107 +251,100 @@ def normalize_stage(s) -> str:
 
 
 # =============================================================================
-# HELPER: OCLR-defined iPSC fate set
+# HELPER: load OCLR dual endpoints from 02b2 output
 # =============================================================================
-def load_oclr_endpoint(adata) -> "tuple[pd.Series, pd.Series]":
+def load_oclr_endpoints(adata):
     """
-    Load the OCLR-based iPS terminal barcode list produced by
-    02b2_define_oclr_endpoint.py and return (oclr_score_series, oclr_subset_mask).
+    Load the OCLR dual-endpoint labels produced by 02b2_define_oclr_endpoint.py.
 
-    The endpoint is defined by:
-      - One-class logistic regression (OCLR) stemness scores for every cell in
-        GSM7230012_hCiPSCs-0618 (pre-computed, independent of WOT / CellRank2).
-      - High-confidence iPS cells = top 10% by OCLR score within that sample
-        (default in 02b2; see FINAL_THRESHOLD_KEY there for the exact quantile).
-
-    This function searches PROCESSED_DIR for the most recent
-    *_oclr_endpoint_barcodes.txt file and aligns it to adata.obs_names.
-
-    Barcode format compatibility
-    ----------------------------
-    The barcode file contains full project barcodes:
-        GSM7230012_hCiPSCs-0618_AAACCCAAGTCCCAGC-1
-    which must match adata.obs_names exactly.  Any barcodes in the file that
-    are not in adata.obs_names are reported as mismatches (never silently dropped).
-
-    Parameters
-    ----------
-    adata : AnnData — the full project AnnData (all cells, all stages)
+    Searches PROCESSED_DIR for the most recent *_oclr_endpoint_labels_hcipsc.tsv
+    (the authoritative per-cell file from 02b2 v14+).  Falls back to loading
+    separate *_oclr_success_endpoint_barcodes.txt / *_oclr_failure_endpoint_barcodes.txt
+    if the tsv is not found.
 
     Returns
     -------
-    oclr_score_series : pd.Series[float]  — OCLR score per cell (NaN for non-hCiPSC)
-    subset_mask       : pd.Series[bool]   — True for cells in the OCLR top-10% set
+    oclr_score_series    : pd.Series[float] — OCLR score per cell (NaN for non-hCiPSC)
+    success_mask         : pd.Series[bool]  — True = fate_oclr_success endpoint
+    failure_mask         : pd.Series[bool]  — True = fate_oclr_failure endpoint
+    endpoint_label_series: pd.Series[str]   — 'success'|'failure'|'ambiguous'|'unscored'|''
     """
-    # ── Find the most recent barcode list ─────────────────────────────────────
-    _bc_files = sorted(PROCESSED_DIR.glob("*_oclr_endpoint_barcodes.txt"))
-    if not _bc_files:
-        raise FileNotFoundError(
-            f"No OCLR endpoint barcode file found in {PROCESSED_DIR}.\n"
-            f"Run 02b2_define_oclr_endpoint.py first to generate it.\n"
-            f"Expected pattern: *_oclr_endpoint_barcodes.txt"
-        )
-    _bc_file = _bc_files[-1]   # most recent (lexicographic sort on timestamp prefix)
-    print(f"  OCLR barcode file : {_bc_file.name}")
-
-    # ── Load barcode list ─────────────────────────────────────────────────────
-    _bc_df = pd.read_csv(str(_bc_file), sep="\t", index_col=0)
-    _oclr_terminal_barcodes = set(_bc_df.index.astype(str).tolist())
-    _oclr_score_map  = {}
-    if "oclr_score" in _bc_df.columns:
-        _oclr_score_map = _bc_df["oclr_score"].to_dict()
-    print(f"  Terminal barcodes in file : {len(_oclr_terminal_barcodes):,}")
-
-    # ── Also load the per-cell OCLR score file if available ───────────────────
-    _score_files = sorted(PROCESSED_DIR.glob("*_oclr_score_all_hcipsc.csv"))
-    if _score_files:
-        _score_file = _score_files[-1]
-        print(f"  OCLR score file (all hCiPSC) : {_score_file.name}")
-        _all_scores_df = pd.read_csv(str(_score_file), index_col=0)
-        if "oclr_score" in _all_scores_df.columns:
-            _oclr_score_map.update(
-                _all_scores_df["oclr_score"].to_dict()
-            )
-
-    # ── Align to adata.obs_names ──────────────────────────────────────────────
     _proj_barcodes = adata.obs_names.astype(str).tolist()
     _proj_set      = set(_proj_barcodes)
 
-    # Barcodes in file that are NOT in adata
-    _extra_in_file = _oclr_terminal_barcodes - _proj_set
-    # Barcodes in adata that ARE in the terminal set
-    _matched_terminal = _oclr_terminal_barcodes & _proj_set
+    # ── Try authoritative TSV first ───────────────────────────────────────────
+    _label_files = sorted(PROCESSED_DIR.glob("*_oclr_endpoint_labels_hcipsc.tsv"))
+    if _label_files:
+        _lf = _label_files[-1]
+        print(f"  OCLR endpoint labels file : {_lf.name}")
+        _ldf = pd.read_csv(str(_lf), sep="\t", index_col=0)
+        _ldf.index = _ldf.index.astype(str)
 
-    if _extra_in_file:
-        print(f"\n  [WARN] {len(_extra_in_file)} terminal barcodes in file "
-              f"not found in adata.obs_names:")
-        for _b in sorted(_extra_in_file)[:5]:
-            print(f"    {_b!r}  (not in project AnnData)")
-        if len(_extra_in_file) > 5:
-            print(f"    ... ({len(_extra_in_file) - 5} more not shown)")
+        # Build per-cell series aligned to adata
+        _score_map   = _ldf["oclr_score"].to_dict()    if "oclr_score"   in _ldf.columns else {}
+        _label_map   = _ldf["oclr_endpoint_label"].to_dict() if "oclr_endpoint_label" in _ldf.columns else {}
+        _suc_set     = set(_ldf.index[_ldf.get("is_oclr_success_endpoint",
+                           _ldf.get("is_oclr_terminal", pd.Series(0))) == 1].tolist())
+        _fail_set    = set(_ldf.index[_ldf.get("is_oclr_failure_endpoint",
+                           pd.Series(0)) == 1].tolist()) if "is_oclr_failure_endpoint" in _ldf.columns else set()
+
     else:
-        print(f"  Barcode alignment: all terminal barcodes found in adata  ✓")
+        # Fallback: load separate barcode files
+        _suc_files  = sorted(PROCESSED_DIR.glob("*_oclr_success_endpoint_barcodes.txt"))
+        _fail_files = sorted(PROCESSED_DIR.glob("*_oclr_failure_endpoint_barcodes.txt"))
+        if not _suc_files:
+            raise FileNotFoundError(
+                f"No OCLR endpoint label file found in {PROCESSED_DIR}.\n"
+                "Run 02b2_define_oclr_endpoint.py first.\n"
+                "Expected: *_oclr_endpoint_labels_hcipsc.tsv"
+            )
+        print(f"  [FALLBACK] Loading separate barcode files:")
+        _suc_df  = pd.read_csv(str(_suc_files[-1]),  sep="\t", index_col=0)
+        _suc_set = set(_suc_df.index.astype(str).tolist())
+        _fail_set = set()
+        if _fail_files:
+            _fail_df  = pd.read_csv(str(_fail_files[-1]), sep="\t", index_col=0)
+            _fail_set = set(_fail_df.index.astype(str).tolist())
+        _score_map = {}
+        if "oclr_score" in _suc_df.columns:
+            _score_map.update(_suc_df["oclr_score"].to_dict())
+        # Also try all-hcipsc score file
+        _sf = sorted(PROCESSED_DIR.glob("*_oclr_score_all_hcipsc.csv"))
+        if _sf:
+            _sdf = pd.read_csv(str(_sf[-1]), index_col=0)
+            if "oclr_score" in _sdf.columns:
+                _score_map.update(_sdf["oclr_score"].to_dict())
+        _label_map = {}
+        print(f"    SUCCESS: {len(_suc_set):,} barcodes  FAILURE: {len(_fail_set):,} barcodes")
 
-    print(f"\n  Matched terminal barcodes  : {len(_matched_terminal):,}")
-    print(f"  Unmatched (file − adata)   : {len(_extra_in_file):,}")
+    # Report alignment
+    _extra_suc  = _suc_set  - _proj_set
+    _extra_fail = _fail_set - _proj_set
+    if _extra_suc or _extra_fail:
+        print(f"  [WARN] {len(_extra_suc)} success / {len(_extra_fail)} failure barcodes "
+              f"not in adata.obs_names")
+    print(f"  Matched SUCCESS: {len(_suc_set & _proj_set):,}  "
+          f"FAILURE: {len(_fail_set & _proj_set):,}")
 
-    # ── Build per-cell OCLR score series (NaN for non-hCiPSC / unscored cells)─
-    _oclr_scores = pd.Series(
-        [_oclr_score_map.get(bc, np.nan) for bc in _proj_barcodes],
-        index=_proj_barcodes,
-        name="oclr_score",
-        dtype=float,
+    # Build aligned series
+    oclr_score_series = pd.Series(
+        [_score_map.get(bc, np.nan) for bc in _proj_barcodes],
+        index=_proj_barcodes, name="oclr_score", dtype=float,
+    )
+    success_mask = pd.Series(
+        [bc in _suc_set for bc in _proj_barcodes],
+        index=_proj_barcodes, name="oclr_success_endpoint_mask", dtype=bool,
+    )
+    failure_mask = pd.Series(
+        [bc in _fail_set for bc in _proj_barcodes],
+        index=_proj_barcodes, name="oclr_failure_endpoint_mask", dtype=bool,
+    )
+    endpoint_label_series = pd.Series(
+        [_label_map.get(bc, "") for bc in _proj_barcodes],
+        index=_proj_barcodes, name="oclr_endpoint_label", dtype=str,
     )
 
-    # ── Build subset mask (True = in OCLR terminal set) ───────────────────────
-    subset_mask = pd.Series(
-        [bc in _matched_terminal for bc in _proj_barcodes],
-        index=_proj_barcodes,
-        name="oclr_ips_subset_mask",
-        dtype=bool,
-    )
-
-    return _oclr_scores, subset_mask
+    return oclr_score_series, success_mask, failure_mask, endpoint_label_series
 
 
 # =============================================================================
@@ -752,37 +732,34 @@ else:
     print(f"\n  {len(successful_tmaps)} transport map(s) ready for fate computation.")
 
 # =============================================================================
-# 8.  FATE COMPUTATION  (multi-fate biological design, WOT Python API)
+# 8.  FATE COMPUTATION  (OCLR dual-endpoint design, WOT fates() API)
 # =============================================================================
 #
-# Framework (original WOT paper design, Schiebinger et al. 2019)
-# ---------------------------------------------------------------
-# Define K ≥ 2 biologically distinct terminal fate sets; compute per-cell
-# fate probabilities using the WOT TransportMapModel Python API, which
-# handles fate sets at different timepoints (e.g. hCiPSC at day30,
-# StageIII_late at day21) correctly via multi-step backward propagation.
+# Two competing fate sets are defined WITHIN the hCiPSC terminal sample using
+# OCLR stemness labels from 02b2_define_oclr_endpoint.py:
 #
-# Fate sets (stage annotation, independent of OCLR / trajectory models):
-#   fate_hcipsc        — ALL cells with stage_std == "hCiPSC"
-#   fate_stageIII_late — StageIII cells at their latest observed timepoint
+#   fate_oclr_success  — top-10% OCLR within GSM7230012_hCiPSCs-0618
+#   fate_oclr_failure  — bottom-10% OCLR within GSM7230012_hCiPSCs-0618
 #
-# Output columns on adata_full.obs:
-#   p_hcipsc        — fate probability toward hCiPSC
-#   p_stageIII_late — fate probability toward StageIII_late
-#   oclr_score      — OCLR stemness score (annotation only, NaN for non-hCiPSC)
-#   oclr_ips_subset_mask — OCLR top-10% binary flag (annotation only)
+# Both sets are at the same timepoint (day30), satisfying the WOT fates()
+# single-timepoint constraint.  If they span different days, a RuntimeError
+# is raised immediately (not a warning).
+#
+# Output columns on adata_full.obs (primary):
+#   p_oclr_success  — P(cell → high-stemness hCiPSC endpoint)
+#   p_oclr_failure  — P(cell → low-stemness hCiPSC endpoint)
+#   p_oclr_margin   — p_oclr_success − p_oclr_failure  [PRIMARY benchmark metric]
+# Legacy alias:
+#   p_hcipsc        = p_oclr_success  (kept for backward compatibility)
 #
 print(f"\n{_SEP}")
-print("STEP 8  —  Fate computation  (multi-fate biological design, WOT Python API)")
+print("STEP 8  —  Fate computation  (OCLR dual-endpoint, WOT fates() API)")
 print(_SEP)
 
 # Tracking variables initialised here; updated inside the if-block below.
-_n_hcipsc              = 0
-_n_stageIII_late       = 0
-_T_stageIII_latest     = np.nan
-_mask_cipsc            = None
-_p_hcipsc_stats        = {}
-_p_stageIII_stats      = {}
+_n_hcipsc       = 0
+_mask_cipsc     = None
+_p_hcipsc_stats = {}
 
 if not RUN_FATE_COMPUTATION or not successful_tmaps:
     print("  Skipped  (no transport maps available)")
@@ -812,142 +789,161 @@ else:
         RUN_FATE_COMPUTATION = False
 
     # ─────────────────────────────────────────────────────────────────────────
-    # 8b.  Define multi-fate biological terminal sets
+    # 8b.  Load OCLR dual endpoints and define fate sets
     # ─────────────────────────────────────────────────────────────────────────
-    # fate_hcipsc        — ALL hCiPSC cells (fully reprogrammed iPSCs)
-    # fate_stageIII_late — StageIII cells at their latest observed timepoint
+    # fate_oclr_success  — top-10% OCLR within hCiPSC  (loaded from 02b2)
+    # fate_oclr_failure  — bottom-10% OCLR within hCiPSC  (loaded from 02b2)
     #
-    # OCLR scores are attached as obs annotations for external evaluation only.
+    # Both sets must be at the same timepoint (day30 hCiPSC sample).
+    # This satisfies the WOT fates() single-timepoint constraint.
     if RUN_FATE_COMPUTATION:
         print(f"\n{_SEP2}")
-        print("  Step 8b — Define multi-fate biological terminal sets")
+        print("  Step 8b — Load OCLR dual endpoints (from 02b2 output)")
 
-        # ── fate_hcipsc: all hCiPSC cells ────────────────────────────────────
-        _mask_cipsc_bool   = _mask_cipsc.values if hasattr(_mask_cipsc, "values") else _mask_cipsc
-        _n_hcipsc          = int(_mask_cipsc_bool.sum())
-        adata_full.obs["fate_hcipsc"] = _mask_cipsc_bool.astype(int)
-
-        print(f"\n  fate_hcipsc (stage_std == 'hCiPSC') : {_n_hcipsc:,} cells")
-        if _n_hcipsc < MIN_FATE_CELLS:
-            print(f"  !! FATAL: Only {_n_hcipsc} hCiPSC cells (need ≥ {MIN_FATE_CELLS}).")
-            RUN_FATE_COMPUTATION = False
-
-    if RUN_FATE_COMPUTATION:
-        # ── fate_stageIII_late: StageIII at latest observed timepoint ─────────
-        _mask_stageIII_all = (adata_full.obs["stage_std"] == "StageIII").values
-        if _mask_stageIII_all.any():
-            _T_stageIII_latest  = float(
-                adata_full.obs.loc[_mask_stageIII_all, "day"].max()
-            )
-            _mask_stageIII_late = (
-                _mask_stageIII_all &
-                (adata_full.obs["day"].values == _T_stageIII_latest)
-            )
-            _n_stageIII_late = int(_mask_stageIII_late.sum())
-        else:
-            _mask_stageIII_late = np.zeros(adata_full.n_obs, dtype=bool)
-            _n_stageIII_late    = 0
-            _T_stageIII_latest  = np.nan
-
-        adata_full.obs["fate_stageIII_late"] = _mask_stageIII_late.astype(int)
-
-        print(f"  fate_stageIII_late (StageIII @ day {_T_stageIII_latest}) : "
-              f"{_n_stageIII_late:,} cells")
-        if _n_stageIII_late < MIN_FATE_CELLS:
-            print(f"  !! FATAL: Only {_n_stageIII_late} StageIII_late cells "
-                  f"(need ≥ {MIN_FATE_CELLS}).")
-            print(f"     Check that 'StageIII' cells are present in obs['stage_std'].")
-            print(f"     Observed values: {sorted(adata_full.obs['stage_std'].unique())}")
-            RUN_FATE_COMPUTATION = False
-
-    if RUN_FATE_COMPUTATION:
-        # ── OCLR scores: load as obs annotation only ──────────────────────────
-        print(f"\n{_SEP2}")
-        print("  Step 8b (cont.) — Attach OCLR scores as obs annotation")
-        print(f"  (Annotation only — NOT used to define fate sets)")
+        _mask_cipsc_bool = (
+            _mask_cipsc.values if hasattr(_mask_cipsc, "values") else _mask_cipsc
+        )
+        _n_hcipsc = int(_mask_cipsc_bool.sum())
+        print(f"  hCiPSC cells in adata (stage_std == 'hCiPSC') : {_n_hcipsc:,}")
 
         try:
-            _oclr_score_series, _oclr_subset_mask = load_oclr_endpoint(adata_full)
-            adata_full.obs["oclr_score"]           = _oclr_score_series.values
-            adata_full.obs["oclr_ips_subset_mask"] = _oclr_subset_mask.astype(int).values
-            _n_oclr_annotated = int(np.isfinite(_oclr_score_series.values).sum())
-            print(f"  OCLR scores attached: {_n_oclr_annotated:,} cells have finite scores")
+            (
+                _oclr_score_series,
+                _oclr_success_mask,
+                _oclr_failure_mask,
+                _oclr_label_series,
+            ) = load_oclr_endpoints(adata_full)
+
+            adata_full.obs["oclr_score"]                = _oclr_score_series.values
+            adata_full.obs["oclr_success_endpoint_mask"]= _oclr_success_mask.astype(int).values
+            adata_full.obs["oclr_failure_endpoint_mask"]= _oclr_failure_mask.astype(int).values
+            adata_full.obs["oclr_endpoint_label"]       = _oclr_label_series.values
+            # Legacy alias
+            adata_full.obs["oclr_ips_subset_mask"]      = _oclr_success_mask.astype(int).values
+
+            _n_suc = int(_oclr_success_mask.sum())
+            _n_fail= int(_oclr_failure_mask.sum())
+            print(f"  fate_oclr_success : {_n_suc:,} cells")
+            print(f"  fate_oclr_failure : {_n_fail:,} cells")
+
+            if _n_suc < MIN_FATE_CELLS:
+                print(f"  !! FATAL: Only {_n_suc} success endpoint cells "
+                      f"(need ≥ {MIN_FATE_CELLS}).")
+                RUN_FATE_COMPUTATION = False
+            if _n_fail < MIN_FATE_CELLS:
+                print(f"  !! FATAL: Only {_n_fail} failure endpoint cells "
+                      f"(need ≥ {MIN_FATE_CELLS}).")
+                RUN_FATE_COMPUTATION = False
+
+            # Verify both endpoints are at the same day
+            _suc_days  = sorted(adata_full.obs.loc[
+                _oclr_success_mask.values.astype(bool), "day"
+            ].unique())
+            _fail_days = sorted(adata_full.obs.loc[
+                _oclr_failure_mask.values.astype(bool), "day"
+            ].unique())
+            if len(set(_suc_days) | set(_fail_days)) > 1:
+                raise RuntimeError(
+                    "OCLR success and failure endpoints span different timepoints.\n"
+                    f"  Success endpoint days : {_suc_days}\n"
+                    f"  Failure endpoint days : {_fail_days}\n"
+                    "Both endpoints must be within the same hCiPSC terminal sample "
+                    "(same day).\nThe WOT fates() API requires all population objects "
+                    "at a single timepoint.\n"
+                    "Verify that 02b2_define_oclr_endpoint.py is restricting scoring "
+                    "to a single sample (ENDPOINT_SAMPLE_ID = "
+                    f"'{OCLR_ENDPOINT_SAMPLE_ID}')."
+                )
+            _endpoint_day = float(_suc_days[0]) if _suc_days else np.nan
+            print(f"  Endpoint timepoint (day) : {_endpoint_day}")
+
         except FileNotFoundError as _e:
-            print(f"  [WARN] OCLR score file not found — skipping annotation.")
-            print(f"    {_e}")
-            adata_full.obs["oclr_score"]           = np.nan
-            adata_full.obs["oclr_ips_subset_mask"] = 0
+            print(f"  !! FATAL: OCLR endpoint file not found:\n    {_e}")
+            print(f"  Run 02b2_define_oclr_endpoint.py first.")
+            RUN_FATE_COMPUTATION = False
+            _oclr_success_mask = pd.Series(
+                np.zeros(adata_full.n_obs, dtype=bool),
+                index=adata_full.obs_names,
+            )
+            _oclr_failure_mask = _oclr_success_mask.copy()
+            _n_suc = _n_fail = 0
+            _endpoint_day = np.nan
+
+        adata_full.obs["fate_oclr_success"] = _oclr_success_mask.astype(int).values
+        adata_full.obs["fate_oclr_failure"] = _oclr_failure_mask.astype(int).values
+        # Legacy alias
+        adata_full.obs["fate_hcipsc"]       = _oclr_success_mask.astype(int).values
 
     # ─────────────────────────────────────────────────────────────────────────
-    # 8c.  Build cell_set_matrix for WOT Python API
+    # 8c.  Build cell_sets dict for WOT fates() API
+    # ─────────────────────────────────────────────────────────────────────────
+    # wot.tmap.TransportMapModel.fates(populations) takes a list of Population
+    # objects all at the same timepoint.
+    # population_from_cell_sets(cell_sets_dict, at_time) converts a dict of
+    # {name: [cell_ids]} to the required Population list.
+    if RUN_FATE_COMPUTATION:
+        print(f"\n{_SEP2}")
+        print("  Step 8c — Build cell_sets dict for WOT fates() API")
+
+        _cell_bcs = adata_full.obs_names.astype(str).tolist()
+
+        _success_barcodes = [
+            bc for bc in _cell_bcs
+            if bc in _oclr_success_mask.index and bool(_oclr_success_mask.loc[bc])
+        ]
+        _failure_barcodes = [
+            bc for bc in _cell_bcs
+            if bc in _oclr_failure_mask.index and bool(_oclr_failure_mask.loc[bc])
+        ]
+
+        _cell_sets_dict = {
+            "fate_oclr_success": _success_barcodes,
+            "fate_oclr_failure": _failure_barcodes,
+        }
+        print(f"  fate_oclr_success : {len(_success_barcodes):,} cells  "
+              f"(at day {_endpoint_day})")
+        print(f"  fate_oclr_failure : {len(_failure_barcodes):,} cells  "
+              f"(at day {_endpoint_day})")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 8d.  Fate computation — WOT Python API  (fates() method)
+    # ─────────────────────────────────────────────────────────────────────────
+    #
+    # wot.tmap.TransportMapModel.from_directory() loads the transport maps.
+    # .population_from_cell_sets(cell_sets_dict, at_time) builds Population list.
+    # .fates(populations) propagates backward and returns an AnnData with
+    #   obs = all project cells, var = fate names, X[i,k] = fate probability.
+    #
+    # Both endpoints are at the same timepoint (day30) — fates() constraint met.
     # ─────────────────────────────────────────────────────────────────────────
     if RUN_FATE_COMPUTATION:
         print(f"\n{_SEP2}")
-        print("  Step 8c — Build cell_set_matrix (cells × fates, binary)")
+        print("  Step 8d — Fate computation  (WOT fates() API)")
 
-        _fate_names = ["fate_hcipsc", "fate_stageIII_late"]
-        _cell_bcs   = adata_full.obs_names.astype(str).tolist()
-
-        _cell_set_df = pd.DataFrame(
-            0, index=_cell_bcs, columns=_fate_names, dtype=np.float32
-        )
-        _cell_set_df.loc[
-            adata_full.obs_names[_mask_cipsc_bool].astype(str), "fate_hcipsc"
-        ] = 1.0
-        if _n_stageIII_late > 0:
-            _cell_set_df.loc[
-                adata_full.obs_names[_mask_stageIII_late].astype(str),
-                "fate_stageIII_late"
-            ] = 1.0
-
-        _n_hcipsc_in_csm = int((_cell_set_df["fate_hcipsc"] > 0).sum())
-        _n_s3_in_csm     = int((_cell_set_df["fate_stageIII_late"] > 0).sum())
-        print(f"  cell_set_matrix : {len(_cell_bcs):,} cells × {len(_fate_names)} fates")
-        print(f"    fate_hcipsc entries        : {_n_hcipsc_in_csm:,}")
-        print(f"    fate_stageIII_late entries : {_n_s3_in_csm:,}")
-
-        _cell_set_adata = ad.AnnData(
-            X=_cell_set_df.values,
-            obs=pd.DataFrame(index=_cell_set_df.index),
-            var=pd.DataFrame(index=_cell_set_df.columns),
-        )
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # 8d.  Fate computation — WOT Python API
-    # ─────────────────────────────────────────────────────────────────────────
-    #
-    # wot.tmap.TransportMapModel.from_directory() loads the transport maps
-    # produced by the WOT CLI (step 6) as a linked chain.
-    #
-    # .get_fate_probabilities(cell_set_matrix) propagates fate indicators
-    # backward through the chain, handling fate sets at different timepoints
-    # correctly (e.g., fate_hcipsc at day30, fate_stageIII_late at day21).
-    #
-    # Returns an AnnData: obs = all project cells, var = fate names,
-    # X[i, k] = fate probability of cell i toward fate k.
-    # ─────────────────────────────────────────────────────────────────────────
-    if RUN_FATE_COMPUTATION:
-        print(f"\n{_SEP2}")
-        print("  Step 8d — Fate computation  (WOT Python API)")
-
-        # Load transport map model from directory
+        # Load transport map model
         try:
             _tmap_model = wot.tmap.TransportMapModel.from_directory(
                 str(TMAPS_DIR), prefix="tmaps"
             )
             print(f"  TransportMapModel loaded from : {TMAPS_DIR.name}/")
         except AttributeError:
-            # Older WOT versions may have a different module path
             import wot.tmap as _wot_tmap
             _tmap_model = _wot_tmap.TransportMapModel.from_directory(
                 str(TMAPS_DIR), prefix="tmaps"
             )
             print(f"  TransportMapModel (fallback import) loaded from : {TMAPS_DIR.name}/")
 
-        # Compute fate probabilities
-        print(f"  Computing get_fate_probabilities() ...")
-        _fate_ds = _tmap_model.get_fate_probabilities(_cell_set_adata)
-        # _fate_ds: AnnData with obs=cells, var=fates, X=fate_prob matrix
+        # Build Population objects from cell_sets dict
+        print(f"  Building Population objects (at_time={_endpoint_day}) …")
+        _populations = _tmap_model.population_from_cell_sets(
+            _cell_sets_dict, at_time=_endpoint_day
+        )
+        print(f"  Populations built : {[p.name for p in _populations]}")
+
+        # Compute fate probabilities using fates()
+        print(f"  Computing fates() …")
+        _fate_ds = _tmap_model.fates(_populations)
+        # _fate_ds: AnnData — obs = all cells, var = fate names, X = fate probs
 
         print(f"  Fate probability AnnData : {_fate_ds.n_obs:,} cells × {_fate_ds.n_vars} fates")
         print(f"  Fate names               : {list(_fate_ds.var_names)}")
@@ -959,58 +955,62 @@ else:
             columns=_fate_ds.var_names.astype(str),
         )
 
-        _p_hcipsc_vec     = np.full(adata_full.n_obs, np.nan, dtype=np.float64)
-        _p_stageIII_vec   = np.full(adata_full.n_obs, np.nan, dtype=np.float64)
+        _p_success_vec = np.full(adata_full.n_obs, np.nan, dtype=np.float64)
+        _p_failure_vec = np.full(adata_full.n_obs, np.nan, dtype=np.float64)
 
         for _i, _bc in enumerate(adata_full.obs_names.astype(str)):
             if _bc in _fate_df.index:
-                if "fate_hcipsc" in _fate_df.columns:
-                    _p_hcipsc_vec[_i] = float(_fate_df.loc[_bc, "fate_hcipsc"])
-                if "fate_stageIII_late" in _fate_df.columns:
-                    _p_stageIII_vec[_i] = float(_fate_df.loc[_bc, "fate_stageIII_late"])
+                if "fate_oclr_success" in _fate_df.columns:
+                    _p_success_vec[_i] = float(_fate_df.loc[_bc, "fate_oclr_success"])
+                if "fate_oclr_failure" in _fate_df.columns:
+                    _p_failure_vec[_i] = float(_fate_df.loc[_bc, "fate_oclr_failure"])
 
-        adata_full.obs["p_hcipsc"]        = _p_hcipsc_vec
-        adata_full.obs["p_stageIII_late"] = _p_stageIII_vec
+        # Primary columns
+        adata_full.obs["p_oclr_success"] = _p_success_vec
+        adata_full.obs["p_oclr_failure"] = _p_failure_vec
+        adata_full.obs["p_oclr_margin"]  = _p_success_vec - _p_failure_vec
+        # Legacy alias
+        adata_full.obs["p_hcipsc"]       = _p_success_vec
 
         # ── Sanity checks ─────────────────────────────────────────────────────
-        _n_finite_hcipsc  = int(np.isfinite(_p_hcipsc_vec).sum())
-        _n_finite_s3      = int(np.isfinite(_p_stageIII_vec).sum())
-        _early_mask_bool  = ~_mask_cipsc_bool & np.isfinite(_p_hcipsc_vec)
-        _p_early_hcipsc   = _p_hcipsc_vec[_early_mask_bool]
+        _n_fin_suc = int(np.isfinite(_p_success_vec).sum())
+        _n_fin_fail= int(np.isfinite(_p_failure_vec).sum())
+        _non_terminal_mask = ~_mask_cipsc_bool & np.isfinite(_p_success_vec)
+        _p_suc_early = _p_success_vec[_non_terminal_mask]
 
-        print(f"\n  p_hcipsc finite values        : {_n_finite_hcipsc:,}  "
-              f"({_n_finite_hcipsc / adata_full.n_obs:.1%})")
-        print(f"  p_stageIII_late finite values : {_n_finite_s3:,}  "
-              f"({_n_finite_s3 / adata_full.n_obs:.1%})")
+        print(f"\n  p_oclr_success finite : {_n_fin_suc:,}  "
+              f"({_n_fin_suc / adata_full.n_obs:.1%})")
+        print(f"  p_oclr_failure finite : {_n_fin_fail:,}  "
+              f"({_n_fin_fail / adata_full.n_obs:.1%})")
 
-        if len(_p_early_hcipsc) > 0:
+        if len(_p_suc_early) > 0:
             _p_hcipsc_stats = {
-                "min":    float(np.nanmin(_p_early_hcipsc)),
-                "median": float(np.nanmedian(_p_early_hcipsc)),
-                "max":    float(np.nanmax(_p_early_hcipsc)),
+                "min":    float(np.nanmin(_p_suc_early)),
+                "median": float(np.nanmedian(_p_suc_early)),
+                "max":    float(np.nanmax(_p_suc_early)),
             }
-            print(f"  p_hcipsc (non-terminal cells): "
+            print(f"  p_oclr_success (non-terminal cells): "
                   f"min={_p_hcipsc_stats['min']:.4f}  "
                   f"median={_p_hcipsc_stats['median']:.4f}  "
                   f"max={_p_hcipsc_stats['max']:.4f}")
-
-            if _p_early_hcipsc.min() > 0.99:
-                print("  !! WARNING: p_hcipsc ≈ 1.0 for all non-terminal cells — "
-                      "degenerate!  Check that fate_stageIII_late is non-empty.")
-            elif _p_early_hcipsc.max() < 0.01:
-                print("  !! WARNING: p_hcipsc ≈ 0.0 for all non-terminal cells — "
-                      "inverse collapse.  Check barcode matching.")
+            if _p_suc_early.min() > 0.99:
+                print("  !! WARNING: p_oclr_success ≈ 1.0 everywhere — degenerate!")
+            elif _p_suc_early.max() < 0.01:
+                print("  !! WARNING: p_oclr_success ≈ 0.0 everywhere — check barcodes.")
             else:
-                print("  ✓  p_hcipsc shows variation across non-terminal cells — "
-                      "non-degenerate.")
+                print("  ✓  p_oclr_success shows variation — non-degenerate.")
 
     # ── Save adata_full with all new columns ──────────────────────────────────
     if RUN_FATE_COMPUTATION:
         _out_h5ad = METRICS_DIR / f"{TIMESTAMP}_GSE230659_wot_fates.h5ad"
         adata_full.write_h5ad(str(_out_h5ad))
         print(f"\n  Saved adata_full with fate columns → {_out_h5ad.name}")
-        print(f"    obs columns added: p_hcipsc, p_stageIII_late, "
-              f"fate_hcipsc, fate_stageIII_late, oclr_score, oclr_ips_subset_mask")
+        print(f"    obs columns added (primary): "
+              f"p_oclr_success, p_oclr_failure, p_oclr_margin, "
+              f"fate_oclr_success, fate_oclr_failure, "
+              f"oclr_score, oclr_success_endpoint_mask, oclr_failure_endpoint_mask, "
+              f"oclr_endpoint_label")
+        print(f"    obs columns added (legacy): p_hcipsc, fate_hcipsc, oclr_ips_subset_mask")
 
 # =============================================================================
 # 9.  PLOTTING
@@ -1046,11 +1046,12 @@ else:
     except Exception as _ue:
         print(f"  UMAP computation failed: {_ue}")
 
-    # ── Plot A: continuous day vs p_hcipsc scatter ────────────────────────────
+    # ── Plot A: continuous day vs p_oclr_success scatter ─────────────────────
     try:
         _fig, _ax = plt.subplots(figsize=(8, 5))
-        _sc_data  = adata_full.obs[["day", "p_hcipsc", "stage_std"]].dropna(
-            subset=["p_hcipsc"]
+        _plot_col = "p_oclr_success" if "p_oclr_success" in adata_full.obs.columns else "p_hcipsc"
+        _sc_data  = adata_full.obs[["day", _plot_col, "stage_std"]].dropna(
+            subset=[_plot_col]
         )
         for _st, _col in STAGE_PALETTE.items():
             _mask_st = _sc_data["stage_std"].apply(
@@ -1058,17 +1059,17 @@ else:
             )
             _sub = _sc_data[_mask_st]
             if len(_sub):
-                _ax.scatter(_sub["day"], _sub["p_hcipsc"],
+                _ax.scatter(_sub["day"], _sub[_plot_col],
                             c=_col, s=2, alpha=0.3, label=_st, rasterized=True)
         _ax.set_xlabel("Day")
-        _ax.set_ylabel("p(hCiPSC fate)")
-        _ax.set_title("WOT fate probability — transition toward hCiPSC  (multi-fate)")
+        _ax.set_ylabel(_plot_col)
+        _ax.set_title("WOT p_oclr_success — OCLR dual-endpoint fate probability")
         _ax.legend(markerscale=4, fontsize=8)
         _fig.tight_layout()
         _fig_path_A = FIGURES_DIR / f"{TIMESTAMP}_fate_prob_day.png"
         _fig.savefig(str(_fig_path_A), dpi=150, bbox_inches="tight")
         plt.close(_fig)
-        print(f"  Plot A (day vs p_hcipsc) → {_fig_path_A.name}")
+        print(f"  Plot A (day vs {_plot_col}) → {_fig_path_A.name}")
     except Exception as _pe:
         print(f"  Plot A failed: {_pe}")
 
@@ -1104,27 +1105,39 @@ else:
         except Exception as _pe:
             print(f"  Plot B failed: {_pe}")
 
-    # ── Plot C: continuous p_hcipsc on UMAP ──────────────────────────────────
+    # ── Plot C: p_oclr_success on UMAP ───────────────────────────────────────
     if "X_umap" in adata_full.obsm:
         try:
-            _fig_C, _ax_C = plt.subplots(figsize=(7, 6))
-            _p_all  = adata_full.obs["p_hcipsc"].values
-            _finite = np.isfinite(_p_all)
-            _sc_C   = _ax_C.scatter(
-                adata_full.obsm["X_umap"][_finite, 0],
-                adata_full.obsm["X_umap"][_finite, 1],
-                c=_p_all[_finite], cmap="RdYlBu_r",
-                s=3, alpha=0.5, vmin=0, vmax=1, rasterized=True, linewidths=0,
-            )
-            plt.colorbar(_sc_C, ax=_ax_C, label="p(hCiPSC fate)")
-            _ax_C.set_xlabel("UMAP 1"); _ax_C.set_ylabel("UMAP 2")
-            _ax_C.set_title("WOT p(hCiPSC) — continuous  (RdYlBu_r)")
-            _ax_C.set_xticks([]); _ax_C.set_yticks([])
+            _fig_C, _axes_C = plt.subplots(1, 2, figsize=(14, 6))
+            for _ci, (_pcol, _clabel) in enumerate([
+                ("p_oclr_success", "p_oclr_success"),
+                ("p_oclr_margin",  "p_oclr_margin (success − failure)"),
+            ]):
+                if _pcol not in adata_full.obs.columns:
+                    continue
+                _p_all  = adata_full.obs[_pcol].values.astype(float)
+                _finite = np.isfinite(_p_all)
+                _cmap   = "RdYlBu_r" if _pcol == "p_oclr_success" else "RdBu_r"
+                _vcent  = None if _pcol == "p_oclr_success" else 0.0
+                _vabs   = np.nanmax(np.abs(_p_all[_finite])) if _vcent == 0.0 else 1.0
+                _sc = _axes_C[_ci].scatter(
+                    adata_full.obsm["X_umap"][_finite, 0],
+                    adata_full.obsm["X_umap"][_finite, 1],
+                    c=_p_all[_finite], cmap=_cmap,
+                    s=3, alpha=0.5,
+                    vmin=-_vabs if _vcent == 0.0 else 0,
+                    vmax= _vabs if _vcent == 0.0 else 1,
+                    rasterized=True, linewidths=0,
+                )
+                plt.colorbar(_sc, ax=_axes_C[_ci], label=_clabel)
+                _axes_C[_ci].set_xlabel("UMAP 1"); _axes_C[_ci].set_ylabel("UMAP 2")
+                _axes_C[_ci].set_title(f"WOT {_pcol}")
+                _axes_C[_ci].set_xticks([]); _axes_C[_ci].set_yticks([])
             _fig_C.tight_layout()
-            _fig_path_C = FIGURES_DIR / f"{TIMESTAMP}_umap_p_hcipsc.png"
+            _fig_path_C = FIGURES_DIR / f"{TIMESTAMP}_umap_p_oclr.png"
             _fig_C.savefig(str(_fig_path_C), dpi=150, bbox_inches="tight")
             plt.close(_fig_C)
-            print(f"  Plot C (UMAP p_hcipsc) → {_fig_path_C.name}")
+            print(f"  Plot C (UMAP p_oclr) → {_fig_path_C.name}")
         except Exception as _pe:
             print(f"  Plot C failed: {_pe}")
 
@@ -1142,18 +1155,16 @@ print(f"  EPSILON used               : {EPSILON}  "
 print(f"  Transport maps found       : {len(successful_tmaps)}")
 print(f"  USE_GROWTH_RATES           : {USE_GROWTH_RATES}")
 print()
-print(f"  ── Fate computation  (multi-fate biological design, WOT Python API) ───────")
-print(f"  fate_hcipsc                : {_n_hcipsc:,} cells  "
-      f"(ALL hCiPSC; biological fate target)")
-print(f"  fate_stageIII_late         : {_n_stageIII_late:,} cells  "
-      f"(StageIII @ day {_T_stageIII_latest}; competing biological fate)")
-if _p_hcipsc_stats:
-    print(f"  p_hcipsc (non-terminal)    : "
+print(f"  ── Fate computation  (OCLR dual-endpoint, WOT fates() API) ─────────────")
+print(f"  fate_oclr_success  : "
+      + (f"{_n_suc:,} cells  (top-10% OCLR within hCiPSC)" if RUN_FATE_COMPUTATION else "skipped"))
+print(f"  fate_oclr_failure  : "
+      + (f"{_n_fail:,} cells  (bottom-10% OCLR within hCiPSC)" if RUN_FATE_COMPUTATION else "skipped"))
+if RUN_FATE_COMPUTATION and _p_hcipsc_stats:
+    print(f"  p_oclr_success (non-terminal): "
           f"min={_p_hcipsc_stats['min']:.4f}  "
           f"median={_p_hcipsc_stats['median']:.4f}  "
           f"max={_p_hcipsc_stats['max']:.4f}")
-print(f"  OCLR annotation            : obs['oclr_score'] + obs['oclr_ips_subset_mask']")
-print(f"    (external biological anchor for evaluation in script 05 only)")
 print()
 print(f"  UMAP                       : "
       + ("newly computed" if _umap_recomputed else "reused from obsm"))
@@ -1166,16 +1177,18 @@ if not successful_tmaps:
     print(f"     4. Try LOCAL_PCA=5 or FORCE_DENSE_FLOAT64=True.")
 elif not RUN_FATE_COMPUTATION:
     print(f"\n  !! WOT OT succeeded but fate computation was skipped.")
-    print(f"     Check warnings above  "
-          f"(fate_hcipsc: {_n_hcipsc}, fate_stageIII_late: {_n_stageIII_late}).")
+    print(f"     Check warnings above (OCLR endpoint file missing or too few cells).")
 else:
-    print(f"\n  ✓  WOT CLI + multi-fate computation complete.")
+    print(f"\n  ✓  WOT CLI + OCLR dual-endpoint fate computation complete.")
     print(f"     Key outputs (adata_full.obs):")
-    print(f"       p_hcipsc            : fate probability toward hCiPSC")
-    print(f"       p_stageIII_late     : fate probability toward StageIII_late")
-    print(f"       fate_hcipsc         : binary fate membership (0/1)")
-    print(f"       fate_stageIII_late  : binary fate membership (0/1)")
-    print(f"       oclr_score          : OCLR stemness score (annotation, NaN for non-hCiPSC)")
-    print(f"       oclr_ips_subset_mask: OCLR top-10% flag (annotation)")
+    print(f"       p_oclr_success       : P(cell → high-stemness hCiPSC fate)")
+    print(f"       p_oclr_failure       : P(cell → low-stemness hCiPSC fate)")
+    print(f"       p_oclr_margin        : p_oclr_success − p_oclr_failure  [PRIMARY metric]")
+    print(f"       fate_oclr_success    : binary endpoint membership")
+    print(f"       fate_oclr_failure    : binary endpoint membership")
+    print(f"       oclr_score           : continuous OCLR stemness score")
+    print(f"       oclr_success_endpoint_mask / oclr_failure_endpoint_mask: binary flags")
+    print(f"       oclr_endpoint_label  : 'success'|'failure'|'ambiguous'|'unscored'")
+    print(f"     Legacy aliases: p_hcipsc = p_oclr_success, fate_hcipsc = fate_oclr_success")
     _h5ad_out = METRICS_DIR / f"{TIMESTAMP}_GSE230659_wot_fates.h5ad"
     print(f"     h5ad saved to : {_h5ad_out.name}")
