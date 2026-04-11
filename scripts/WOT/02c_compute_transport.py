@@ -90,7 +90,7 @@ H5AD_PATH = find_latest("*_GSE230659_wot_gr.h5ad")
 # ══════════════════════════════════════════════════════════════════════════════
 # WOT CLI PARAMETERS
 # ══════════════════════════════════════════════════════════════════════════════
-EPSILON:   float = 0.05
+EPSILON:   float = 80.0
 LAMBDA1:   float = 1.0
 LAMBDA2:   float = 50.0
 LOCAL_PCA: int   = 30
@@ -570,6 +570,11 @@ if "day" in adata_wot.obs.columns:
     adata_wot.obs = adata_wot.obs.rename(columns={"day": "day_in_stage"})
     print("  Renamed obs['day'] → 'day_in_stage'  (avoids WOT internal collision)")
 
+if "growth_rate" in adata_wot.obs.columns:
+    adata_wot.obs = adata_wot.obs.drop(columns=["growth_rate"])
+    print("  Removed 'growth_rate' from ExprMatrix.h5ad obs "
+          "— provided via external growth-rate file (cell_growth_rate column)")
+
 if FORCE_DENSE_FLOAT64:
     _Xd = (adata_wot.X.toarray().astype(np.float64) if sp.issparse(adata_wot.X)
            else np.asarray(adata_wot.X, dtype=np.float64))
@@ -598,12 +603,12 @@ print(f"  cell_days.txt    → {CELL_DAYS_PATH.name}  "
 # ── c) growth_rates.txt ───────────────────────────────────────────────────────
 GROWTH_RATES_PATH = WOT_INPUTS / "growth_rates.txt"
 _gr = pd.DataFrame({
-    "id":          adata.obs_names.astype(str),
-    "growth_rate": adata.obs["growth_rate"].values.astype(float),
+    "id":               adata.obs_names.astype(str),
+    "cell_growth_rate": adata.obs["growth_rate"].values.astype(float),
 })
 _gr.to_csv(str(GROWTH_RATES_PATH), sep="\t", index=False)
 print(f"  growth_rates.txt → {GROWTH_RATES_PATH.name}  "
-      f"(all zero: {(_gr['growth_rate'] == 0).all()})")
+      f"(column: 'cell_growth_rate';  all zero: {(_gr['cell_growth_rate'] == 0).all()})")
 
 # =============================================================================
 # 6.  RUN WOT CLI  via subprocess
@@ -662,7 +667,8 @@ _cmd = (
     ]
 )
 if USE_GROWTH_RATES:
-    _cmd += ["--cell_growth_rates", str(GROWTH_RATES_PATH)]
+    _cmd += ["--cell_growth_rates",       str(GROWTH_RATES_PATH),
+             "--cell_growth_rates_field", "cell_growth_rate"]
 
 print(f"\n  Command:\n    {' '.join(_cmd)}")
 print(f"\n  Running … (may take several minutes for large datasets)")
