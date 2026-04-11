@@ -1,0 +1,7 @@
+macrostate	n_assigned_cells	is_auto_terminal	mean_day	frac_last_day	mean_p_iPSC	frac_ips_stage	mean_fate_ips	dominant_stage	dominant_stage_frac	dominant_leiden	dominant_leiden_frac	evidence_stage	evidence_fate_ips	evidence_p_iPSC	evidence_late	evidence_count	evidence_score	manual_added_terminal	is_final_terminal	is_ips_terminal	ips_selection_rule
+15_1	22	True	29.818181818181817	0.9090909090909091	0.9237213387128255	0.9090909090909091	0.8636363636363636	hCiPSCs	0.9090909090909091	15	0.9090909090909091	True	True	True	True	3	0.8968394255872971	False	True	True	strict evidence: final terminal + last_day>=0.8 + at least 2/3 of (frac_ips_stage, mean_fate_ips, mean_p_iPSC); top-2 by evidence_score
+15_2	30	True	30.0	1.0	0.7333333333333333	1.0	0.7333333333333333	hCiPSCs	1.0	15	1.0	True	True	True	True	3	0.8400000000000001	False	True	False	
+0	30	True	16.921666666666667	0.16666666666666666	0.31625583082038145	0.16666666666666666	0.13333333333333333	StageIII	0.43333333333333335	0	0.8333333333333334	False	False	False	False	0	0.19239729103842867	False	True	False	
+15_3	30	True	30.0	1.0	0.1	1.0	0.1	hCiPSCs	1.0	15	1.0	True	False	False	True	1	0.45999999999999996	False	True	False	
+18	30	True	30.0	1.0	0.5	1.0	0.5	hCiPSCs	1.0	18	1.0	True	True	True	True	3	0.7	False	True	False	
+15_4	30	True	30.0	1.0	0.7666666666666667	1.0	0.7666666666666667	hCiPSCs	1.0	15	1.0	True	True	True	True	3	0.86	False	True	True	strict evidence: final terminal + last_day>=0.8 + at least 2/3 of (frac_ips_stage, mean_fate_ips, mean_p_iPSC); top-2 by evidence_score

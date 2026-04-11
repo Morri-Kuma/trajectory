@@ -1,0 +1,11 @@
+metric	value
+n_terminal_cells	30.0
+n_dynamic_positive	30.0
+n_biology_positive	13.0
+n_overlap	13.0
+n_dynamic_only	17.0
+n_biology_only	0.0
+n_terminal_neither	0.0
+jaccard	0.43333333333333335
+overlap_over_dynamic	0.43333333333333335
+overlap_over_biology	1.0
