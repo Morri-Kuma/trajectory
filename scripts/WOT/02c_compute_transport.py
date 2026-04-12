@@ -370,7 +370,7 @@ if "day" not in adata_full.obs.columns:
     else:
         raise ValueError("Neither 'day' nor 'abs_day' in obs. Re-run 02a/02b.")
 
-REQUIRED_OBS = ["day", "growth_rate", "stage", "stage_day_label"]
+REQUIRED_OBS = ["day", "cell_growth_rate", "stage", "stage_day_label"]
 _missing = [c for c in REQUIRED_OBS if c not in adata_full.obs.columns]
 if _missing:
     raise ValueError(f"Required obs columns missing: {_missing}")
@@ -382,15 +382,37 @@ if np.isnan(_samp).any() or np.isinf(_samp).any():
     raise ValueError("adata.X contains NaN/Inf in first 500 cells. Re-run preprocessing.")
 print(f"  NaN/Inf check (500-cell sample) : PASSED")
 
-# ── Growth-rate zeroing / clipping ────────────────────────────────────────────
-_gr_raw     = adata_full.obs["growth_rate"].values.astype(float)
-_gr_clipped = np.clip(_gr_raw, -GR_CLIP, GR_CLIP)
-adata_full.obs["growth_rate"] = _gr_clipped
+# ── Growth prior: cell_growth_rate is WOT's multiplicative growth factor ───────
+# Must be strictly positive.  log_growth_rate is used for reporting only.
+# USE_GROWTH_RATES=False  →  neutral prior: 1.0 for every cell (no mass gain/loss)
+# USE_GROWTH_RATES=True   →  use cell_growth_rate = exp(log_growth_rate) from 02b
 if not USE_GROWTH_RATES:
-    adata_full.obs["growth_rate"] = 0.0
-    print("  Growth rates : set to 0.0  (USE_GROWTH_RATES=False)")
+    adata_full.obs["cell_growth_rate"] = 1.0
+    print("  Growth prior : cell_growth_rate = 1.0 (neutral multiplicative; "
+          "USE_GROWTH_RATES=False)")
 else:
-    print(f"  Growth rates : [{_gr_clipped.min():.4f}, {_gr_clipped.max():.4f}]  (clipped)")
+    _cgr = adata_full.obs["cell_growth_rate"].values.astype(float)
+    _n_nan    = int((~np.isfinite(_cgr)).sum())
+    _n_nonpos = int((_cgr <= 0).sum())
+    if _n_nan > 0:
+        raise ValueError(
+            f"cell_growth_rate contains {_n_nan} non-finite values. "
+            "Re-run 02b_estimate_growth_rates.py."
+        )
+    if _n_nonpos > 0:
+        raise ValueError(
+            f"cell_growth_rate contains {_n_nonpos} non-positive values. "
+            "WOT requires strictly positive multiplicative growth factors. "
+            "Re-run 02b_estimate_growth_rates.py."
+        )
+    _lgr_col = ("log_growth_rate"
+                if "log_growth_rate" in adata_full.obs.columns else None)
+    if _lgr_col:
+        _lgr = adata_full.obs[_lgr_col].values.astype(float)
+        print(f"  Growth prior : USE_GROWTH_RATES=True")
+        print(f"    log_growth_rate  : [{_lgr.min():+.6f}, {_lgr.max():+.6f}]  (reporting only)")
+    print(f"    cell_growth_rate : [{_cgr.min():.6f}, {_cgr.max():.6f}]  "
+          f"(all finite: ✓  all >0: ✓)")
 
 _sorted_days = sorted(adata_full.obs["day"].unique())
 print(f"\n  Timepoints ({len(_sorted_days)}):")
@@ -570,10 +592,12 @@ if "day" in adata_wot.obs.columns:
     adata_wot.obs = adata_wot.obs.rename(columns={"day": "day_in_stage"})
     print("  Renamed obs['day'] → 'day_in_stage'  (avoids WOT internal collision)")
 
-if "growth_rate" in adata_wot.obs.columns:
-    adata_wot.obs = adata_wot.obs.drop(columns=["growth_rate"])
-    print("  Removed 'growth_rate' from ExprMatrix.h5ad obs "
-          "— provided via external growth-rate file (cell_growth_rate column)")
+_gr_obs_cols = [c for c in ["growth_rate", "log_growth_rate", "cell_growth_rate"]
+                if c in adata_wot.obs.columns]
+if _gr_obs_cols:
+    adata_wot.obs = adata_wot.obs.drop(columns=_gr_obs_cols)
+    print(f"  Removed growth columns from ExprMatrix.h5ad obs: {_gr_obs_cols}")
+    print(f"  — cell_growth_rate provided via external growth-rate file")
 
 if FORCE_DENSE_FLOAT64:
     _Xd = (adata_wot.X.toarray().astype(np.float64) if sp.issparse(adata_wot.X)
@@ -604,7 +628,7 @@ print(f"  cell_days.txt    → {CELL_DAYS_PATH.name}  "
 GROWTH_RATES_PATH = WOT_INPUTS / "growth_rates.txt"
 _gr = pd.DataFrame({
     "id":               adata.obs_names.astype(str),
-    "cell_growth_rate": adata.obs["growth_rate"].values.astype(float),
+    "cell_growth_rate": adata.obs["cell_growth_rate"].values.astype(float),
 })
 _gr.to_csv(str(GROWTH_RATES_PATH), sep="\t", index=False)
 print(f"  growth_rates.txt → {GROWTH_RATES_PATH.name}  "
@@ -927,17 +951,20 @@ else:
         print("  Step 8d — Fate computation  (WOT fates() API)")
 
         # Load transport map model
+        # WOT 1.0.8.post2: from_directory() takes a single positional argument
+        # which must be the full tmap prefix (same string passed to --out in
+        # the CLI step).  The prefix= keyword was removed and must not be used.
         try:
             _tmap_model = wot.tmap.TransportMapModel.from_directory(
-                str(TMAPS_DIR), prefix="tmaps"
+                str(TMAPS_DIR / "tmaps")
             )
-            print(f"  TransportMapModel loaded from : {TMAPS_DIR.name}/")
+            print(f"  TransportMapModel loaded from prefix : {TMAPS_DIR.name}/tmaps")
         except AttributeError:
             import wot.tmap as _wot_tmap
             _tmap_model = _wot_tmap.TransportMapModel.from_directory(
-                str(TMAPS_DIR), prefix="tmaps"
+                str(TMAPS_DIR / "tmaps")
             )
-            print(f"  TransportMapModel (fallback import) loaded from : {TMAPS_DIR.name}/")
+            print(f"  TransportMapModel (fallback import) loaded from prefix : {TMAPS_DIR.name}/tmaps")
 
         # Build Population objects from cell_sets dict
         print(f"  Building Population objects (at_time={_endpoint_day}) …")
@@ -979,32 +1006,65 @@ else:
         adata_full.obs["p_hcipsc"]       = _p_success_vec
 
         # ── Sanity checks ─────────────────────────────────────────────────────
-        _n_fin_suc = int(np.isfinite(_p_success_vec).sum())
-        _n_fin_fail= int(np.isfinite(_p_failure_vec).sum())
-        _non_terminal_mask = ~_mask_cipsc_bool & np.isfinite(_p_success_vec)
-        _p_suc_early = _p_success_vec[_non_terminal_mask]
+        _n_fin_suc  = int(np.isfinite(_p_success_vec).sum())
+        _n_fin_fail = int(np.isfinite(_p_failure_vec).sum())
+        _non_terminal_mask = (
+            ~_mask_cipsc_bool
+            & np.isfinite(_p_success_vec)
+            & np.isfinite(_p_failure_vec)
+        )
+        _p_suc_nt  = _p_success_vec[_non_terminal_mask]
+        _p_fail_nt = _p_failure_vec[_non_terminal_mask]
+        _p_marg_nt = _p_suc_nt - _p_fail_nt
 
         print(f"\n  p_oclr_success finite : {_n_fin_suc:,}  "
               f"({_n_fin_suc / adata_full.n_obs:.1%})")
         print(f"  p_oclr_failure finite : {_n_fin_fail:,}  "
               f"({_n_fin_fail / adata_full.n_obs:.1%})")
 
-        if len(_p_suc_early) > 0:
-            _p_hcipsc_stats = {
-                "min":    float(np.nanmin(_p_suc_early)),
-                "median": float(np.nanmedian(_p_suc_early)),
-                "max":    float(np.nanmax(_p_suc_early)),
-            }
-            print(f"  p_oclr_success (non-terminal cells): "
-                  f"min={_p_hcipsc_stats['min']:.4f}  "
-                  f"median={_p_hcipsc_stats['median']:.4f}  "
-                  f"max={_p_hcipsc_stats['max']:.4f}")
-            if _p_suc_early.min() > 0.99:
-                print("  !! WARNING: p_oclr_success ≈ 1.0 everywhere — degenerate!")
-            elif _p_suc_early.max() < 0.01:
-                print("  !! WARNING: p_oclr_success ≈ 0.0 everywhere — check barcodes.")
+        def _fate_stats_line(arr: np.ndarray, label: str) -> str:
+            q25, med, q75 = np.nanpercentile(arr, [25, 50, 75])
+            rng = float(np.nanmax(arr) - np.nanmin(arr))
+            iqr = float(q75 - q25)
+            return (
+                f"  {label} (non-terminal, n={len(arr):,}):\n"
+                f"    min={np.nanmin(arr):.4f}  q25={q25:.4f}  "
+                f"median={med:.4f}  q75={q75:.4f}  max={np.nanmax(arr):.4f}\n"
+                f"    std={np.nanstd(arr):.4f}  range={rng:.4f}  iqr={iqr:.4f}"
+            )
+
+        if len(_p_suc_nt) > 0:
+            print(_fate_stats_line(_p_suc_nt,  "p_oclr_success"))
+            print(_fate_stats_line(_p_fail_nt, "p_oclr_failure"))
+            print(_fate_stats_line(_p_marg_nt, "p_oclr_margin "))
+
+            _suc_range  = float(np.nanmax(_p_suc_nt)  - np.nanmin(_p_suc_nt))
+            _marg_range = float(np.nanmax(_p_marg_nt) - np.nanmin(_p_marg_nt))
+            _marg_std   = float(np.nanstd(_p_marg_nt))
+
+            if _suc_range < 0.01 and _marg_range < 0.01:
+                print("  !! WARNING: near-degenerate fate signal — "
+                      "success-range and margin-range both < 0.01.")
+                print("     Fate probabilities are near-constant.  "
+                      "Consider enabling USE_GROWTH_RATES=True.")
+            elif _marg_std < 0.005:
+                print("  !! WARNING: near-degenerate fate signal — "
+                      f"p_oclr_margin std={_marg_std:.5f} (< 0.005).")
+                print("     Margin has almost no variance across non-terminal cells.")
             else:
-                print("  ✓  p_oclr_success shows variation — non-degenerate.")
+                print(f"  ✓  Fate signal non-degenerate  "
+                      f"(suc_range={_suc_range:.4f}  "
+                      f"marg_range={_marg_range:.4f}  "
+                      f"marg_std={_marg_std:.4f})")
+
+            # Keep slim dict for backward-compatible final-summary reference
+            _p_hcipsc_stats = {
+                "min":    float(np.nanmin(_p_suc_nt)),
+                "median": float(np.nanmedian(_p_suc_nt)),
+                "max":    float(np.nanmax(_p_suc_nt)),
+                "range":  _suc_range,
+                "marg_std": _marg_std,
+            }
 
     # ── Save adata_full with all new columns ──────────────────────────────────
     if RUN_FATE_COMPUTATION:
@@ -1170,7 +1230,9 @@ if RUN_FATE_COMPUTATION and _p_hcipsc_stats:
     print(f"  p_oclr_success (non-terminal): "
           f"min={_p_hcipsc_stats['min']:.4f}  "
           f"median={_p_hcipsc_stats['median']:.4f}  "
-          f"max={_p_hcipsc_stats['max']:.4f}")
+          f"max={_p_hcipsc_stats['max']:.4f}  "
+          f"range={_p_hcipsc_stats['range']:.4f}  "
+          f"marg_std={_p_hcipsc_stats['marg_std']:.4f}")
 print()
 print(f"  UMAP                       : "
       + ("newly computed" if _umap_recomputed else "reused from obsm"))

@@ -272,37 +272,56 @@ for t_day, stats in fold_changes.items():
     growth_rates[mask] = (raw_t + shift).astype(np.float32)
 
 # Last timepoint = terminal reference pool (all hCiPSC/day30 cells).
-# Growth rate is set to 0: these cells are the absorbing endpoint of the model,
-# not an intermediate state undergoing further dynamics.
-# NOTE: growth_rate=0 is assigned to ALL hCiPSC cells (the full day30 pool).
+# log_growth_rate is set to 0 → cell_growth_rate = exp(0) = 1.0 (neutral).
+# These cells are the absorbing endpoint of the model, not an intermediate
+# state undergoing further dynamics.
+# NOTE: log_growth_rate=0 is assigned to ALL hCiPSC cells (the full day30 pool).
 # Within this pool, the high-confidence iPSC terminal subset is later defined
-# by OCLR stemness score (top 10%) in 02b2, then loaded into fate_ips/fate_other
-# columns by 02c.  The growth-rate assignment here is independent of that split.
+# by OCLR stemness score (top 10%) in 02b2, then loaded into fate_oclr_success
+# / fate_oclr_failure by 02c.  The growth-rate assignment here is independent
+# of that split.
 last_day = sorted_days[-1]
 mask_last = adata.obs["abs_day"].values == last_day
 growth_rates[mask_last] = 0.0
 
-adata.obs["growth_rate"] = growth_rates
+# Store log-growth and its exponentiated multiplicative form.
+# log_growth_rate  — the rescaled log-scale value (can be negative)
+# cell_growth_rate — the strictly-positive multiplicative factor WOT needs
+#                    cell_growth_rate = exp(log_growth_rate) > 0 always
+adata.obs["log_growth_rate"]  = growth_rates.astype(np.float32)
+adata.obs["cell_growth_rate"] = np.exp(growth_rates).astype(np.float32)
 
-print(f"\n  Growth rate summary:")
+# Strict positivity assertion — exp() guarantees >0, but be explicit
+_n_nonpos_cgr = int((adata.obs["cell_growth_rate"].values <= 0).sum())
+assert _n_nonpos_cgr == 0, (
+    f"cell_growth_rate has {_n_nonpos_cgr} non-positive values — should be impossible."
+)
+
+print(f"\n  Growth rate summary  (log_growth_rate / cell_growth_rate = exp(log_gr)):")
 for day in sorted_days:
     mask = adata.obs["abs_day"].values == day
-    gr = growth_rates[mask]
-    print(f"    Day {day:5.2f}: mean={gr.mean():+.4f}  "
-          f"std={gr.std():.4f}  "
-          f"range=[{gr.min():+.4f}, {gr.max():+.4f}]")
+    lgr  = growth_rates[mask]
+    cgr  = adata.obs["cell_growth_rate"].values[mask]
+    print(f"    Day {day:5.2f}: "
+          f"log_gr=[{lgr.min():+.6f}, {lgr.max():+.6f}]  mean={lgr.mean():+.6f}  "
+          f"cell_gr=[{cgr.min():.6f}, {cgr.max():.6f}]  (all>0: ✓)")
+
+_cgr_all = adata.obs["cell_growth_rate"].values
+print(f"\n  cell_growth_rate global: "
+      f"min={_cgr_all.min():.6f}  max={_cgr_all.max():.6f}  "
+      f"mean={_cgr_all.mean():.6f}  strictly_positive=✓")
 
 # =============================================================================
 # 8. WRITE cell_growth_rates.txt FOR WOT
 # =============================================================================
 print("\n--- Writing cell_growth_rates.txt ---")
 
-gr_df = adata.obs[["growth_rate"]].copy()
+gr_df = adata.obs[["log_growth_rate", "cell_growth_rate"]].copy()
 gr_df.index.name = "id"
 
 gr_path = PROCESSED_DIR / f"{TIMESTAMP}_cell_growth_rates.txt"
 gr_df.to_csv(gr_path, sep="\t")
-print(f"  Saved → {gr_path}")
+print(f"  Saved → {gr_path}  (columns: id, log_growth_rate, cell_growth_rate)")
 
 # =============================================================================
 # 9. SAVE UPDATED ANNDATA
@@ -389,7 +408,7 @@ labels = [
 
 fig, ax = plt.subplots(figsize=(15, 5))
 gr_by_day = [
-    adata.obs.loc[adata.obs["abs_day"] == d, "growth_rate"].values
+    adata.obs.loc[adata.obs["abs_day"] == d, "log_growth_rate"].values
     for d in abs_days_sorted
 ]
 bp = ax.boxplot(gr_by_day, patch_artist=True, medianprops={"color": "black", "lw": 2},
@@ -419,8 +438,8 @@ print(f"  Saved → {gr_path_fig}")
 print(f"\n{'='*60}")
 print(f"[{TIMESTAMP}] Step 02b COMPLETE")
 print(f"\n  Growth rate files:")
-print(f"    {gr_path.name}")
-print(f"    {gr_h5ad_path.name}")
+print(f"    {gr_path.name}  (columns: id, log_growth_rate, cell_growth_rate)")
+print(f"    {gr_h5ad_path.name}  (obs: log_growth_rate, cell_growth_rate)")
 print(f"\n  Cell cycle scoring:")
 print(f"    S genes used    : {len(s_genes_present)}")
 print(f"    G2M genes used  : {len(g2m_genes_present)}")
