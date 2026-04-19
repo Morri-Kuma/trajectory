@@ -1,0 +1,179 @@
+{
+  "_meta": {
+    "description": "Provisional cluster-to-pseudostate mapping for full-scale scGPT Leiden result.",
+    "leiden_resolution": 0.5,
+    "leiden_key": "leiden_scgpt_res0.5",
+    "n_clusters": 14,
+    "mapping_version": "v1",
+    "mapping_status": "provisional",
+    "last_updated": "2026-04-19",
+    "full_run_cells": 75194,
+    "full_run_leiden_clusters": 14,
+    "policy": [
+      "All original Leiden labels are preserved in obs['leiden_scgpt_res0.5'].",
+      "This file adds a provisional interpretation layer only.",
+      "Edit this file and rerun annotate_provisional.py to revise any assignment.",
+      "No hard biological names are claimed at this stage.",
+      "Uncertain and merge_review clusters are intentionally kept separate."
+    ],
+    "status_codes": {
+      "confirmed":     "Concentrated, coherent timepoint composition; treated as a stable state.",
+      "merge_review":  "Mixed or bridging timepoints; may be merged or split in a later pass.",
+      "uncertain":     "Anomalous or highly mixed composition; do not use as a reference state yet."
+    },
+    "family_codes": {
+      "somatic":             "Early-timepoint cells (days 0.5-4, StageI equivalent).",
+      "stageII":             "Day-8 dominant StageII-entry population.",
+      "mid_transition":      "Transition bridge spanning days 8-17 (StageII-to-StageIII).",
+      "stageIII_transition": "Broad StageIII spanning days 16-24.",
+      "stageIII_peak":       "Day-17-18 concentrated state within StageIII.",
+      "late_transition":     "Days 20-28 late-reprogramming corridor.",
+      "late_branch":         "Late/terminal-anchored cluster with unusual secondary mass.",
+      "pre_pluripotent":     "Day-28 dominant pre-terminal state.",
+      "pluripotent":         "Day-30 dominant terminal pluripotent state.",
+      "uncertain":           "Anomalous or highly mixed; no reliable family assignment."
+    }
+  },
+  "clusters": {
+    "0": {
+      "pseudostate": "PS_00",
+      "family": "stageIII_transition",
+      "status": "merge_review",
+      "n_cells": 12996,
+      "dominant_timepoint": 17.0,
+      "dominant_frac": 0.305,
+      "norm_entropy": 0.568,
+      "notes": "Largest cluster; broad StageIII corridor spanning days 16-24 (73% mid2, 26% mid3). Mixed across multiple StageIII timepoints. May be split into earlier and later StageIII sub-states at higher Leiden resolution. Do not hard-merge with other clusters yet."
+    },
+    "1": {
+      "pseudostate": "PS_01",
+      "family": "late_transition",
+      "status": "merge_review",
+      "n_cells": 11404,
+      "dominant_timepoint": 24.0,
+      "dominant_frac": 0.335,
+      "norm_entropy": 0.530,
+      "notes": "Second-largest cluster; late-transition corridor concentrated in days 22-28 (66% mid3, 32% late). Bridges mid-reprogramming to pre-terminal state. Merge-review with cluster 10 to assess whether day-28 cells are better described as PS_01 tail or as a distinct PS_10 state."
+    },
+    "2": {
+      "pseudostate": "PS_02",
+      "family": "mid_transition",
+      "status": "merge_review",
+      "n_cells": 8819,
+      "dominant_timepoint": 16.0,
+      "dominant_frac": 0.364,
+      "norm_entropy": 0.529,
+      "notes": "Mid-transition corridor: 33% in days 8-12, 67% in days 16-17. Bridges StageII into early StageIII. Merge-review with cluster 7 — both belong to the mid-transition family but cluster 7 leans more toward days 12-16 while this cluster leans toward days 16-17."
+    },
+    "3": {
+      "pseudostate": "PS_03",
+      "family": "somatic",
+      "status": "confirmed",
+      "n_cells": 7344,
+      "dominant_timepoint": 0.5,
+      "dominant_frac": 0.651,
+      "norm_entropy": 0.269,
+      "notes": "Clean early somatic state. 100% early-timepoint (days 0.5-4), dominated by day 0.5 (65%) and day 2.0 (33%). Confirmed stable state. Merge-review with cluster 9 (also somatic) to assess whether two somatic sub-states should be kept separate or unified."
+    },
+    "4": {
+      "pseudostate": "PS_04",
+      "family": "stageIII_peak",
+      "status": "confirmed",
+      "n_cells": 6686,
+      "dominant_timepoint": 18.0,
+      "dominant_frac": 0.969,
+      "norm_entropy": 0.072,
+      "notes": "Sharpest cluster in the full run. 97% of cells are at day 18.0 alone. A coherent day-18 specific state within StageIII. Strongly concentrated; confirmed as a stable anchor state. Merge-review with cluster 13 (tiny day-17/18 subcluster in the same region)."
+    },
+    "5": {
+      "pseudostate": "PS_05",
+      "family": "pluripotent",
+      "status": "confirmed",
+      "n_cells": 5879,
+      "dominant_timepoint": 30.0,
+      "dominant_frac": 0.988,
+      "norm_entropy": 0.032,
+      "notes": "Second-cleanest cluster. 99% at day 30 (terminal hCiPSC state). Confirmed as the primary terminal pluripotent state. Distinct from cluster 8 which also has day-30 cells but with unusual secondary StageIII mass."
+    },
+    "6": {
+      "pseudostate": "PS_06",
+      "family": "stageII",
+      "status": "confirmed",
+      "n_cells": 5328,
+      "dominant_timepoint": 8.0,
+      "dominant_frac": 0.987,
+      "norm_entropy": 0.035,
+      "notes": "Very clean day-8 state representing the StageII entry point. 99% at day 8.0. Confirmed stable anchor state."
+    },
+    "7": {
+      "pseudostate": "PS_07",
+      "family": "mid_transition",
+      "status": "merge_review",
+      "n_cells": 5204,
+      "dominant_timepoint": 12.0,
+      "dominant_frac": 0.558,
+      "norm_entropy": 0.281,
+      "notes": "Mid-transition state: 56% day 12.0, 44% days 16-17. Bridges StageII-mid to StageIII-early. Merge-review with cluster 2 — both are mid-transition family; potential soft merge into a single mid_transition state for the reference graph."
+    },
+    "8": {
+      "pseudostate": "PS_08",
+      "family": "late_branch",
+      "status": "merge_review",
+      "n_cells": 4238,
+      "dominant_timepoint": 30.0,
+      "dominant_frac": 0.688,
+      "norm_entropy": 0.391,
+      "notes": "Unusual cluster: 69% at day 30 but with 27% at StageIII mid (days 16.33-17). Could be (a) a distinct pluripotent sub-population, (b) cells on a secondary trajectory that converges to day-30 from a different StageIII path, or (c) a technical mixing artifact. Do not merge with cluster 5 without further investigation. Flagged as late_branch for now."
+    },
+    "9": {
+      "pseudostate": "PS_09",
+      "family": "somatic",
+      "status": "merge_review",
+      "n_cells": 3126,
+      "dominant_timepoint": 2.0,
+      "dominant_frac": 0.517,
+      "norm_entropy": 0.325,
+      "notes": "Second somatic cluster: 98% early (day 0.5: 1393, day 2.0: 1616, day 4: 70). Together with cluster 3, this covers the full early somatic population. Two distinct somatic clusters at this resolution may indicate biologically meaningful somatic subtypes or a resolution artifact. Merge-review with cluster 3."
+    },
+    "10": {
+      "pseudostate": "PS_10",
+      "family": "pre_pluripotent",
+      "status": "confirmed",
+      "n_cells": 1556,
+      "dominant_timepoint": 28.0,
+      "dominant_frac": 0.898,
+      "norm_entropy": 0.147,
+      "notes": "Clean pre-terminal state: 90% day 28.0, 8% day 24.0. Concentrated and coherent. Confirmed as a stable pre-pluripotent anchor state immediately before the day-30 endpoint. Merge-review with cluster 1 to assess whether day-28 cells in cluster 1 are better assigned here."
+    },
+    "11": {
+      "pseudostate": "PS_11",
+      "family": "uncertain",
+      "status": "uncertain",
+      "n_cells": 1284,
+      "dominant_timepoint": 22.0,
+      "dominant_frac": 0.581,
+      "norm_entropy": 0.514,
+      "notes": "Anomalous composition: 30% early (274 cells at day 4.0, 39 at day 0.5, 74 at day 2.0) and 62% mid3 (746 at day 22.0). A cluster combining early somatic cells and late-reprogramming cells is unexpected and likely not biologically coherent. Do not use as a reference state until the source of this mixing is understood. Flagged uncertain."
+    },
+    "12": {
+      "pseudostate": "PS_12",
+      "family": "uncertain",
+      "status": "uncertain",
+      "n_cells": 1026,
+      "dominant_timepoint": 30.0,
+      "dominant_frac": 0.405,
+      "norm_entropy": 0.764,
+      "notes": "Highest entropy in the dataset (0.764). Cells are spread thinly across nearly all timepoints with no dominant state. Small size (1026 cells) and uniform scatter across time suggest this captures residual cells that did not fit cleanly into any other cluster. Do not use as a reference state. Consider dropping from reference graph or absorbing into nearest neighbor during the freeze step."
+    },
+    "13": {
+      "pseudostate": "PS_13",
+      "family": "stageIII_peak",
+      "status": "merge_review",
+      "n_cells": 304,
+      "dominant_timepoint": 18.0,
+      "dominant_frac": 0.559,
+      "norm_entropy": 0.399,
+      "notes": "Smallest cluster (304 cells). Concentrated at days 17-18 (97+170=267 cells, 88%). Located in the same timepoint territory as cluster 4 (the confirmed day-18 peak). Likely a minor subpopulation of the day-18 state; strong candidate for merge into PS_04 during the freeze step. Kept separate here to avoid premature collapse."
+    }
+  }
+}

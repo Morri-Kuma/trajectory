@@ -1,0 +1,80 @@
+# wot_gse230659_observed.yaml
+# WOT smoke-test configuration — Scenario A (observed-time, full dataset).
+# Framework reference: experimental framework v2.md §10.1, §13
+#
+# This config is the entry point for:
+#   benchmark/methods/WOT/run.py --config benchmark/configs/wot_gse230659_observed.yaml
+#
+# Capability reminder (v2 §6):
+#   WOT: supports_unseen_timepoint_projection = False
+#        supports_lineage_inference            = True
+#   → evaluated on Lineage Fidelity only.
+#   → Forecast Accuracy and Embedding Coherence are NOT run for WOT.
+
+# ---------------------------------------------------------------------------
+# Run identity
+# ---------------------------------------------------------------------------
+run_id: wot_gse230659_A
+method: wot
+scenario: A
+scenario_name: "Observed-time (full, scaffold)"
+framework_version: v2
+
+# ---------------------------------------------------------------------------
+# Dataset
+# ---------------------------------------------------------------------------
+dataset:
+  id: GSE230659
+  pkl_path: "benchmark/datasets/gse230659_observed.dataset.pkl"
+  h5ad_path: "data/processed/adata_benchmark.h5ad"   # fallback if pkl load fails
+  time_key: time_label                                # obs column with numeric abs_day
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+output:
+  base_dir: "benchmark/results/wot/scenario_A"
+  # Files written under base_dir/:
+  #   state_transition_matrix.csv
+  #   lineage_graph_edges.csv
+  #   lineage_metrics.json       (written by eval_lineage.py after run.py)
+  #   run_metadata.json
+
+# ---------------------------------------------------------------------------
+# WOT transport-map parameters
+# (these match the defaults used in the previous working pipeline)
+# ---------------------------------------------------------------------------
+wot_params:
+  epsilon: 0.05             # entropic regularisation (OT)
+  lambda1: 1.0              # unbalanced transport penalty (growth)
+  lambda2: 50.0             # unbalanced transport penalty (death)
+  local_pca: 30             # local PCA dimensions for cost matrix
+  growth_iters: 3           # iterations for growth-rate estimation
+  ncells_subsample: null    # null = use all cells (set to e.g. 8000 for debug)
+  # Growth rate source:
+  #   "uniform"   — flat prior (all cells weight 1.0); safe for first smoke test
+  #   "estimated" — use cell-cycle + apoptosis scoring (requires extra scoring step)
+  growth_rate_source: "uniform"
+
+# ---------------------------------------------------------------------------
+# State-transition matrix construction
+# (Lineage Fidelity prerequisite — see v2 §9.3)
+# ---------------------------------------------------------------------------
+lineage:
+  # cell_state_key: the obs column to use for state-level aggregation.
+  # "scTimeBench_cell_type" = provisional stage proxy (somatic/early_transition/
+  #                           intermediate/pluripotent).
+  # Replace with a frozen per-cell annotation when available.
+  cell_state_key: "scTimeBench_cell_type"
+  cell_state_annotation_is_proxy: true
+  # reference_graph_path: null until the reference lineage is frozen (v2 §9.3).
+  reference_graph_path: null
+
+# ---------------------------------------------------------------------------
+# Evaluation (run after run.py completes)
+# ---------------------------------------------------------------------------
+evaluation:
+  run_eval_lineage: true
+  eval_script: "benchmark/evaluation/eval_lineage.py"
+  # Lineage Fidelity metrics will be deferred (status = "deferred") until
+  # reference_graph_path above is set to a real frozen reference graph.

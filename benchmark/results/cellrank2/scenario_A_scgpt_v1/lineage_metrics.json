@@ -1,0 +1,17 @@
+{
+  "auroc": null,
+  "auprc": null,
+  "jaccard_similarity": null,
+  "single_step_recovery": null,
+  "multi_step_recovery": null,
+  "baseline": {
+    "auroc": null,
+    "auprc": null,
+    "jaccard_similarity": null,
+    "single_step_recovery": null,
+    "multi_step_recovery": null
+  },
+  "status": "completed_with_empty_predictions: reference graph was loaded successfully but the method adapter produced no state transitions (scaffold or runtime failure path). Check run_metadata.json for the method execution status.",
+  "edge_confidence_mode": "medium_and_above",
+  "n_reference_edges": 31
+}

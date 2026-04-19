@@ -1,0 +1,46 @@
+# scenario_observed.yaml
+# Observed-time scenario definitions.
+# Framework reference: experimental framework v2.md §4.1
+#
+# These scenarios use the experimentally measured sampling time (day labels)
+# as the benchmark time axis.
+
+time_axis: observed_sampling_time
+
+scenarios:
+
+  A:
+    id: A
+    name: "Observed-time interpolation"
+    description: >
+      Project cells to held-out internal time points along the observed time axis.
+      Training time points: all except one held-out internal point.
+      Evaluation target: the held-out internal time point.
+    dimension_eligibility:
+      forecast_accuracy: true_if_method_supports_projection
+      embedding_coherence: true_if_method_supports_projection
+      lineage_fidelity: true_if_method_supports_lineage_inference
+
+  B:
+    id: B
+    name: "Observed-time extrapolation"
+    description: >
+      Project cells to later unseen time points beyond the training window.
+      Training time points: all early time points.
+      Evaluation target: one or more later time points not seen during training.
+    dimension_eligibility:
+      forecast_accuracy: true_if_method_supports_projection
+      embedding_coherence: true_if_method_supports_projection
+      lineage_fidelity: true_if_method_supports_lineage_inference
+
+  C:
+    id: C
+    name: "Observed-time interpolation + extrapolation"
+    description: >
+      Combined hardest observed-time setting.
+      Training uses a subset of time points; evaluation covers both held-out
+      internal and held-out later time points simultaneously.
+    dimension_eligibility:
+      forecast_accuracy: true_if_method_supports_projection
+      embedding_coherence: true_if_method_supports_projection
+      lineage_fidelity: true_if_method_supports_lineage_inference

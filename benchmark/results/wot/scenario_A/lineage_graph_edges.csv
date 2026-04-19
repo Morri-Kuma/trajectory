@@ -1,0 +1,7 @@
+source_state,target_state,weight
+early_transition,early_transition,0.5188904338494714
+early_transition,intermediate,0.48110956615052863
+intermediate,intermediate,0.8626026615280002
+intermediate,pluripotent,0.13739733847199967
+somatic,early_transition,0.3295007007833891
+somatic,somatic,0.6704992992166109

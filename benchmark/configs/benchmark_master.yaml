@@ -1,0 +1,158 @@
+# benchmark_master.yaml
+# Master configuration for the scTimeBench-aligned benchmark.
+# Framework reference: experimental framework v2.md
+#
+# Three core benchmark dimensions:
+#   1. Forecast Accuracy      — INACTIVE for current stage (WOT, CellRank2 not eligible)
+#   2. Embedding Coherence    — INACTIVE for current stage (WOT, CellRank2 not eligible)
+#   3. Lineage Fidelity       — ACTIVE (WOT and CellRank2 are eligible)
+#
+# Method eligibility is governed by capability flags in method_capabilities.yaml.
+# No OT-projection workaround or synthetic future-cell layer is used.
+# The old T1/T2/T3/T4/T5 task structure is retired.
+
+# =============================================================================
+# Framework version
+# =============================================================================
+framework_version: v2
+framework_alignment: scTimeBench
+
+# =============================================================================
+# Datasets
+# =============================================================================
+datasets:
+  primary:
+    id: GSE230659
+    description: "Liuyang et al. 2023 Cell Stem Cell — human chemical iPSC reprogramming"
+    benchmark_input: "data/processed/adata_benchmark.h5ad"
+    # Required obs fields: cell_id, sample_id, time_label
+    # Required var fields: gene_symbol
+    # Required matrix: X (gene expression)
+
+# =============================================================================
+# Methods
+# =============================================================================
+methods:
+  - id: wot
+    label: "WOT"
+    adapter: "benchmark/adapters/wot_adapter.py"
+    capabilities_ref: "benchmark/configs/method_capabilities.yaml"
+
+  - id: cellrank2
+    label: "CellRank2"
+    adapter: "benchmark/adapters/cellrank2_adapter.py"
+    capabilities_ref: "benchmark/configs/method_capabilities.yaml"
+
+# =============================================================================
+# Core benchmark dimensions
+# =============================================================================
+dimensions:
+
+  - id: forecast_accuracy
+    name: "Forecast Accuracy"
+    evaluator: "benchmark/evaluation/eval_forecast.py"
+    status: inactive
+    # Inactive: WOT and CellRank2 do not generate unseen future-timepoint cells.
+    # Will be activated when generative/forecasting models are added.
+    metrics:
+      - wasserstein_distance
+      - gaussian_mmd
+      - energy_distance_mmd
+      - hausdorff_loss
+    aggregation: mean_rank_within_scenario
+
+  - id: embedding_coherence
+    name: "Embedding Coherence"
+    evaluator: "benchmark/evaluation/eval_embedding.py"
+    status: inactive
+    # Inactive: same eligibility rule as Forecast Accuracy.
+    metrics:
+      - adjusted_rand_index
+      - avg_normalized_classifier_entropy
+    aggregation: mean_rank_within_scenario
+
+  - id: lineage_fidelity
+    name: "Lineage Fidelity"
+    evaluator: "benchmark/evaluation/eval_lineage.py"
+    status: active
+    # Active: WOT and CellRank2 are eligible (supports_lineage_inference = True).
+    metrics:
+      - auroc
+      - auprc
+      - jaccard_similarity
+      - single_step_recovery
+      - multi_step_recovery
+    baseline: correlation_baseline
+    aggregation: mean_rank_within_scenario
+
+# =============================================================================
+# Scenarios
+# =============================================================================
+# Full scenario specs: scenario_observed.yaml, scenario_pseudotime.yaml.
+# Scenario activation per method depends on capability flags.
+
+scenarios:
+  observed_time:
+    config: "benchmark/configs/scenario_observed.yaml"
+    variants:
+      - id: A
+        name: "Observed-time interpolation"
+      - id: B
+        name: "Observed-time extrapolation"
+      - id: C
+        name: "Observed-time interpolation + extrapolation"
+
+  pseudotime:
+    config: "benchmark/configs/scenario_pseudotime.yaml"
+    variants:
+      - id: D
+        name: "Pseudotime interpolation"
+      - id: E
+        name: "Pseudotime extrapolation"
+      - id: F
+        name: "Pseudotime interpolation + extrapolation"
+
+# =============================================================================
+# Output specification
+# =============================================================================
+outputs:
+
+  lineage_fidelity:
+    # For all lineage-eligible methods
+    state_transition_matrix:  "benchmark/results/{method}/{scenario}/state_transition_matrix.csv"
+    lineage_graph_edges:      "benchmark/results/{method}/{scenario}/lineage_graph_edges.csv"
+    lineage_metrics:          "benchmark/results/{method}/{scenario}/lineage_metrics.json"
+
+  forecast_accuracy:
+    # Only for methods where supports_unseen_timepoint_projection = True
+    projected_expression:           "benchmark/results/{method}/{scenario}/projected_expression.npy"
+    forecast_metrics:               "benchmark/results/{method}/{scenario}/forecast_metrics.json"
+    per_timepoint_forecast_metrics: "benchmark/results/{method}/{scenario}/per_timepoint_forecast_metrics.csv"
+
+  embedding_coherence:
+    # Only for methods where supports_unseen_timepoint_projection = True
+    projected_embedding:      "benchmark/results/{method}/{scenario}/projected_embedding.npy"
+    embedding_metrics:        "benchmark/results/{method}/{scenario}/embedding_metrics.json"
+    projected_cluster_labels: "benchmark/results/{method}/{scenario}/projected_cluster_labels.csv"
+
+  run_metadata:
+    # For all methods
+    path: "benchmark/results/{method}/{scenario}/run_metadata.json"
+    required_fields:
+      - method
+      - dataset
+      - scenario
+      - capability_flags
+      - dimensions_executed
+      - runtime
+      - status
+      - notes
+
+# =============================================================================
+# Ranking strategy
+# =============================================================================
+ranking:
+  strategy: mean_rank_within_dimension
+  # For methods supporting all three dimensions: three task ranks + combined overall rank.
+  # For WOT and CellRank2 (Lineage Fidelity only): Lineage Fidelity rank only.
+  # Do NOT fabricate a combined overall rank for dimensions a method is ineligible for.

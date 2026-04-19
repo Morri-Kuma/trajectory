@@ -1,0 +1,46 @@
+# scenario_pseudotime.yaml
+# Pseudotime scenario definitions.
+# Framework reference: experimental framework v2.md §4.2
+#
+# These scenarios replace the observed day labels with pseudotime bins
+# as the benchmark time axis.
+
+time_axis: pseudotime_bins
+
+scenarios:
+
+  D:
+    id: D
+    name: "Pseudotime interpolation"
+    description: >
+      Project cells to held-out internal pseudotime bins.
+      Training bins: all except one held-out internal bin.
+      Evaluation target: the held-out internal pseudotime bin.
+    dimension_eligibility:
+      forecast_accuracy: true_if_method_supports_projection
+      embedding_coherence: true_if_method_supports_projection
+      lineage_fidelity: true_if_method_supports_lineage_inference
+
+  E:
+    id: E
+    name: "Pseudotime extrapolation"
+    description: >
+      Project cells to later unseen pseudotime bins beyond the training window.
+      Training bins: early pseudotime range.
+      Evaluation target: later pseudotime bins not seen during training.
+    dimension_eligibility:
+      forecast_accuracy: true_if_method_supports_projection
+      embedding_coherence: true_if_method_supports_projection
+      lineage_fidelity: true_if_method_supports_lineage_inference
+
+  F:
+    id: F
+    name: "Pseudotime interpolation + extrapolation"
+    description: >
+      Combined pseudotime setting (hardest).
+      Training uses a subset of pseudotime bins; evaluation covers both
+      held-out internal and held-out later pseudotime bins.
+    dimension_eligibility:
+      forecast_accuracy: true_if_method_supports_projection
+      embedding_coherence: true_if_method_supports_projection
+      lineage_fidelity: true_if_method_supports_lineage_inference
