@@ -70,11 +70,17 @@ T0 = _time.time()
 # script's location until we find a directory that contains a 'data/' subdirectory.
 
 def _find_project_root() -> Path:
-    # 1. Try the known Windows path directly.
-    known = Path(r"C:\Users\37620\trajectory")
-    if known.exists() and (known / "data").exists():
-        return known
-    # 2. Search upward from the script file itself.
+    # 1. Explicit override: TRAJ_PROJECT_ROOT env var (Shirokane HPC / CI).
+    env = os.environ.get("TRAJ_PROJECT_ROOT")
+    if env:
+        p = Path(env)
+        if p.exists():
+            return p
+        raise FileNotFoundError(
+            f"TRAJ_PROJECT_ROOT={env!r} does not exist.  "
+            "Correct the environment variable and retry."
+        )
+    # 2. Walk upward from this script until a directory containing 'data/' is found.
     here = Path(__file__).resolve().parent
     for candidate in [here, *here.parents]:
         if (candidate / "data").exists():

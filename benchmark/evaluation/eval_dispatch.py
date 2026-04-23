@@ -57,7 +57,8 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
              scenario_config: dict, output_dir: str,
              reference_graph_path: str = None,
              edge_confidence_mode: str = "all",
-             exclude_uncertain_states: bool = False):
+             exclude_uncertain_states: bool = False,
+             cell_state_key: str = None):
     """
     Run the benchmark for one method × scenario.
 
@@ -84,7 +85,28 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
         Typically read from the method config's lineage.exclude_uncertain_states.
     """
     AdapterClass = load_adapter_class(method_id)
-    adata = anndata.read_h5ad(adata_path)
+    # `adata` here is the FULL input adata loaded from --adata. Adapters that
+    # apply a scenario-level row filter (e.g. CellRank2Adapter's Step 0
+    # scenario_params.train_times block) mutate their own `self.adata` to the
+    # filtered subset. After adapter.run_lineage_fidelity(...) returns we MUST
+    # read the filtered view back from the adapter and hand THAT to
+    # run_lineage_evaluation — otherwise the correlation baseline gets computed
+    # on the full-data adata while the method-level metrics were computed on
+    # the filtered subset, producing an invalid Scenario-B baseline that leaks
+    # held-out time points.
+    #
+    # Memory-efficient loading: when scenario_config carries a
+    # scenario_params.train_times list (i.e. Scenario B / C), the adapter will
+    # immediately filter to a row subset. Use backed='r' so the full gene matrix
+    # is not materialised before that filter. The adapter's self.adata[mask].copy()
+    # call materialises only the filtered subset.  For Scenario A (no train_times)
+    # the backed read is equally safe: the first .copy() triggered inside the
+    # adapter materialises the full matrix as before.
+    _has_train_times = bool(
+        (scenario_config.get("scenario_params") or {}).get("train_times")
+    )
+    _backed_mode = "r" if _has_train_times else None
+    adata = anndata.read_h5ad(adata_path, backed=_backed_mode)
     adapter = AdapterClass(adata=adata, scenario_config=scenario_config,
                            output_dir=output_dir)
 
@@ -104,6 +126,14 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
         print(f"[dispatch] Lineage Fidelity outputs: {lf_result}")
 
         # Run the lineage evaluator to compute metrics.
+        # IMPORTANT: pass `adapter.adata` (which is the scenario-filtered view
+        # after the adapter's Step 0 train_times filter) rather than the
+        # dispatcher-level `adata`. If the adapter didn't reassign self.adata
+        # (e.g. Scenario A, no train_times block), the two are the same object
+        # and Scenario-A behavior is unchanged. If the adapter did reassign
+        # (e.g. CellRank2 Scenario B), this ensures the correlation baseline is
+        # computed on the same cell universe that the method trained on.
+        eval_adata = getattr(adapter, "adata", adata)
         from benchmark.evaluation.eval_lineage import run_lineage_evaluation
         lf_metrics = run_lineage_evaluation(
             state_transition_matrix_path=lf_result["state_transition_matrix"],
@@ -112,6 +142,8 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
             reference_graph_path=reference_graph_path,
             edge_confidence_mode=edge_confidence_mode,
             exclude_uncertain_states=exclude_uncertain_states,
+            cell_state_key=cell_state_key or scenario_config.get("cell_state_key"),
+            adata=eval_adata,
         )
         results["lineage_fidelity"]["metrics"] = lf_metrics
     else:
@@ -203,6 +235,7 @@ def main():
     reference_graph_path = None
     edge_confidence_mode = "all"
     exclude_uncertain_states = False
+    cell_state_key = None
     if args.method_config:
         # Use utf-8-sig for the same reason: YAML files may be BOM-encoded on Windows.
         with open(args.method_config, encoding="utf-8-sig") as f:
@@ -218,6 +251,9 @@ def main():
         eus = lineage_cfg.get("exclude_uncertain_states")
         if eus is not None:
             exclude_uncertain_states = bool(eus)
+        csk = lineage_cfg.get("cell_state_key")
+        if csk:
+            cell_state_key = csk
 
         # Inject method-level dataset/lineage fields into scenario_config so that
         # adapters can read them via self.scenario_config. Adapters receive
@@ -236,6 +272,13 @@ def main():
         for top_key in ("cellrank2_params", "wot_params"):
             if method_config.get(top_key) and top_key not in scenario_config:
                 scenario_config[top_key] = method_config[top_key]
+        # Inject scenario_params (train_times / heldout_times) so adapters that
+        # honor a scenario-level time filter can see it via self.scenario_config.
+        # Required for CellRank2 Scenario B support; WOT/run.py reads from its
+        # own YAML so it does not depend on this path.
+        sp = method_config.get("scenario_params")
+        if sp and "scenario_params" not in scenario_config:
+            scenario_config["scenario_params"] = sp
 
     dispatch(
         method_id=args.method,
@@ -246,6 +289,7 @@ def main():
         reference_graph_path=reference_graph_path,
         edge_confidence_mode=edge_confidence_mode,
         exclude_uncertain_states=exclude_uncertain_states,
+        cell_state_key=cell_state_key,
     )
 
 

@@ -1,17 +1,24 @@
 {
-  "auroc": null,
-  "auprc": null,
-  "jaccard_similarity": null,
-  "single_step_recovery": null,
-  "multi_step_recovery": null,
+  "auroc": 0.7636363636363636,
+  "auprc": 0.3619922979499564,
+  "jaccard_similarity": 0.15816326530612246,
+  "jaccard_similarity_topk": 0.4090909090909091,
+  "single_step_recovery": 0.41935483870967744,
+  "multi_step_recovery": 0.34615384615384615,
   "baseline": {
-    "auroc": null,
-    "auprc": null,
-    "jaccard_similarity": null,
-    "single_step_recovery": null,
-    "multi_step_recovery": null
+    "auroc": 0.6742913000977517,
+    "auprc": 0.2339979522788161,
+    "jaccard_similarity": 0.26,
+    "single_step_recovery": 0.2903225806451613,
+    "multi_step_recovery": 0.28846153846153844,
+    "method": "correlation_baseline",
+    "cell_state_key": "scgpt_pseudostate_provisional",
+    "n_states_used": 14,
+    "n_predicted_edges_topk": 32,
+    "note": "Per-state mean-expression Pearson correlation (symmetric), top-31 off-diagonal entries as predicted lineage edges."
   },
-  "status": "completed_with_empty_predictions: reference graph was loaded successfully but the method adapter produced no state transitions (scaffold or runtime failure path). Check run_metadata.json for the method execution status.",
+  "status": "completed",
   "edge_confidence_mode": "medium_and_above",
-  "n_reference_edges": 31
+  "n_reference_edges": 31,
+  "cell_state_key": "scgpt_pseudostate_provisional"
 }

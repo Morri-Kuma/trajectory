@@ -48,21 +48,34 @@ import torch
 # ---------------------------------------------------------------------------
 
 def _find_project_root() -> Path:
-    known = Path(r"C:\Users\37620\trajectory")
-    if known.exists() and (known / "data").exists():
-        return known
+    import os
+    # 1. Explicit override: TRAJ_PROJECT_ROOT env var (Shirokane HPC / CI).
+    env = os.environ.get("TRAJ_PROJECT_ROOT")
+    if env:
+        p = Path(env)
+        if p.exists():
+            return p
+        raise FileNotFoundError(
+            f"TRAJ_PROJECT_ROOT={env!r} does not exist.  "
+            "Correct the environment variable and retry."
+        )
+    # 2. Walk upward from this script until a directory containing 'data/' is found.
     here = Path(__file__).resolve().parent
     for candidate in [here, *here.parents]:
         if (candidate / "data").exists():
             return candidate
+    # 3. Last-resort fallback.
     return here.parent
 
 
 PROJECT_ROOT = _find_project_root()
 print(f"[smoke_test] Project root: {PROJECT_ROOT}")
 
-# Make the local scGPT repo importable if the package is not installed
-SCGPT_REPO = Path(r"C:\Users\37620\Documents\GitHub\scGPT")
+# Make the local scGPT repo importable if the package is not installed.
+# Set SCGPT_REPO env var to override the default path (required on Shirokane / HPC).
+import os as _os
+SCGPT_REPO = Path(_os.environ.get("SCGPT_REPO", r"C:\Users\37620\Documents\GitHub\scGPT"))
+del _os
 if SCGPT_REPO.exists() and str(SCGPT_REPO) not in sys.path:
     sys.path.insert(0, str(SCGPT_REPO))
 

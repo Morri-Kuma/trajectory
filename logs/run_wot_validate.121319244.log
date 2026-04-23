@@ -1,0 +1,43 @@
+============================================================
+Job started at: 2026年  4月 22日 水曜日 21:01:58 JST
+Host          : pc057
+Project root  : /home/xzy0723/projects/trajectory
+SCGPT repo    : /home/xzy0723/projects/scGPT
+Config        : benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioA.yaml
+Output dir    : benchmark/results/wot/scenario_A_scgpt_v1_shirokane_test
+Job ID        : 121319244
+============================================================
+Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
+Python 3.10.20
+imports OK
+anndata : 0.11.4
+scanpy  : 1.11.5
+cellrank: 2.0.7
+scvelo  : 0.3.4
+------------------------------------------------------------
+Running command:
+ python benchmark/methods/WOT/run.py --config benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioA.yaml --output-dir benchmark/results/wot/scenario_A_scgpt_v1_shirokane_test --skip-tmap-if-exists
+------------------------------------------------------------
+=================================================================
+WOT benchmark runner  (scTimeBench v2 — Lineage Fidelity only)
+=================================================================
+  Project root : /home/xzy0723/projects/trajectory
+Traceback (most recent call last):
+  File "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/methods/WOT/run.py", line 86, in _load_yaml
+    import yaml
+ModuleNotFoundError: No module named 'yaml'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/methods/WOT/run.py", line 673, in <module>
+    main()
+  File "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/methods/WOT/run.py", line 444, in main
+    cfg = _load_yaml(config_path)
+  File "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/methods/WOT/run.py", line 93, in _load_yaml
+    with open(path, "r", encoding="utf-8-sig") as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/home/xzy0723/projects/trajectory/benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioA.yaml'
+
+real	0m0.486s
+user	0m7.170s
+sys	0m0.186s

@@ -216,38 +216,248 @@ def compute_multi_step_recovery(predicted_matrix: pd.DataFrame,
 # Correlation baseline
 # ------------------------------------------------------------------
 
+def _state_mean_expression(adata, cell_state_key: str,
+                            states: list,
+                            chunk_size: int = 4096) -> pd.DataFrame:
+    """
+    Compute mean gene expression per cell state in a memory-friendly way.
+
+    Works whether ``adata.X`` is a sparse CSR, dense ndarray, or a backed
+    h5ad ``_CSRDataset`` (AnnData backed='r'). Iterates over cells in chunks
+    so we never materialise the full n_cells × n_genes matrix in RAM, which
+    is essential at the 75k×23k GSE230659 scale.
+
+    Returns
+    -------
+    pd.DataFrame indexed by state id, columns = gene indices (positional).
+    """
+    import scipy.sparse as sp
+
+    cell_states = adata.obs[cell_state_key].astype(str).values
+    n_cells = adata.n_obs
+    n_genes = adata.n_vars
+    state_to_idx = {str(s): i for i, s in enumerate(states)}
+
+    sums = np.zeros((len(states), n_genes), dtype=np.float64)
+    counts = np.zeros(len(states), dtype=np.int64)
+
+    X = adata.X
+    for start in range(0, n_cells, chunk_size):
+        end = min(start + chunk_size, n_cells)
+        chunk = X[start:end]
+        if sp.issparse(chunk):
+            chunk_dense = chunk.toarray()
+        else:
+            chunk_dense = np.asarray(chunk)
+        # Group-sum by state within this chunk.
+        chunk_states = cell_states[start:end]
+        # Precompute per-state masks via unique for speed.
+        for s_str, i in state_to_idx.items():
+            mask = chunk_states == s_str
+            if not mask.any():
+                continue
+            sums[i] += chunk_dense[mask].sum(axis=0)
+            counts[i] += int(mask.sum())
+
+    # Safe per-state mean.
+    means = np.zeros_like(sums)
+    nonzero = counts > 0
+    means[nonzero] = sums[nonzero] / counts[nonzero, None]
+
+    return pd.DataFrame(means, index=list(states))
+
+
+def _build_baseline_edges(corr_df: pd.DataFrame,
+                           n_top: int) -> Tuple[pd.DataFrame, set]:
+    """
+    Binarize the correlation "transition" matrix into a sparse edge list by
+    selecting the top-N off-diagonal entries (matching the single-step rule).
+
+    This gives the baseline a predicted-edges set comparable to what the
+    method adapters emit, so the edge-based Jaccard is not trivially 1.0
+    for the full dense matrix.
+    """
+    flat = corr_df.values.copy()
+    # Mask diagonal so self-correlation (1.0) is not treated as an edge.
+    np.fill_diagonal(flat, -np.inf)
+    n = flat.size
+    if n_top <= 0 or n_top > n:
+        n_top = max(1, min(n_top, n))
+    threshold = np.sort(flat.flatten())[-n_top]
+    edge_rows: list = []
+    edges: set = set()
+    states = list(corr_df.index)
+    for i, src in enumerate(states):
+        for j, tgt in enumerate(corr_df.columns):
+            v = flat[i, j]
+            if v >= threshold and np.isfinite(v):
+                edge_rows.append({"source_state": src,
+                                  "target_state": tgt,
+                                  "weight": float(corr_df.iloc[i, j])})
+                edges.add((src, tgt))
+    edges_df = pd.DataFrame(
+        edge_rows if edge_rows else [],
+        columns=["source_state", "target_state", "weight"],
+    )
+    return edges_df, edges
+
+
 def compute_correlation_baseline(adata,
-                                  reference_matrix: pd.DataFrame) -> dict:
+                                  reference_matrix: pd.DataFrame,
+                                  reference_edges: set,
+                                  cell_state_key: Optional[str] = None,
+                                  output_dir: Optional[str] = None) -> dict:
     """
     Correlation-based baseline for Lineage Fidelity (per v2 §9.6).
 
-    Analogous to scTimeBench's lineage baseline: uses pairwise gene expression
-    correlation between cell states as a naive predictor of lineage connectivity,
-    then evaluates against the reference lineage using the same metrics.
+    Analogous to scTimeBench's lineage baseline: uses pairwise Pearson
+    correlation between per-state mean gene expression vectors as a naive
+    predictor of lineage connectivity, then evaluates the resulting
+    (symmetric) score matrix against the reference lineage using the same
+    metrics as the main evaluator.
+
+    Notes on interpretation
+    -----------------------
+    The baseline is intentionally naïve and **undirected**: correlation is
+    symmetric, so the baseline cannot distinguish A→B from B→A.  That is the
+    point — a non-trivial method must beat a direction-agnostic similarity
+    signal to demonstrate real lineage inference value.  Diagonal entries
+    are masked out so self-correlation (=1.0) does not dominate the
+    predicted-edges list.
+
+    Traceability
+    ------------
+    If ``output_dir`` is provided, the baseline writes two side files so the
+    baseline is fully reproducible from disk:
+      - ``baseline_state_transition_matrix.csv`` (the correlation matrix)
+      - ``baseline_lineage_graph_edges.csv`` (top-N correlation edges)
     """
-    if adata is None or reference_matrix.empty:
-        return {metric: None for metric in
-                ["auroc", "auprc", "jaccard_similarity",
-                 "single_step_recovery", "multi_step_recovery"]}
-
-    # TODO: compute mean gene expression per cell state and build correlation matrix.
-    # state_means = ...
-    # corr_matrix = np.corrcoef(state_means)
-    # Evaluate corr_matrix against reference_matrix using the same metrics.
-
-    return {
-        "auroc": None,
-        "auprc": None,
-        "jaccard_similarity": None,
-        "single_step_recovery": None,
-        "multi_step_recovery": None,
-        "note": "Correlation baseline not yet implemented. Requires frozen cell-state system.",
+    none_result = {
+        "auroc": None, "auprc": None, "jaccard_similarity": None,
+        "single_step_recovery": None, "multi_step_recovery": None,
     }
+
+    if adata is None:
+        return {**none_result,
+                "note": "Correlation baseline skipped: no AnnData was passed to the evaluator."}
+    if reference_matrix is None or reference_matrix.empty:
+        return {**none_result,
+                "note": "Correlation baseline skipped: reference matrix is empty under the current edge_confidence_mode."}
+    if cell_state_key is None:
+        return {**none_result,
+                "note": "Correlation baseline skipped: cell_state_key was not supplied to the evaluator."}
+    if cell_state_key not in adata.obs.columns:
+        return {**none_result,
+                "note": f"Correlation baseline skipped: adata.obs does not contain {cell_state_key!r}."}
+
+    # Align state list with the reference matrix so predicted and reference
+    # matrices have identical index/columns when metrics are computed.
+    states = list(reference_matrix.index)
+
+    # Per-state mean expression.
+    try:
+        means_df = _state_mean_expression(adata, cell_state_key, states)
+    except Exception as exc:  # pragma: no cover — defensive
+        return {**none_result,
+                "note": f"Correlation baseline failed during mean-expression computation: {exc!s}"}
+
+    # States present in adata (non-zero mean vector).
+    row_norms = np.linalg.norm(means_df.values, axis=1)
+    present_mask = row_norms > 0
+
+    if present_mask.sum() < 2:
+        return {**none_result,
+                "note": (
+                    "Correlation baseline skipped: fewer than 2 reference states "
+                    f"are represented in adata under {cell_state_key!r}."
+                )}
+
+    # Pearson correlation across states. Clip NaN rows (zero-variance) to 0.
+    corr = np.corrcoef(means_df.values)
+    corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+    # Shift from [-1, 1] → [0, 1] so it behaves like a probability score for
+    # AUROC/AUPRC (the sklearn implementations care about ranking, so the
+    # shift is metric-preserving, but it keeps the score non-negative for
+    # downstream consistency with the WOT/CR2 STM conventions).
+    score = (corr + 1.0) / 2.0
+    corr_df = pd.DataFrame(score, index=states, columns=states, dtype=float)
+
+    # Metrics — aligned with the main evaluator so numbers are directly
+    # comparable across method vs baseline rows in the summary.
+    y_true = reference_matrix.values.flatten().astype(int)
+    y_score = corr_df.values.flatten().astype(float)
+    metrics = {
+        "auroc": compute_auroc(y_true, y_score),
+        "auprc": compute_auprc(y_true, y_score),
+    }
+
+    # Edge-based metrics require a sparse predicted-edges set.
+    n_ref = int(reference_matrix.values.sum())
+    edges_df, edges_set = _build_baseline_edges(corr_df, n_top=n_ref)
+    metrics["jaccard_similarity"] = compute_jaccard(edges_set, reference_edges)
+    metrics["single_step_recovery"] = compute_single_step_recovery(
+        corr_df, reference_matrix
+    )
+    metrics["multi_step_recovery"] = compute_multi_step_recovery(
+        corr_df, reference_matrix
+    )
+
+    # Provenance fields so the baseline row is traceable in the summary.
+    metrics["method"] = "correlation_baseline"
+    metrics["cell_state_key"] = cell_state_key
+    metrics["n_states_used"] = int(present_mask.sum())
+    metrics["n_predicted_edges_topk"] = len(edges_set)
+    metrics["note"] = (
+        "Per-state mean-expression Pearson correlation (symmetric), "
+        f"top-{n_ref} off-diagonal entries as predicted lineage edges."
+    )
+
+    # Optional on-disk traceability artifacts.
+    if output_dir is not None:
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        corr_df.to_csv(out / "baseline_state_transition_matrix.csv")
+        edges_df.to_csv(out / "baseline_lineage_graph_edges.csv", index=False)
+
+    return metrics
 
 
 # ------------------------------------------------------------------
 # Main evaluation function
 # ------------------------------------------------------------------
+
+def _topk_predicted_edges(predicted_matrix: pd.DataFrame, k: int) -> set:
+    """
+    Build a top-k predicted-edges set from a (possibly dense) state-transition
+    matrix by selecting the k off-diagonal entries with the largest weight.
+
+    This mirrors the rule used by ``compute_single_step_recovery`` so that the
+    edge-based Jaccard is computed on a *sparse, comparable* edge list rather
+    than on whatever the adapter happened to dump into ``lineage_graph_edges.csv``
+    (WOT and CellRank2 currently emit fully dense 14×14 = 196 edges, which
+    forces the raw-edge Jaccard to collapse to ``n_ref / 196`` for any method
+    whose STM is dense — see benchmark/docs/jaccard_singlestep_diagnosis.md).
+    Self-loops are excluded.
+    """
+    if predicted_matrix.empty or k <= 0:
+        return set()
+    vals = predicted_matrix.values.copy().astype(float)
+    np.fill_diagonal(vals, -np.inf)
+    flat = vals.flatten()
+    finite = flat[np.isfinite(flat)]
+    if finite.size == 0:
+        return set()
+    k = min(k, finite.size)
+    threshold = np.sort(finite)[-k]
+    edges: set = set()
+    states_idx = list(predicted_matrix.index)
+    states_col = list(predicted_matrix.columns)
+    for i, src in enumerate(states_idx):
+        for j, tgt in enumerate(states_col):
+            if np.isfinite(vals[i, j]) and vals[i, j] >= threshold:
+                edges.add((src, tgt))
+    return edges
+
 
 def run_lineage_evaluation(
     state_transition_matrix_path: str,
@@ -257,6 +467,7 @@ def run_lineage_evaluation(
     adata=None,
     edge_confidence_mode: str = "all",
     exclude_uncertain_states: bool = False,
+    cell_state_key: Optional[str] = None,
 ) -> dict:
     """
     Evaluate Lineage Fidelity for one method × scenario run.
@@ -284,12 +495,17 @@ def run_lineage_evaluation(
     exclude_uncertain_states : bool
         If True, exclude edges involving uncertain-status nodes from the
         reference. See load_reference_graph() for details. Default False.
+    cell_state_key : str, optional
+        Name of the obs column that holds the cell-state label used by the
+        method (e.g. ``"scgpt_pseudostate_provisional"``). Required by the
+        correlation baseline; if absent the baseline reports a clear "skipped"
+        status instead of returning silently empty values.
 
     Returns
     -------
-    dict with keys: auroc, auprc, jaccard_similarity, single_step_recovery,
-                    multi_step_recovery, baseline, status,
-                    edge_confidence_mode, n_reference_edges
+    dict with keys: auroc, auprc, jaccard_similarity, jaccard_similarity_topk,
+                    single_step_recovery, multi_step_recovery, baseline,
+                    status, edge_confidence_mode, n_reference_edges
     """
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -322,12 +538,14 @@ def run_lineage_evaluation(
             "auroc": None,
             "auprc": None,
             "jaccard_similarity": None,
+            "jaccard_similarity_topk": None,
             "single_step_recovery": None,
             "multi_step_recovery": None,
             "baseline": None,
             "status": status,
             "edge_confidence_mode": edge_confidence_mode,
             "n_reference_edges": None,
+            "cell_state_key": cell_state_key,
         }
         metrics_path = out_dir / "lineage_metrics.json"
         with open(metrics_path, "w") as f:
@@ -376,7 +594,23 @@ def run_lineage_evaluation(
 
         metrics["auroc"] = compute_auroc(y_true, y_score)
         metrics["auprc"] = compute_auprc(y_true, y_score)
+        # Raw edge Jaccard — treats every nonzero entry in
+        # lineage_graph_edges.csv as a predicted edge.  This is the
+        # scTimeBench-style set-Jaccard.  For current adapters it collapses
+        # to n_ref / 196 because WOT/CR2 emit dense 14×14 edge lists.
         metrics["jaccard_similarity"] = compute_jaccard(predicted_edges, reference_edges)
+        # Top-k edge Jaccard — restricts the predicted edge set to the
+        # top n_ref off-diagonal entries of the STM (same rule as
+        # single_step_recovery). This is the method-discriminating
+        # Jaccard used for ranking; see jaccard_singlestep_diagnosis.md.
+        ref_set_for_topk = {
+            (src, tgt) for src, tgt in reference_edges
+            if src in pred_aligned.index and tgt in pred_aligned.columns
+        }
+        topk_edges = _topk_predicted_edges(pred_aligned, len(ref_set_for_topk))
+        metrics["jaccard_similarity_topk"] = compute_jaccard(
+            topk_edges, ref_set_for_topk
+        )
         metrics["single_step_recovery"] = compute_single_step_recovery(
             pred_aligned, ref_aligned
         )
@@ -389,7 +623,8 @@ def run_lineage_evaluation(
         # reference matrix is empty.  All metrics are None, but we clearly label
         # WHY so the status is not mistaken for a successful evaluation.
         metrics.update({
-            "auroc": None, "auprc": None, "jaccard_similarity": None,
+            "auroc": None, "auprc": None,
+            "jaccard_similarity": None, "jaccard_similarity_topk": None,
             "single_step_recovery": None, "multi_step_recovery": None,
         })
         if not has_predictions:
@@ -408,11 +643,22 @@ def run_lineage_evaluation(
                 "applying the current edge_confidence_mode filter."
             )
 
-    # Correlation baseline
-    metrics["baseline"] = compute_correlation_baseline(adata, reference_matrix)
+    # Correlation baseline (per v2 §9.6).
+    # Uses per-state mean expression Pearson correlation as a naive lineage
+    # predictor and is evaluated against the SAME reference graph using the
+    # SAME metric functions, so baseline rows are directly comparable to
+    # method rows in the summary table.
+    metrics["baseline"] = compute_correlation_baseline(
+        adata=adata,
+        reference_matrix=reference_matrix,
+        reference_edges=reference_edges,
+        cell_state_key=cell_state_key,
+        output_dir=str(out_dir),
+    )
     metrics["status"] = completion_status
     metrics["edge_confidence_mode"] = edge_confidence_mode
     metrics["n_reference_edges"] = len(reference_edges)
+    metrics["cell_state_key"] = cell_state_key
 
     metrics_path = out_dir / "lineage_metrics.json"
     with open(metrics_path, "w") as f:

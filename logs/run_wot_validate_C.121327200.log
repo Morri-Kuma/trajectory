@@ -1,0 +1,92 @@
+============================================================
+Job started at: 2026年  4月 23日 木曜日 10:40:13 JST
+Host          : hc021
+Project root  : /home/xzy0723/projects/trajectory
+SCGPT repo    : /home/xzy0723/projects/scGPT
+Config        : benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioC.yaml
+Output dir    : benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test
+Job ID        : 121327200
+============================================================
+Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
+Python 3.10.20
+imports OK
+anndata : 0.11.4
+scanpy  : 1.11.5
+cellrank: 2.0.7
+scvelo  : 0.3.4
+------------------------------------------------------------
+Running command:
+ python benchmark/methods/WOT/run.py --config benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioC.yaml --output-dir benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test --skip-tmap-if-exists
+------------------------------------------------------------
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/anndata/__init__.py:42: FutureWarning: `anndata.read` is deprecated, use `anndata.read_h5ad` instead. `ad.read` will be removed in mid 2024.
+  warnings.warn(
+=================================================================
+WOT benchmark runner  (scTimeBench v2 — Lineage Fidelity only)
+=================================================================
+  Project root : /home/xzy0723/projects/trajectory
+  Config       : /home/xzy0723/projects/trajectory/benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioC.yaml
+
+[1/5] Loading dataset ...
+  pkl not found at /home/xzy0723/projects/trajectory/benchmark/datasets/scgpt_v1_no_pkl_placeholder.pkl. Falling back to h5ad direct load.
+  Backed read: 75194 cells × 23112 genes (will materialize filtered subset)
+
+  [scenario] Restricted train_adata to [0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0]: 75194 → 49820 cells (dropped 25374)
+  [scenario] Remaining time points: [np.float64(0.5), np.float64(2.0), np.float64(8.0), np.float64(16.0), np.float64(16.33), np.float64(16.67), np.float64(17.0), np.float64(18.0), np.float64(22.0), np.float64(24.0)]
+
+[2/5] Preparing WOT inputs ...
+  Growth rates: uniform prior (all 1.0)
+  Time points: [np.float64(0.5), np.float64(2.0), np.float64(8.0), np.float64(16.0), np.float64(16.33), np.float64(16.67), np.float64(17.0), np.float64(18.0), np.float64(22.0), np.float64(24.0)]
+
+[3/5] Running WOT transport maps ...
+  [cache] --skip-tmap-if-exists set but no existing tmap_*.h5ad files found in /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/tmaps — running OT computation.
+  Initializing wot.ot.OTModel (day_field='abs_day') ...
+  Timepoints detected: [0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0]
+  Computing all transport maps → /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/tmaps ...
+  Loading transport maps from /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/tmaps ...
+  [timing] Transport map step: 569.7s
+
+[4/5] Aggregating to cell-state level ...
+  [timing] State aggregation — 9 pair(s) in 7.054s
+  [timing] Aggregation step total: 7.066s
+  State-transition matrix shape: (14, 14)
+  Lineage graph edges: 194 edges
+
+[5/5] Writing outputs → /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test
+  state_transition_matrix → /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/state_transition_matrix.csv
+  lineage_graph_edges     → /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/lineage_graph_edges.csv
+  run_metadata            → /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/run_metadata.json
+
+[eval] Running eval_lineage.py ...
+[eval_lineage] Reference graph loaded: 14 nodes, 31 edges (mode='medium_and_above')
+[eval_lineage] Metrics written to /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test/lineage_metrics.json
+  Lineage Fidelity status: completed
+
+=================================================================
+WOT run complete
+  Output dir  : /home/xzy0723/projects/trajectory/benchmark/results/wot/scenario_C_scgpt_v1_shirokane_test
+  Runtime     : 594.0s
+  Status      : completed
+=================================================================
+
+real	9m56.254s
+user	264m46.498s
+sys	2m49.944s
+============================================================
+Job finished at: 2026年  4月 23日 木曜日 10:50:41 JST
+============================================================
