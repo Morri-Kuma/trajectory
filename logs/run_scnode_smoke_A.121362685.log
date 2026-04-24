@@ -1,0 +1,201 @@
+============================================================
+Job started at: 2026年  4月 23日 木曜日 19:38:38 JST
+Host          : pc030
+Project root  : /home/xzy0723/projects/trajectory
+SCGPT repo    : /home/xzy0723/projects/scGPT
+Method        : scnode
+Scenario      : A smoke
+Source adata  : benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
+Smoke adata   : benchmark/results/scnode/smoke_inputs/adata_scnode_smoke_A.h5ad
+Base config   : benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml
+Smoke config  : benchmark/configs/scnode_gse230659_observed_scgpt_v1_smoke.yaml
+Output dir    : benchmark/results/scnode/scenario_A_scgpt_v1_smoke
+Job ID        : 121362685
+============================================================
+Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
+Python 3.10.20
+imports OK
+anndata  : 0.11.4
+torch    : 2.11.0+cu130
+torchdiffeq import OK
+------------------------------------------------------------
+Building smoke-test h5ad and config
+------------------------------------------------------------
+wrote smoke adata: /home/xzy0723/projects/trajectory/benchmark/results/scnode/smoke_inputs/adata_scnode_smoke_A.h5ad shape=(1500, 23112)
+wrote smoke config: /home/xzy0723/projects/trajectory/benchmark/configs/scnode_gse230659_observed_scgpt_v1_smoke.yaml
+------------------------------------------------------------
+Running command:
+ python -m benchmark.evaluation.eval_dispatch --method scnode --scenario A --adata benchmark/results/scnode/smoke_inputs/adata_scnode_smoke_A.h5ad --output-dir benchmark/results/scnode/scenario_A_scgpt_v1_smoke --method-config benchmark/configs/scnode_gse230659_observed_scgpt_v1_smoke.yaml
+------------------------------------------------------------
+
+============================================================
+Method       : scnode
+Scenario     : A
+Eligible for : ['lineage_fidelity', 'forecast_accuracy', 'embedding_coherence']
+============================================================
+[dispatch] Running Lineage Fidelity ...
+  [data] tp=0.50: 100 cells
+  [data] tp=2.00: 100 cells
+  [data] tp=4.00: 100 cells
+  [data] tp=8.00: 100 cells
+  [data] tp=12.00: 100 cells
+  [data] tp=16.00: 100 cells
+  [data] tp=16.33: 100 cells
+  [data] tp=16.67: 100 cells
+  [data] tp=17.00: 100 cells
+  [data] tp=18.00: 100 cells
+  [data] tp=20.00: 100 cells
+  [data] tp=22.00: 100 cells
+  [data] tp=24.00: 100 cells
+  [data] tp=28.00: 100 cells
+  [data] tp=30.00: 100 cells
+[ScNODEAdapter] n_genes=23112, n_sim_cells=100, train_times=all, heldout_times=[]
+[scNODE] Training: pretrain_iters=5, epochs=1, seed=42
+[ Pre-Training ]:   0%|          | 0/5 [00:00<?, ?it/s][ Pre-Training ]:   0%|          | 0/5 [00:03<?, ?it/s, Loss=81.089][ Pre-Training ]:  20%|██        | 1/5 [00:05<00:22,  5.58s/it, Loss=81.089][ Pre-Training ]:  20%|██        | 1/5 [00:06<00:22,  5.58s/it, Loss=94.620][ Pre-Training ]:  40%|████      | 2/5 [00:07<00:09,  3.25s/it, Loss=94.620][ Pre-Training ]:  40%|████      | 2/5 [00:07<00:09,  3.25s/it, Loss=81.933][ Pre-Training ]:  60%|██████    | 3/5 [00:08<00:04,  2.42s/it, Loss=81.933][ Pre-Training ]:  60%|██████    | 3/5 [00:08<00:04,  2.42s/it, Loss=81.575][ Pre-Training ]:  80%|████████  | 4/5 [00:10<00:02,  2.03s/it, Loss=81.575][ Pre-Training ]:  80%|████████  | 4/5 [00:10<00:02,  2.03s/it, Loss=84.814][ Pre-Training ]: 100%|██████████| 5/5 [00:11<00:00,  1.80s/it, Loss=84.814][ Pre-Training ]: 100%|██████████| 5/5 [00:11<00:00,  2.29s/it, Loss=84.814]
+[ Epoch 1 ]:   0%|          | 0/2 [00:00<?, ?it/s][ Epoch 1 ]:   0%|          | 0/2 [01:19<?, ?it/s, Loss=1044142.938 | OT=1040766.375, Dynamic_Reg=3376.578][ Epoch 1 ]:  50%|█████     | 1/2 [01:39<01:39, 99.06s/it, Loss=1044142.938 | OT=1040766.375, Dynamic_Reg=3376.578][ Epoch 1 ]:  50%|█████     | 1/2 [02:56<01:39, 99.06s/it, Loss=978474.188 | OT=978026.312, Dynamic_Reg=447.896]   [ Epoch 1 ]: 100%|██████████| 2/2 [03:15<00:00, 97.23s/it, Loss=978474.188 | OT=978026.312, Dynamic_Reg=447.896][ Epoch 1 ]: 100%|██████████| 2/2 [03:15<00:00, 97.50s/it, Loss=978474.188 | OT=978026.312, Dynamic_Reg=447.896]
+[scNODE] Model saved → benchmark/results/scnode/scenario_A_scgpt_v1_smoke/trained_scnode_model.pth
+[Forecast] Predicting from t0=0.5 across 15 tps (train=15, heldout=0, n_sim_cells=100) ...
+  [Forecast] t=0.50: Wasserstein=1110669.0910 L2=1401.5141
+  [Forecast] t=2.00: Wasserstein=1624707.4988 L2=1728.0271
+  [Forecast] t=4.00: Wasserstein=2333461.5085 L2=1660.2361
+  [Forecast] t=8.00: Wasserstein=1240241.3073 L2=1447.7338
+  [Forecast] t=12.00: Wasserstein=652391.1244 L2=1089.6129
+  [Forecast] t=16.00: Wasserstein=740347.0595 L2=1120.5991
+  [Forecast] t=16.33: Wasserstein=431589.8704 L2=863.9391
+  [Forecast] t=16.67: Wasserstein=690073.3215 L2=1108.4610
+  [Forecast] t=17.00: Wasserstein=693780.7924 L2=1086.7143
+  [Forecast] t=18.00: Wasserstein=284331.2846 L2=728.6490
+  [Forecast] t=20.00: Wasserstein=467244.8219 L2=912.1802
+  [Forecast] t=22.00: Wasserstein=989037.1307 L2=1228.3510
+  [Forecast] t=24.00: Wasserstein=1593942.1104 L2=1618.0709
+  [Forecast] t=28.00: Wasserstein=1728043.1205 L2=1715.4092
+  [Forecast] t=30.00: Wasserstein=415137.3808 L2=822.3847
+[Forecast] Done. Mean Wasserstein=999666.4948621616
+[Embedding] Computed centroids for 14 states.
+[Embedding] projected_embedding.npy shape: (1500, 10)
+[Lineage] 14 states, 15 training tps
+[Lineage] Computing state centroids ...
+  [Lineage] 0.50 → 2.00: 100 cells
+  [Lineage] 2.00 → 4.00: 100 cells
+  [Lineage] 4.00 → 8.00: 100 cells
+  [Lineage] 8.00 → 12.00: 100 cells
+  [Lineage] 12.00 → 16.00: 100 cells
+  [Lineage] 16.00 → 16.33: 100 cells
+  [Lineage] 16.33 → 16.67: 100 cells
+  [Lineage] 16.67 → 17.00: 100 cells
+  [Lineage] 17.00 → 18.00: 100 cells
+  [Lineage] 18.00 → 20.00: 100 cells
+  [Lineage] 20.00 → 22.00: 100 cells
+  [Lineage] 22.00 → 24.00: 100 cells
+  [Lineage] 24.00 → 28.00: 100 cells
+  [Lineage] 28.00 → 30.00: 100 cells
+[Lineage] STM written  (14×14): benchmark/results/scnode/scenario_A_scgpt_v1_smoke/state_transition_matrix.csv
+[Lineage] Edges written (194 edges): benchmark/results/scnode/scenario_A_scgpt_v1_smoke/lineage_graph_edges.csv
+[dispatch] Lineage Fidelity outputs: {'state_transition_matrix': 'benchmark/results/scnode/scenario_A_scgpt_v1_smoke/state_transition_matrix.csv', 'lineage_graph_edges': 'benchmark/results/scnode/scenario_A_scgpt_v1_smoke/lineage_graph_edges.csv'}
+[eval_lineage] Reference graph loaded: 14 nodes, 31 edges (mode='medium_and_above')
+[eval_lineage] Metrics written to benchmark/results/scnode/scenario_A_scgpt_v1_smoke/lineage_metrics.json
+[dispatch] Running Forecast Accuracy ...
+[dispatch] Forecast metrics already produced by adapter; using benchmark/results/scnode/scenario_A_scgpt_v1_smoke/forecast_metrics.json
+[dispatch] Running Embedding Coherence ...
+[dispatch] Embedding metrics already produced by adapter; using benchmark/results/scnode/scenario_A_scgpt_v1_smoke/embedding_metrics.json
+
+[dispatch] Run complete for scnode / A.
+
+real	4m53.612s
+user	374m48.902s
+sys	1m19.388s
+------------------------------------------------------------
+Output check
+------------------------------------------------------------
+output_dir: /home/xzy0723/projects/trajectory/benchmark/results/scnode/scenario_A_scgpt_v1_smoke
+missing: []
+
+== run_metadata.json ==
+{
+  "method": "scnode",
+  "dataset": "GSE230659",
+  "scenario": "A",
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 278.67,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "scgpt_pseudostate_provisional",
+  "train_times": "all",
+  "heldout_times": [],
+  "n_sim_cells": 100,
+  "notes": ""
+}
+
+== forecast_metrics.json ==
+{
+  "wasserstein_distance": 999666.4948621616,
+  "gaussian_mmd": null,
+  "energy_distance_mmd": null,
+  "hausdorff_loss": null,
+  "n_eval_timepoints": 15,
+  "eval_timepoints": [
+    0.5,
+    2.0,
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    16.33,
+    16.67,
+    17.0,
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    28.0,
+    30.0
+  ],
+  "scenario_type": "reconstruction",
+  "status": "completed"
+}
+
+== embedding_metrics.json ==
+{
+  "adjusted_rand_index": null,
+  "avg_normalized_classifier_entropy": null,
+  "projected_latent_dim": 10,
+  "n_eval_timepoints": 15,
+  "status": "embedding_produced_metrics_deferred"
+}
+
+== lineage_metrics.json ==
+{
+  "auroc": 0.5216031280547408,
+  "auprc": 0.1895225123117929,
+  "jaccard_similarity": 0.15384615384615385,
+  "jaccard_similarity_topk": 0.12727272727272726,
+  "single_step_recovery": 0.1935483870967742,
+  "multi_step_recovery": 0.2692307692307692,
+  "baseline": {
+    "auroc": 0.6389051808406647,
+    "auprc": 0.22386679658971456,
+    "jaccard_similarity": 0.26,
+    "single_step_recovery": 0.2903225806451613,
+    "multi_step_recovery": 0.28846153846153844,
+    "method": "correlation_baseline",
+    "cell_state_key": "scgpt_pseudostate_provisional",
+    "n_states_used": 14,
+    "n_predicted_edges_topk": 32,
+    "note": "Per-state mean-expression Pearson correlation (symmetric), top-31 off-diagonal entries as predicted lineage edges."
+  },
+  "status": "completed",
+  "edge_confidence_mode": "medium_and_above",
+  "n_reference_edges": 31,
+  "cell_state_key": "scgpt_pseudostate_provisional"
+}
+============================================================
+Job finished at: 2026年  4月 23日 木曜日 19:44:48 JST
+============================================================

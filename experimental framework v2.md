@@ -268,6 +268,102 @@ A formal Lineage Fidelity benchmark requires:
 
 At the present stage, these should be treated as **benchmark prerequisites** rather than assumed repository defaults. Existing project-side draft label files are **not yet automatically wired into the active benchmark flow**. They may be adopted later only after the core evaluator logic is stabilized and the reference definition is explicitly frozen.
 
+### 9.3.1 Ground-truth provider strategy
+The benchmark should treat the definition of "ground truth" as a **replaceable provider layer**, not as a hard-coded property of any single annotation method.
+
+For Forecast Accuracy, the ground truth is comparatively direct:
+- observed held-out cells at the target time point
+- observed gene expression used as the reference distribution
+
+For Embedding Coherence and Lineage Fidelity, the ground truth is more model-dependent because it requires:
+- a cell-state annotation system
+- per-cell state labels
+- per-state metadata
+- a reference lineage graph over those states
+
+Therefore, each annotation / reference system should be represented as a modular **ground-truth provider**. A provider must produce the following standard assets:
+
+```text
+state_labels.tsv
+state_metadata.tsv
+reference_graph.json
+reference_graph_edges.csv
+ground_truth_metadata.json
+```
+
+Each provider must also declare:
+- `provider_id`
+- `annotation_method`
+- `state_key`
+- `label_path`
+- `metadata_path`
+- `reference_graph_path`
+- `reference_edges_path`
+- `confidence_mode`
+- `exclude_uncertain_states`
+- `status`
+- provenance notes
+
+The current provider is:
+
+```text
+provider_id: scgpt_v1
+status: silver_standard_working
+annotation_method: scGPT
+state_key: scgpt_pseudostate_provisional
+```
+
+This provider is derived from:
+1. pretrained whole-human scGPT embeddings (`X_scGPT`)
+2. Leiden clustering into 14 pseudostates (`PS_00`-`PS_13`)
+3. per-state biological review into confirmed / merge-review / uncertain states
+4. consecutive-timepoint kNN transition counting
+5. confidence-tier filtering of reference edges
+
+The resulting scGPT-v1 reference graph has:
+- 14 nodes
+- 42 total directed edges
+- 3 high-confidence edges
+- 28 medium-confidence edges
+- 11 low-confidence edges
+
+The default active Lineage Fidelity setting uses:
+
+```text
+edge_confidence_mode: medium_and_above
+```
+
+This means the active reference contains 31 edges (high + medium), while low-confidence edges involving uncertain states are excluded from the main metric calculation.
+
+This scGPT-v1 provider is a **silver-standard working reference**, not final biological ground truth. Its role is to make the benchmark executable, reproducible, and comparable while preserving the option to replace or compare annotation systems later.
+
+Future providers may include, for example:
+- CellTypist-derived labels and lineage graph
+- scANVI-derived labels and lineage graph
+- SingleR-derived labels and lineage graph
+- marker-rule-derived labels and lineage graph
+- ensemble or consensus annotation providers
+
+When a new provider is added, the model adapters should not need to change. The benchmark should instead switch provider metadata and paths through a `ground_truth` configuration block or provider registry:
+
+```yaml
+ground_truth:
+  provider_id: scgpt_v1
+  state_key: scgpt_pseudostate_provisional
+  confidence_mode: medium_and_above
+  exclude_uncertain_states: false
+```
+
+This enables two complementary comparisons:
+
+1. **Fixed ground truth, compare trajectory models**
+   - Example: WOT vs CellRank2 vs scNODE under `scgpt_v1`
+
+2. **Fixed model, compare ground-truth providers**
+   - Example: scNODE under `scgpt_v1` vs `celltypist_v1` vs `scanvi_v1`
+
+All summary and ranking tables must therefore carry the ground-truth provider identity. Rankings should be computed within the same `(scenario, result_class, ground_truth_provider)` group, so that scores from different annotation systems are not mixed as if they shared the same reference scale.
+
 ### 9.4 Predicted lineage construction
 For each eligible method:
 - infer transitions across benchmark time intervals
@@ -393,6 +489,10 @@ This file should include:
 - method name
 - dataset
 - scenario
+- ground-truth provider identity
+- ground-truth provider status
+- state key used for annotation / aggregation
+- reference graph path and confidence mode
 - capability flags
 - benchmark dimensions actually executed
 - runtime
@@ -426,7 +526,22 @@ benchmark/
 └─ docs/
 ```
 
-At the current stage, label directories and repository-specific draft label assets do not need to be inserted into the active benchmark path yet.
+The ground-truth provider layer is now represented explicitly under:
+
+```text
+benchmark/ground_truth/
+  registry.yaml
+  loader.py
+  providers/
+    scgpt_v1/
+      state_labels.tsv
+      state_metadata.tsv
+      reference_graph.json
+      reference_graph_edges.csv
+      ground_truth_metadata.json
+```
+
+Repository-specific draft label assets remain outside the active benchmark path unless they are promoted into a registered ground-truth provider with frozen provenance and standard output files.
 
 ---
 
@@ -489,7 +604,7 @@ At the same time, it follows the same method-eligibility rule as scTimeBench:
 
 Under this rule, the current first-stage benchmark for **WOT vs CellRank2** activates only **Lineage Fidelity**. Forecast Accuracy and Embedding Coherence remain in the framework, but they are deferred until future models that actually support unseen-timepoint generation are added.
 
-No OT projection workaround is introduced. No repository-specific label asset is forcibly embedded into the active core pipeline at this stage. The first priority is to make the scTimeBench-aligned core benchmark logic clean, strict, and runnable.
+No OT projection workaround is introduced. No repository-specific label asset is forcibly embedded into the active core pipeline at this stage. Instead, annotation-derived labels and lineage references are handled through an explicit ground-truth provider layer. The first priority is to make the scTimeBench-aligned core benchmark logic clean, strict, modular, and runnable.
 
 ---
 
@@ -517,4 +632,22 @@ Scenario C split defined: 10 training time points (days 0.5, 2.0, 8.0, 16.0, 16.
 
 **2026-04-22 — Performance audit, code optimizations, WOT-C full run, and Shirokane HPC validation**
 Full-data WOT Scenario C completed on local machine (4.5 h, AUROC 0.817 / AUPRC 0.403 / SSR 0.452), confirming both methods score ~0.818 AUROC on Scenario C with full training data. Performance audit conducted across all source files; four optimizations implemented: (1) `_aggregate_to_state_level()` in `WOT/run.py` vectorized — Python O(n²) double loop replaced with sparse S_src @ M @ S_tgt.T, eliminating 80 M+ iterations on the largest transport maps; (2) `--skip-tmap-if-exists` CLI flag added to `WOT/run.py` for tmap reuse across reruns; (3) redundant `adata.copy()` eliminated in `CellRank2Adapter._run_lineage_fidelity_impl()` — reuses existing copy for both WOT and CellRank2 stages, reducing peak RAM from 3× to 2× dataset size; (4) all hard-coded Windows paths (`C:\Users\37620\trajectory`, `C:\...\scGPT`) removed from 9 source files and replaced with `TRAJ_PROJECT_ROOT` / `SCGPT_REPO` env-var overrides plus upward-search fallback, making the codebase portable to Linux/HPC. SGE job scripts written (`run_wot_validate.sh`, `run_cellrank_validate.sh`, `run_cellrank_validate_array.sh`) and project deployed to Shirokane HPC (`/home/xzy0723/projects/trajectory`). Four Shirokane jobs completed successfully (Apr 22 21:14–21:55 JST): WOT/A reproduced exactly (AUROC 0.8559, bit-for-bit match; tmap cache hit on 2nd run reduced runtime from 676 s to 24 s); CellRank2/A reproduced (AUROC 0.7634, Δ ≤ 0.001 vs local); CellRank2/B reproduced (AUROC 0.5665); CellRank2/C run at full scale for the first time (49,820 cells, 376 s, AUROC 0.8194 vs pilot 0.694). One SGE job failed due to a config filename typo in the shell script (non-critical; corrected). Confirmed: Scenario B below baseline for both methods (WOT AUROC 0.534, CR2 0.566 vs baseline 0.678) — early-only training is insufficient for full lineage recovery, a stable scientific finding. Outstanding: WOT/B and WOT/C not yet re-run on Shirokane; `result_class` label missing from CR2/C Shirokane result; summary CSV needs regeneration to cover all 6 runs.
+---
 
+**2026-04-23 - scNODE adapter integration, HPC scripts, and full-cell HVG run**
+Added the first scNODE benchmark path: created `scnode_adapter.py`, registered `scnode` in `eval_dispatch.py`, injected `scnode_params` / `scenario_params` / `dataset_id`, and updated `method_capabilities.yaml`.
+Replaced the WOT scaffold entry by wiring `WOTAdapter` to the real `benchmark/methods/WOT/run.py` logic.
+Wrote Shirokane qsub scripts for scNODE smoke and full runs; the smoke test on GSE230659 human data completed successfully with all required outputs.
+The first naive full-cell run was killed by memory pressure, so an HVG2000 reduced-training route was designed and scripted.
+The original HVG selection failed because Scanpy's Seurat-style HVG routine hit `inf` values; this was fixed by replacing it with a finite sparse mean/variance dispersion selector.
+The rerun completed full-cell training plus forecast/embedding output generation on Shirokane, but lineage evaluation still produced NaNs in the state-transition matrix, so `lineage_metrics.json` is still missing.
+
+---
+
+**2026-04-24 - scNODE A/B/C reduced runs and ground-truth provider modularization**
+Fixed scNODE Lineage Fidelity NaNs by replacing the naive soft assignment normalization with a stable softmax, adding zero-row handling for unsupported source states, and writing `lineage_diagnostics.json`.
+Re-ran scNODE full-cell HVG2000 Scenario A on Shirokane using the cached trained model; `lineage_metrics.json` completed successfully and the state-transition matrix contains no non-finite values.
+Added Shirokane array script support for scNODE Scenario B and Scenario C HVG2000 reduced runs; both completed with Forecast Accuracy and Lineage Fidelity outputs.
+Implemented the first modular ground-truth provider layer under `benchmark/ground_truth/`, with `scgpt_v1` registered as the current silver-standard working provider.
+The provider layer standardizes `state_labels.tsv`, `state_metadata.tsv`, `reference_graph.json`, `reference_graph_edges.csv`, and `ground_truth_metadata.json`, allowing future annotation systems such as CellTypist, scANVI, SingleR, marker-rule, or consensus providers to replace scGPT without changing model adapters.
+`eval_dispatch.py`, `eval_lineage.py`, and `summarize_lineage.py` now carry provider metadata so results can be grouped and ranked by `(scenario, result_class, ground_truth_provider)`.

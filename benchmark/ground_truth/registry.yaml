@@ -1,0 +1,19 @@
+providers:
+  scgpt_v1:
+    provider_id: scgpt_v1
+    annotation_method: scGPT
+    status: silver_standard_working
+    state_key: scgpt_pseudostate_provisional
+    label_path: benchmark/ground_truth/providers/scgpt_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/scgpt_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/scgpt_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/scgpt_v1/reference_graph_edges.csv
+    confidence_mode: medium_and_above
+    exclude_uncertain_states: false
+    n_states: 14
+    n_graph_edges: 42
+    source_h5ad: benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
+    notes: >
+      Working v1 silver-standard state system derived from scGPT embeddings
+      and consecutive-timepoint kNN transition counting. This is not final
+      biological ground truth; it is the current frozen benchmark provider.

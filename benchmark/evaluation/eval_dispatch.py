@@ -24,6 +24,8 @@ from pathlib import Path
 
 import anndata
 
+from benchmark.ground_truth import load_ground_truth
+
 
 # ------------------------------------------------------------------
 # Method registry
@@ -32,8 +34,7 @@ import anndata
 METHOD_REGISTRY = {
     "wot": "benchmark.adapters.wot_adapter.WOTAdapter",
     "cellrank2": "benchmark.adapters.cellrank2_adapter.CellRank2Adapter",
-    # Add future models here:
-    # "future_model": "benchmark.adapters.future_model_adapter.FutureModelAdapter",
+    "scnode": "benchmark.adapters.scnode_adapter.ScNODEAdapter",
 }
 
 
@@ -58,7 +59,8 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
              reference_graph_path: str = None,
              edge_confidence_mode: str = "all",
              exclude_uncertain_states: bool = False,
-             cell_state_key: str = None):
+             cell_state_key: str = None,
+             ground_truth: dict = None):
     """
     Run the benchmark for one method × scenario.
 
@@ -144,6 +146,7 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
             exclude_uncertain_states=exclude_uncertain_states,
             cell_state_key=cell_state_key or scenario_config.get("cell_state_key"),
             adata=eval_adata,
+            ground_truth=ground_truth,
         )
         results["lineage_fidelity"]["metrics"] = lf_metrics
     else:
@@ -155,12 +158,21 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
         fa_result = adapter.run_forecast_accuracy(scenario_id=scenario_id)
         results["forecast_accuracy"] = fa_result
 
-        from benchmark.evaluation.eval_forecast import run_forecast_evaluation
-        fa_metrics = run_forecast_evaluation(
-            projected_expression_path=fa_result["projected_expression"],
-            adata=adata,
-            output_dir=output_dir,
-        )
+        forecast_metrics_path = fa_result.get("forecast_metrics")
+        if forecast_metrics_path and Path(forecast_metrics_path).exists():
+            with open(forecast_metrics_path, encoding="utf-8") as f:
+                fa_metrics = json.load(f)
+            print(
+                "[dispatch] Forecast metrics already produced by adapter; "
+                f"using {forecast_metrics_path}"
+            )
+        else:
+            from benchmark.evaluation.eval_forecast import run_forecast_evaluation
+            fa_metrics = run_forecast_evaluation(
+                projected_expression_path=fa_result["projected_expression"],
+                adata=adata,
+                output_dir=output_dir,
+            )
         results["forecast_accuracy"]["metrics"] = fa_metrics
     else:
         print(
@@ -174,13 +186,22 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
         ec_result = adapter.run_embedding_coherence(scenario_id=scenario_id)
         results["embedding_coherence"] = ec_result
 
-        from benchmark.evaluation.eval_embedding import run_embedding_evaluation
-        ec_metrics = run_embedding_evaluation(
-            projected_embedding_path=ec_result["projected_embedding"],
-            projected_cluster_labels_path=ec_result["projected_cluster_labels"],
-            adata=adata,
-            output_dir=output_dir,
-        )
+        embedding_metrics_path = ec_result.get("embedding_metrics")
+        if embedding_metrics_path and Path(embedding_metrics_path).exists():
+            with open(embedding_metrics_path, encoding="utf-8") as f:
+                ec_metrics = json.load(f)
+            print(
+                "[dispatch] Embedding metrics already produced by adapter; "
+                f"using {embedding_metrics_path}"
+            )
+        else:
+            from benchmark.evaluation.eval_embedding import run_embedding_evaluation
+            ec_metrics = run_embedding_evaluation(
+                projected_embedding_path=ec_result["projected_embedding"],
+                projected_cluster_labels_path=ec_result["projected_cluster_labels"],
+                adata=adata,
+                output_dir=output_dir,
+            )
         results["embedding_coherence"]["metrics"] = ec_metrics
     else:
         print(
@@ -231,29 +252,26 @@ def main():
         with open(args.scenario_config, encoding="utf-8-sig") as f:
             scenario_config = yaml.safe_load(f)
 
-    # Read optional lineage wiring from method-level config.
+    # Read optional ground-truth / lineage wiring from method-level config.
     reference_graph_path = None
     edge_confidence_mode = "all"
     exclude_uncertain_states = False
     cell_state_key = None
+    ground_truth_spec = None
     if args.method_config:
         # Use utf-8-sig for the same reason: YAML files may be BOM-encoded on Windows.
         with open(args.method_config, encoding="utf-8-sig") as f:
             method_config = yaml.safe_load(f)
+        ground_truth_spec = load_ground_truth(method_config)
+        ground_truth_dict = ground_truth_spec.to_dict()
         lineage_cfg = method_config.get("lineage", {})
-        rgp = lineage_cfg.get("reference_graph_path")
+        reference_graph_path = ground_truth_spec.reference_graph_path
+        edge_confidence_mode = ground_truth_spec.confidence_mode
+        exclude_uncertain_states = ground_truth_spec.exclude_uncertain_states
+        cell_state_key = ground_truth_spec.state_key
         # Treat the YAML literal "null" (parsed as None) and empty string as absent.
-        if rgp and rgp not in ("null", "~", ""):
-            reference_graph_path = rgp
-        ecm = lineage_cfg.get("edge_confidence_mode")
-        if ecm:
-            edge_confidence_mode = ecm
-        eus = lineage_cfg.get("exclude_uncertain_states")
-        if eus is not None:
-            exclude_uncertain_states = bool(eus)
-        csk = lineage_cfg.get("cell_state_key")
-        if csk:
-            cell_state_key = csk
+        if reference_graph_path in ("null", "~", ""):
+            reference_graph_path = None
 
         # Inject method-level dataset/lineage fields into scenario_config so that
         # adapters can read them via self.scenario_config. Adapters receive
@@ -261,15 +279,19 @@ def main():
         # (from --method-config) directly. Without this injection the adapter
         # cannot know which time/state columns to use.
         dataset_cfg = method_config.get("dataset", {})
+        if dataset_cfg.get("id") and "dataset_id" not in scenario_config:
+            scenario_config["dataset_id"] = dataset_cfg["id"]
         if dataset_cfg.get("time_key") and "time_key" not in scenario_config:
             scenario_config["time_key"] = dataset_cfg["time_key"]
-        if lineage_cfg.get("cell_state_key") and "cell_state_key" not in scenario_config:
-            scenario_config["cell_state_key"] = lineage_cfg["cell_state_key"]
+        if cell_state_key and "cell_state_key" not in scenario_config:
+            scenario_config["cell_state_key"] = cell_state_key
+        if ground_truth_dict and "ground_truth" not in scenario_config:
+            scenario_config["ground_truth"] = ground_truth_dict
         if "exclude_uncertain_states" not in scenario_config:
             scenario_config["exclude_uncertain_states"] = exclude_uncertain_states
         # Inject method-specific params (e.g. cellrank2_params) so the adapter
         # can read kernel/WOT configuration from self.scenario_config.
-        for top_key in ("cellrank2_params", "wot_params"):
+        for top_key in ("cellrank2_params", "wot_params", "scnode_params"):
             if method_config.get(top_key) and top_key not in scenario_config:
                 scenario_config[top_key] = method_config[top_key]
         # Inject scenario_params (train_times / heldout_times) so adapters that
@@ -279,6 +301,8 @@ def main():
         sp = method_config.get("scenario_params")
         if sp and "scenario_params" not in scenario_config:
             scenario_config["scenario_params"] = sp
+    else:
+        ground_truth_dict = None
 
     dispatch(
         method_id=args.method,
@@ -290,6 +314,7 @@ def main():
         edge_confidence_mode=edge_confidence_mode,
         exclude_uncertain_states=exclude_uncertain_states,
         cell_state_key=cell_state_key,
+        ground_truth=ground_truth_dict,
     )
 
 

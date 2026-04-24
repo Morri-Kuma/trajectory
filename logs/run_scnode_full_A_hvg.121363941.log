@@ -1,0 +1,48 @@
+============================================================
+Job started at: 2026年  4月 23日 木曜日 22:17:07 JST
+Host          : pc011
+Project root  : /home/xzy0723/projects/trajectory
+SCGPT repo    : /home/xzy0723/projects/scGPT
+Method        : scnode
+Scenario      : A full-cell HVG2000 reduced-training
+Source adata  : benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
+HVG adata     : benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad
+Base config   : benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml
+HVG config    : benchmark/configs/scnode_gse230659_observed_scgpt_v1_full_hvg2000_reduced.yaml
+Output dir    : benchmark/results/scnode/scenario_A_scgpt_v1_full_hvg2000_reduced
+Job ID        : 121363941
+============================================================
+Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
+Python 3.10.20
+<stdin>:8: FutureWarning: `__version__` is deprecated, use `importlib.metadata.version('scanpy')` instead
+imports OK
+anndata  : 0.11.4
+scanpy   : 1.11.5
+scipy    : 1.15.3
+torch    : 2.11.0+cu130
+torchdiffeq import OK
+------------------------------------------------------------
+Building/reusing full-cell HVG2000 adata
+------------------------------------------------------------
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/scipy/sparse/_data.py:144: RuntimeWarning: overflow encountered in expm1
+  result = op(self._deduped_data())
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/scanpy/preprocessing/_highly_variable_genes.py:328: RuntimeWarning: overflow encountered in expm1
+  x = np.expm1(x)
+loading source adata into memory for HVG selection: /home/xzy0723/projects/trajectory/benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
+source shape=(75194, 23112)
+computing top 2000 HVGs with scanpy.pp.highly_variable_genes(flavor='seurat')
+Traceback (most recent call last):
+  File "<stdin>", line 57, in <module>
+  File "/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/legacy_api_wrap/__init__.py", line 88, in fn_compatible
+    return fn(*args_all, **kw)
+  File "/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/scanpy/preprocessing/_highly_variable_genes.py", line 723, in highly_variable_genes
+    df = _highly_variable_genes_single_batch(
+  File "/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/scanpy/preprocessing/_highly_variable_genes.py", line 343, in _highly_variable_genes_single_batch
+    df["mean_bin"] = _get_mean_bins(df["means"], flavor, n_bins)
+  File "/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/scanpy/preprocessing/_highly_variable_genes.py", line 382, in _get_mean_bins
+    return pd.cut(means, bins=bins)
+  File "/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/pandas/core/reshape/tile.py", line 246, in cut
+    bins = _nbins_to_bins(x_idx, bins, right)
+  File "/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/pandas/core/reshape/tile.py", line 368, in _nbins_to_bins
+    raise ValueError(
+ValueError: cannot specify integer `bins` when input data contains infinity

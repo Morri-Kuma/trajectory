@@ -30,6 +30,18 @@ datasets:
     # Required matrix: X (gene expression)
 
 # =============================================================================
+# Ground-truth providers
+# =============================================================================
+# Cell-state labels and reference lineage graphs are a replaceable provider
+# layer. scGPT-v1 is the current silver-standard working provider; future
+# annotation tools should be registered under benchmark/ground_truth/registry.yaml
+# and selected through method-config ground_truth.provider_id.
+ground_truth:
+  registry: "benchmark/ground_truth/registry.yaml"
+  default_provider: "scgpt_v1"
+  provider_dir_template: "benchmark/ground_truth/providers/{provider_id}"
+
+# =============================================================================
 # Methods
 # =============================================================================
 methods:

@@ -1,0 +1,19 @@
+============================================================
+Job started at: 2026年  4月 23日 木曜日 19:07:26 JST
+Host          : pc022
+Project root  : /home/xzy0723/projects/trajectory
+SCGPT repo    : /home/xzy0723/projects/scGPT
+Method        : scnode
+Scenario      : A smoke
+Source adata  : benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
+Smoke adata   : benchmark/results/scnode/smoke_inputs/adata_scnode_smoke_A.h5ad
+Base config   : benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml
+Smoke config  : benchmark/configs/scnode_gse230659_observed_scgpt_v1_smoke.yaml
+Output dir    : benchmark/results/scnode/scenario_A_scgpt_v1_smoke
+Job ID        : 121362340
+============================================================
+Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
+Python 3.10.20
+Traceback (most recent call last):
+  File "<stdin>", line 2, in <module>
+ModuleNotFoundError: No module named 'torch'

@@ -1,0 +1,271 @@
+============================================================
+Job started at: 2026年  4月 24日 金曜日 18:19:05 JST
+Host          : pc031
+Project root  : /home/xzy0723/projects/trajectory
+SCGPT repo    : /home/xzy0723/projects/scGPT
+Method        : scnode
+Scenario      : C HVG2000 reduced-training
+HVG adata     : benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad
+Base config   : benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioC.yaml
+Reduced config: benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioC_hvg2000_reduced.yaml
+Output dir    : benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced
+Job ID        : 121406008
+Task ID       : 2
+============================================================
+Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
+Python 3.10.20
+<stdin>:8: FutureWarning: `__version__` is deprecated, use `importlib.metadata.version('scanpy')` instead
+imports OK
+anndata  : 0.11.4
+scanpy   : 1.11.5
+scipy    : 1.15.3
+torch    : 2.11.0+cu130
+torchdiffeq import OK
+------------------------------------------------------------
+Preparing Scenario C reduced config
+------------------------------------------------------------
+HVG adata shape=(75194, 2000)
+timepoints: [np.float64(0.5), np.float64(2.0), np.float64(4.0), np.float64(8.0), np.float64(12.0), np.float64(16.0), np.float64(16.33), np.float64(16.67), np.float64(17.0), np.float64(18.0), np.float64(20.0), np.float64(22.0), np.float64(24.0), np.float64(28.0), np.float64(30.0)]
+states: 14
+wrote reduced config: /home/xzy0723/projects/trajectory/benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioC_hvg2000_reduced.yaml
+train_times: [0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0]
+heldout_times: [4.0, 12.0, 20.0, 28.0, 30.0]
+------------------------------------------------------------
+Running command:
+ python -m benchmark.evaluation.eval_dispatch --method scnode --scenario C --adata benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad --output-dir benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced --method-config benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioC_hvg2000_reduced.yaml
+------------------------------------------------------------
+/home/xzy0723/miniconda3/envs/traj_env/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:473: ConvergenceWarning: lbfgs failed to converge after 500 iteration(s) (status=1):
+STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+
+Increase the number of iterations to improve the convergence (max_iter=500).
+You might also want to scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+
+============================================================
+Method       : scnode
+Scenario     : C
+Eligible for : ['lineage_fidelity', 'forecast_accuracy', 'embedding_coherence']
+============================================================
+[dispatch] Running Lineage Fidelity ...
+[ScNODEAdapter] scenario_params.train_times applied: 75194 -> 49820 cells (dropped 25374).
+  [data] tp=0.50: 6217 cells
+  [data] tp=2.00: 4168 cells
+  [data] tp=8.00: 5385 cells
+  [data] tp=16.00: 5614 cells
+  [data] tp=16.33: 6165 cells
+  [data] tp=16.67: 2827 cells
+  [data] tp=17.00: 4869 cells
+  [data] tp=18.00: 6953 cells
+  [data] tp=22.00: 3416 cells
+  [data] tp=24.00: 4206 cells
+[ScNODEAdapter] n_genes=2000, n_sim_cells=1000, train_times=[0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0], heldout_times=[4.0, 12.0, 20.0, 28.0, 30.0]
+[scNODE] Loading cached model from benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/trained_scnode_model.pth
+[Forecast] Predicting from t0=0.5 across 15 tps (train=10, heldout=5, n_sim_cells=1000) ...
+  [Forecast] t=4.00: Wasserstein=1362379.5110 L2=1661.9645
+  [Forecast] t=12.00: Wasserstein=126326.4198 L2=712.4641
+  [Forecast] t=20.00: Wasserstein=191977.4811 L2=723.5016
+  [Forecast] t=28.00: Wasserstein=678835.0096 L2=1241.9591
+  [Forecast] t=30.00: Wasserstein=202423.0864 L2=776.8566
+[Forecast] Done. Mean Wasserstein=512388.3015901598
+[Embedding] Computed centroids for 14 states.
+[Embedding] projected_embedding.npy shape: (5000, 50)
+[Lineage] 14 states, 10 training tps
+[Lineage] Computing state centroids ...
+  [Lineage] 0.50 鈫?2.00: 6217 cells
+  [Lineage] 2.00 鈫?8.00: 4168 cells
+  [Lineage] 8.00 鈫?16.00: 5385 cells
+  [Lineage] 16.00 鈫?16.33: 5614 cells
+  [Lineage] 16.33 鈫?16.67: 6165 cells
+  [Lineage] 16.67 鈫?17.00: 2827 cells
+  [Lineage] 17.00 鈫?18.00: 4869 cells
+  [Lineage] 18.00 鈫?22.00: 6953 cells
+  [Lineage] 22.00 鈫?24.00: 3416 cells
+[Lineage] STM written  (14脳14): benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/state_transition_matrix.csv
+[Lineage] Edges written (191 edges): benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/lineage_graph_edges.csv
+[dispatch] Lineage Fidelity outputs: {'state_transition_matrix': 'benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/state_transition_matrix.csv', 'lineage_graph_edges': 'benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/lineage_graph_edges.csv'}
+[eval_lineage] Reference graph loaded: 14 nodes, 31 edges (mode='medium_and_above')
+[eval_lineage] Metrics written to benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/lineage_metrics.json
+[dispatch] Running Forecast Accuracy ...
+[dispatch] Forecast metrics already produced by adapter; using benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/forecast_metrics.json
+[dispatch] Running Embedding Coherence ...
+[dispatch] Embedding metrics already produced by adapter; using benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced/embedding_metrics.json
+
+[dispatch] Run complete for scnode / C.
+
+real	2m24.475s
+user	124m16.592s
+sys	2m59.007s
+------------------------------------------------------------
+Output check
+------------------------------------------------------------
+output_dir: /home/xzy0723/projects/trajectory/benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced
+missing: []
+stm_shape: (14, 14)
+stm_nonfinite: 0
+stm_zero_rows: []
+
+== run_metadata.json ==
+{
+  "method": "scnode",
+  "dataset": "GSE230659",
+  "scenario": "C",
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 139.76,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "scgpt_pseudostate_provisional",
+  "train_times": [
+    0.5,
+    2.0,
+    8.0,
+    16.0,
+    16.33,
+    16.67,
+    17.0,
+    18.0,
+    22.0,
+    24.0
+  ],
+  "heldout_times": [
+    4.0,
+    12.0,
+    20.0,
+    28.0,
+    30.0
+  ],
+  "n_sim_cells": 1000,
+  "notes": "",
+  "ground_truth": {
+    "provider_id": "scgpt_v1",
+    "state_key": "scgpt_pseudostate_provisional",
+    "label_path": "benchmark/ground_truth/providers/scgpt_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/scgpt_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/scgpt_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/scgpt_v1/reference_graph_edges.csv",
+    "confidence_mode": "medium_and_above",
+    "exclude_uncertain_states": false,
+    "status": "silver_standard_working",
+    "n_states": 14,
+    "n_graph_edges": 42,
+    "source_h5ad": "benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad",
+    "annotation_method": "scGPT",
+    "notes": "Working v1 silver-standard state system derived from scGPT embeddings and consecutive-timepoint kNN transition counting. This is not final biological ground truth; it is the current frozen benchmark provider.\n"
+  }
+}
+
+== forecast_metrics.json ==
+{
+  "wasserstein_distance": 512388.3015901598,
+  "gaussian_mmd": null,
+  "energy_distance_mmd": null,
+  "hausdorff_loss": null,
+  "n_eval_timepoints": 5,
+  "eval_timepoints": [
+    4.0,
+    12.0,
+    20.0,
+    28.0,
+    30.0
+  ],
+  "scenario_type": "forecast",
+  "status": "completed"
+}
+
+== embedding_metrics.json ==
+{
+  "adjusted_rand_index": 0.020779883310509003,
+  "avg_normalized_classifier_entropy": 0.09265125239568585,
+  "projected_latent_dim": 50,
+  "n_eval_timepoints": 5,
+  "eval_timepoints": [
+    4.0,
+    12.0,
+    20.0,
+    28.0,
+    30.0
+  ],
+  "status": "completed",
+  "ari_reference": "nearest observed cell at the same evaluation timepoint in scNODE VAE latent space",
+  "entropy_reference": "balanced logistic regression trained on observed scNODE VAE latent embeddings and provider state labels"
+}
+
+== lineage_diagnostics.json ==
+{
+  "unsupported_source_states": [],
+  "n_unsupported_source_states": 0,
+  "source_transition_counts": {
+    "PS_00": 9879,
+    "PS_01": 2578,
+    "PS_02": 5918,
+    "PS_03": 7227,
+    "PS_04": 6652,
+    "PS_05": 17,
+    "PS_06": 5290,
+    "PS_07": 2299,
+    "PS_08": 1209,
+    "PS_09": 3029,
+    "PS_10": 14,
+    "PS_11": 920,
+    "PS_12": 282,
+    "PS_13": 300
+  },
+  "soft_assignment_nearest_fallback_count": 0,
+  "soft_assignment_skipped_count": 0,
+  "note": "States with zero source_transition_counts are written as all-zero STM rows because no valid source-cell transitions were available for those states in the training timepoint pairs."
+}
+
+== lineage_metrics.json ==
+{
+  "auroc": 0.583186705767351,
+  "auprc": 0.2108672360750609,
+  "jaccard_similarity": 0.15625,
+  "jaccard_similarity_topk": 0.12727272727272726,
+  "single_step_recovery": 0.16129032258064516,
+  "multi_step_recovery": 0.40384615384615385,
+  "baseline": {
+    "auroc": 0.7274682306940371,
+    "auprc": 0.2655593749953022,
+    "jaccard_similarity": 0.2857142857142857,
+    "single_step_recovery": 0.2903225806451613,
+    "multi_step_recovery": 0.3269230769230769,
+    "method": "correlation_baseline",
+    "cell_state_key": "scgpt_pseudostate_provisional",
+    "n_states_used": 14,
+    "n_predicted_edges_topk": 32,
+    "note": "Per-state mean-expression Pearson correlation (symmetric), top-31 off-diagonal entries as predicted lineage edges."
+  },
+  "status": "completed",
+  "edge_confidence_mode": "medium_and_above",
+  "n_reference_edges": 31,
+  "cell_state_key": "scgpt_pseudostate_provisional",
+  "ground_truth": {
+    "provider_id": "scgpt_v1",
+    "state_key": "scgpt_pseudostate_provisional",
+    "label_path": "benchmark/ground_truth/providers/scgpt_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/scgpt_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/scgpt_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/scgpt_v1/reference_graph_edges.csv",
+    "confidence_mode": "medium_and_above",
+    "exclude_uncertain_states": false,
+    "status": "silver_standard_working",
+    "n_states": 14,
+    "n_graph_edges": 42,
+    "source_h5ad": "benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad",
+    "annotation_method": "scGPT",
+    "notes": "Working v1 silver-standard state system derived from scGPT embeddings and consecutive-timepoint kNN transition counting. This is not final biological ground truth; it is the current frozen benchmark provider.\n"
+  }
+}
+============================================================
+Job finished at: 2026年  4月 24日 金曜日 18:23:14 JST
+============================================================

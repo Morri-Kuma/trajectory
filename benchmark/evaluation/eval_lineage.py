@@ -38,6 +38,72 @@ from pathlib import Path
 from typing import Optional, Tuple, List
 
 
+def _mark_run_metadata_lineage_failed(out_dir: Path, reason: str) -> None:
+    """Annotate method metadata when post-hoc lineage evaluation fails."""
+    metadata_path = out_dir / "run_metadata.json"
+    if not metadata_path.exists():
+        return
+    try:
+        with open(metadata_path, encoding="utf-8") as f:
+            metadata = json.load(f)
+        metadata["status"] = "failed_lineage_evaluation"
+        prior_notes = metadata.get("notes") or ""
+        metadata["notes"] = (
+            f"{prior_notes}\n{reason}".strip()
+            if prior_notes else reason
+        )
+        with open(metadata_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2)
+    except Exception as exc:
+        print(
+            "[eval_lineage] Warning: failed to update run_metadata.json "
+            f"after lineage evaluation failure: {exc}"
+        )
+
+
+def _mark_run_metadata_ground_truth(out_dir: Path, ground_truth: dict) -> None:
+    """Attach ground-truth provider metadata to run_metadata.json when present."""
+    if not ground_truth:
+        return
+    metadata_path = out_dir / "run_metadata.json"
+    if not metadata_path.exists():
+        return
+    try:
+        with open(metadata_path, encoding="utf-8") as f:
+            metadata = json.load(f)
+        metadata["ground_truth"] = ground_truth
+        with open(metadata_path, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=2)
+    except Exception as exc:
+        print(
+            "[eval_lineage] Warning: failed to update run_metadata.json "
+            f"with ground-truth metadata: {exc}"
+        )
+
+
+def _nonfinite_matrix_message(matrix: pd.DataFrame, matrix_name: str) -> str:
+    """Return a compact diagnostic message for NaN/Inf values in a matrix."""
+    values = matrix.values.astype(float)
+    bad = ~np.isfinite(values)
+    rows = list(matrix.index)
+    cols = list(matrix.columns)
+    bad_positions = np.argwhere(bad)
+    examples = [
+        f"{rows[i]}->{cols[j]}={float(values[i, j])!r}"
+        for i, j in bad_positions[:10]
+    ]
+    bad_rows = [rows[i] for i in np.where(bad.any(axis=1))[0]]
+    return (
+        f"{matrix_name} contains {int(bad.sum())} non-finite values "
+        f"across {len(bad_rows)} source rows. "
+        f"Bad source rows: {bad_rows[:20]}. "
+        f"Examples: {examples}. "
+        "Fix the method output before computing AUROC/AUPRC; for source "
+        "states with no valid source-cell transitions, write an all-zero row "
+        "and record the unsupported states in diagnostics."
+    )
+
+
 # ------------------------------------------------------------------
 # Reference graph loader
 # ------------------------------------------------------------------
@@ -468,6 +534,7 @@ def run_lineage_evaluation(
     edge_confidence_mode: str = "all",
     exclude_uncertain_states: bool = False,
     cell_state_key: Optional[str] = None,
+    ground_truth: Optional[dict] = None,
 ) -> dict:
     """
     Evaluate Lineage Fidelity for one method × scenario run.
@@ -500,6 +567,9 @@ def run_lineage_evaluation(
         method (e.g. ``"scgpt_pseudostate_provisional"``). Required by the
         correlation baseline; if absent the baseline reports a clear "skipped"
         status instead of returning silently empty values.
+    ground_truth : dict, optional
+        Provider metadata for the annotation/reference graph used by this run.
+        Stored in lineage_metrics.json for downstream sensitivity analysis.
 
     Returns
     -------
@@ -509,6 +579,8 @@ def run_lineage_evaluation(
     """
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    ground_truth = ground_truth or {}
+    _mark_run_metadata_ground_truth(out_dir, ground_truth)
 
     # Load predicted outputs
     stm_path = Path(state_transition_matrix_path)
@@ -546,6 +618,7 @@ def run_lineage_evaluation(
             "edge_confidence_mode": edge_confidence_mode,
             "n_reference_edges": None,
             "cell_state_key": cell_state_key,
+            "ground_truth": ground_truth,
         }
         metrics_path = out_dir / "lineage_metrics.json"
         with open(metrics_path, "w") as f:
@@ -580,9 +653,7 @@ def run_lineage_evaluation(
 
     if has_predictions and not reference_matrix.empty:
         # Both method output and reference are available — compute real metrics.
-        all_states = list(
-            set(predicted_matrix.index) | set(reference_matrix.index)
-        )
+        all_states = sorted(set(predicted_matrix.index) | set(reference_matrix.index))
         pred_aligned = predicted_matrix.reindex(
             index=all_states, columns=all_states, fill_value=0.0
         )
@@ -591,6 +662,29 @@ def run_lineage_evaluation(
         )
         y_true = ref_aligned.values.flatten().astype(int)
         y_score = pred_aligned.values.flatten().astype(float)
+        if not np.isfinite(y_score).all():
+            reason = _nonfinite_matrix_message(
+                pred_aligned, "state_transition_matrix.csv"
+            )
+            metrics.update({
+                "auroc": None,
+                "auprc": None,
+                "jaccard_similarity": None,
+                "jaccard_similarity_topk": None,
+                "single_step_recovery": None,
+                "multi_step_recovery": None,
+                "baseline": None,
+                "status": f"failed_nonfinite_predictions: {reason}",
+                "edge_confidence_mode": edge_confidence_mode,
+                "n_reference_edges": len(reference_edges),
+                "cell_state_key": cell_state_key,
+                "ground_truth": ground_truth,
+            })
+            metrics_path = out_dir / "lineage_metrics.json"
+            with open(metrics_path, "w", encoding="utf-8") as f:
+                json.dump(metrics, f, indent=2)
+            _mark_run_metadata_lineage_failed(out_dir, reason)
+            raise ValueError(f"[eval_lineage] {reason}")
 
         metrics["auroc"] = compute_auroc(y_true, y_score)
         metrics["auprc"] = compute_auprc(y_true, y_score)
@@ -659,6 +753,7 @@ def run_lineage_evaluation(
     metrics["edge_confidence_mode"] = edge_confidence_mode
     metrics["n_reference_edges"] = len(reference_edges)
     metrics["cell_state_key"] = cell_state_key
+    metrics["ground_truth"] = ground_truth
 
     metrics_path = out_dir / "lineage_metrics.json"
     with open(metrics_path, "w") as f:
