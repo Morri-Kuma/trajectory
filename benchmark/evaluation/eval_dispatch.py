@@ -35,6 +35,7 @@ METHOD_REGISTRY = {
     "wot": "benchmark.adapters.wot_adapter.WOTAdapter",
     "cellrank2": "benchmark.adapters.cellrank2_adapter.CellRank2Adapter",
     "scnode": "benchmark.adapters.scnode_adapter.ScNODEAdapter",
+    "prescient": "benchmark.adapters.prescient_adapter.PRESCIENTAdapter",
 }
 
 
@@ -60,6 +61,7 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
              edge_confidence_mode: str = "all",
              exclude_uncertain_states: bool = False,
              cell_state_key: str = None,
+             time_key: str = None,
              ground_truth: dict = None):
     """
     Run the benchmark for one method × scenario.
@@ -145,6 +147,7 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
             edge_confidence_mode=edge_confidence_mode,
             exclude_uncertain_states=exclude_uncertain_states,
             cell_state_key=cell_state_key or scenario_config.get("cell_state_key"),
+            time_key=time_key or scenario_config.get("time_key"),
             adata=eval_adata,
             ground_truth=ground_truth,
         )
@@ -285,13 +288,22 @@ def main():
             scenario_config["time_key"] = dataset_cfg["time_key"]
         if cell_state_key and "cell_state_key" not in scenario_config:
             scenario_config["cell_state_key"] = cell_state_key
+        if method_config.get("result_class") and "result_class" not in scenario_config:
+            scenario_config["result_class"] = method_config["result_class"]
+        if "formal_benchmark" in method_config and "formal_benchmark" not in scenario_config:
+            scenario_config["formal_benchmark"] = method_config["formal_benchmark"]
         if ground_truth_dict and "ground_truth" not in scenario_config:
             scenario_config["ground_truth"] = ground_truth_dict
         if "exclude_uncertain_states" not in scenario_config:
             scenario_config["exclude_uncertain_states"] = exclude_uncertain_states
         # Inject method-specific params (e.g. cellrank2_params) so the adapter
         # can read kernel/WOT configuration from self.scenario_config.
-        for top_key in ("cellrank2_params", "wot_params", "scnode_params"):
+        for top_key in (
+            "cellrank2_params",
+            "wot_params",
+            "scnode_params",
+            "prescient_params",
+        ):
             if method_config.get(top_key) and top_key not in scenario_config:
                 scenario_config[top_key] = method_config[top_key]
         # Inject scenario_params (train_times / heldout_times) so adapters that
@@ -314,6 +326,7 @@ def main():
         edge_confidence_mode=edge_confidence_mode,
         exclude_uncertain_states=exclude_uncertain_states,
         cell_state_key=cell_state_key,
+        time_key=scenario_config.get("time_key"),
         ground_truth=ground_truth_dict,
     )
 

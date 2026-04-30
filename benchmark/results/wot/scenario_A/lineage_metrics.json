@@ -1,9 +1,0 @@
-{
-  "auroc": null,
-  "auprc": null,
-  "jaccard_similarity": null,
-  "single_step_recovery": null,
-  "multi_step_recovery": null,
-  "baseline": null,
-  "status": "deferred: reference lineage graph not yet provided. Per v2 \u00a79.3, a frozen reference graph is required before Lineage Fidelity metrics can be computed."
-}

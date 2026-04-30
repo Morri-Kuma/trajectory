@@ -1,4 +1,4 @@
-run_id: scnode_gse230659_C_scgpt_v1_hvg2000_reduced
+﻿run_id: scnode_gse230659_C_scgpt_v1_hvg2000_reduced
 method: scnode
 scenario: C
 scenario_name: Observed-time interpolation+extrapolation (mixed train, scGPT-v1 state
@@ -15,7 +15,7 @@ state_system:
   graph_csv: benchmark/datasets/scgpt_reference_graph_v1_edges.csv
 dataset:
   id: GSE230659
-  h5ad_path: benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad
+  h5ad_path: benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad
   time_key: abs_day
 scenario_params:
   train_times:

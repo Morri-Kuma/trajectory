@@ -1,4 +1,4 @@
-"""Annotate scNODE reduced-validation run metadata."""
+﻿"""Annotate scNODE reduced-validation run metadata."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def main() -> None:
         meta["feature_space"] = {
             "type": "HVG",
             "n_genes": 2000,
-            "source": "benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad",
+            "source": "benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad",
         }
         meta["training_setting"] = {
             "label": "hvg2000_reduced",

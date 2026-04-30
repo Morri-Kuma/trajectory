@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 #$ -S /bin/bash
 #$ -cwd
 #$ -j y
@@ -18,7 +18,7 @@ SCENARIO="A"
 BASE_CONFIG="benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml"
 HVG_CONFIG="benchmark/configs/scnode_gse230659_observed_scgpt_v1_full_hvg2000_reduced.yaml"
 SOURCE_ADATA="benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad"
-HVG_ADATA="benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad"
+HVG_ADATA="benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad"
 OUTPUT_DIR="benchmark/results/scnode/scenario_A_scgpt_v1_full_hvg2000_reduced"
 
 N_HVG=2000
@@ -134,7 +134,7 @@ else:
                 keep[np.flatnonzero(hv)[:n_hvg]] = True
                 hv = keep
     else:
-        print(f"computing top {n_hvg} HVGs with finite sparse mean/variance dispersion")
+    print(f"computing top {n_hvg} benchmark HVGs with finite sparse mean/variance dispersion")
         X = adata.X
         if sp.issparse(X):
             X = X.tocsr(copy=True)
@@ -166,14 +166,22 @@ else:
         hv = np.zeros(adata.n_vars, dtype=bool)
         hv[top_idx] = True
         adata.var["highly_variable"] = hv
-        adata.var["scnode_hvg_score"] = scores
+        adata.var["benchmark_hvg_score"] = scores
 
     if int(hv.sum()) != n_hvg:
         print(f"WARNING: selected {int(hv.sum())} HVGs, expected {n_hvg}")
 
     adata_hvg = adata[:, hv].copy()
-    adata_hvg.uns["scnode_hvg_source"] = str(source_adata)
-    adata_hvg.uns["scnode_hvg_n_top_genes"] = n_hvg
+    adata_hvg.uns["benchmark_input_id"] = "GSE230659_scGPT_annotated_HVG2000"
+    adata_hvg.uns["benchmark_input_label"] = (
+        "GSE230659 scGPT-annotated HVG2000 benchmark input"
+    )
+    adata_hvg.uns["benchmark_hvg_source"] = str(source_adata)
+    adata_hvg.uns["benchmark_hvg_n_top_genes"] = n_hvg
+    adata_hvg.uns["benchmark_hvg_selection_method"] = (
+        "Top genes by finite sparse mean/variance dispersion from "
+        "scGPT-annotated full-gene AnnData."
+    )
 
     # Keep expression in float32 to reduce downstream dense memory pressure.
     if sp.issparse(adata_hvg.X):

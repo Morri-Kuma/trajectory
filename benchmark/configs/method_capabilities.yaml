@@ -1,0 +1,79 @@
+# method_capabilities.yaml
+# Per-method capability flags for the scTimeBench-aligned benchmark.
+# Framework reference: experimental framework v2.md §6
+#
+# These flags gate which benchmark dimensions each method is evaluated on.
+# Do NOT override these flags to force a method into unsupported dimensions.
+#
+# Capability flag definitions:
+#
+#   supports_unseen_timepoint_projection:
+#     True  → method can directly generate projected cells at unseen future time points.
+#             Eligible for: Forecast Accuracy, Embedding Coherence, Lineage Fidelity.
+#     False → method cannot generate unseen future-timepoint cells.
+#             Eligible for: Lineage Fidelity only.
+#
+#   supports_lineage_inference:
+#     True  → method produces cell-to-cell or state-to-state transition information
+#             sufficient for Lineage Fidelity evaluation.
+#     False → method is not eligible for any current benchmark dimension.
+
+methods:
+
+  wot:
+    label: "WOT"
+    supports_unseen_timepoint_projection: false
+    supports_lineage_inference: true
+    # WOT is an optimal-transport-based lineage inference method.
+    # It cannot directly generate cells at unseen future time points.
+    # Evaluated on Lineage Fidelity only, consistent with scTimeBench treatment
+    # of OT-based methods.
+    eligible_dimensions:
+      - lineage_fidelity
+
+  cellrank2:
+    label: "CellRank2"
+    supports_unseen_timepoint_projection: false
+    supports_lineage_inference: true
+    # CellRank2 is treated identically to WOT at the current benchmark stage.
+    # It cannot directly generate cells at unseen future time points.
+    # Evaluated on Lineage Fidelity only.
+    eligible_dimensions:
+      - lineage_fidelity
+
+  scnode:
+    label: "scNODE"
+    supports_unseen_timepoint_projection: true
+    supports_lineage_inference: true
+    # scNODE is a generative Neural ODE model that can project cells to
+    # unseen time points and can also be converted into a state-transition
+    # matrix for Lineage Fidelity evaluation. It is therefore eligible for
+    # all three scTimeBench-aligned benchmark dimensions.
+    eligible_dimensions:
+      - forecast_accuracy
+      - embedding_coherence
+      - lineage_fidelity
+
+  prescient:
+    label: "PRESCIENT"
+    supports_unseen_timepoint_projection: true
+    supports_lineage_inference: true
+    # PRESCIENT is a generative single-cell time-series model trained in PCA
+    # space. The benchmark adapter inverse-transforms simulated PCs back to
+    # expression space for Forecast Accuracy and aggregates simulated
+    # transitions for Lineage Fidelity.
+    eligible_dimensions:
+      - forecast_accuracy
+      - embedding_coherence
+      - lineage_fidelity
+
+# =============================================================================
+# Template for future generative / forecasting models
+# =============================================================================
+# future_model_template:
+#   supports_unseen_timepoint_projection: true
+#   supports_lineage_inference: true
+#   eligible_dimensions:
+#     - forecast_accuracy
+#     - embedding_coherence
+#     - lineage_fidelity

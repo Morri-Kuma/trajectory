@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 #$ -S /bin/bash
 #$ -cwd
 #$ -j y
@@ -15,7 +15,7 @@ CONDA_SH="/home/xzy0723/miniconda3/etc/profile.d/conda.sh"
 CONDA_ENV="traj_env"
 
 METHOD="scnode"
-HVG_ADATA="benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad"
+HVG_ADATA="benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad"
 
 N_SIM_CELLS=1000
 PRETRAIN_ITERS=50
@@ -103,7 +103,8 @@ reduced_config = root / "${REDUCED_CONFIG}"
 
 if not hvg_adata.exists():
     raise FileNotFoundError(
-        f"HVG adata not found: {hvg_adata}. Run/sync run_scnode_full_A_hvg.sh first."
+        f"Benchmark HVG adata not found: {hvg_adata}. "
+        "Run/sync run_scnode_full_A_hvg.sh first."
     )
 if not base_config.exists():
     raise FileNotFoundError(f"Base config not found: {base_config}")

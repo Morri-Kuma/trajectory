@@ -34,5 +34,7 @@
     "source_h5ad": "benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad",
     "annotation_method": "scGPT",
     "notes": "Working v1 silver-standard state system derived from scGPT embeddings and consecutive-timepoint kNN transition counting. This is not final biological ground truth; it is the current frozen benchmark provider.\n"
-  }
+  },
+  "result_class": "smoke",
+  "formal_benchmark": false
 }

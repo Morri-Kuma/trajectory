@@ -1,0 +1,124 @@
+# scnode_gse230659_observed_scgpt_v1_scenarioB.yaml
+# scNODE benchmark configuration — Scenario B (observed-time extrapolation)
+# STATE SYSTEM: scGPT v1 (silver-standard working, not final biology)
+#
+# Entry point:
+#   python benchmark/methods/scNODE/run.py \
+#       --config benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioB.yaml
+#
+# Capability flags (unchanged from Scenario A):
+#   scNODE: supports_unseen_timepoint_projection = True
+#           supports_lineage_inference            = True
+#   → evaluated on ALL three benchmark dimensions.
+#
+# What changes vs Scenario A:
+#   1. scenario:        A  →  B
+#   2. scenario_name:   updated to reflect extrapolation
+#   3. scenario_params.train_times: early time points only (see split below)
+#   4. scenario_params.heldout_times: late time points never seen during training
+#   5. output.base_dir → benchmark/results/scnode/scenario_B_scgpt_v1
+#   6. run_id updated to reflect Scenario B
+#
+# Time-point split (mirrors wot_gse230659_observed_scgpt_v1_scenarioB.yaml)
+# --------------------------------------------------------------------------
+# GSE230659 has 15 abs_day values. Late states emerge from day 16.33 onwards.
+# Holding out everything from day 16.33+ is the strongest extrapolation cut
+# and keeps 6 early time points (~27,891 cells) for training.
+#   train_times   = [0.5, 2.0, 4.0, 8.0, 12.0, 16.0]   (27,891 cells)
+#   heldout_times = [16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
+#
+# For scNODE specifically:
+#   - The model is TRAINED on train_times only.
+#   - Forecast Accuracy: ODE extrapolates to heldout_times; predicted
+#     cells are compared against observed held-out cells.
+#   - Embedding Coherence: ODE latent at heldout_times; nearest-centroid
+#     assignment uses centroids from all observed cells (adata_full).
+#   - Lineage Fidelity: evaluated on train_times transitions only (same
+#     reference graph as Scenario A; late-only edges will not be recovered).
+
+# ---------------------------------------------------------------------------
+# Run identity
+# ---------------------------------------------------------------------------
+run_id: scnode_gse230659_B_scgpt_v1
+method: scnode
+scenario: B
+scenario_name: "Observed-time extrapolation (early-only train, scGPT-v1 state system)"
+framework_version: v2
+
+# ---------------------------------------------------------------------------
+# State system provenance (shared with all scGPT-v1 configs)
+# ---------------------------------------------------------------------------
+state_system:
+  version: "scgpt_v1"
+  status: "silver_standard_working"
+  n_states: 14
+  n_graph_edges: 42
+  source_h5ad: "benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad"
+  label_tsv: "benchmark/datasets/scgpt_pseudostate_v1.tsv"
+  graph_json: "benchmark/datasets/scgpt_reference_graph_v1.json"
+  graph_csv: "benchmark/datasets/scgpt_reference_graph_v1_edges.csv"
+
+# ---------------------------------------------------------------------------
+# Dataset (same source as Scenario A; runner applies the time-split filter)
+# ---------------------------------------------------------------------------
+dataset:
+  id: GSE230659
+  h5ad_path: "benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad"
+  time_key: abs_day
+
+# ---------------------------------------------------------------------------
+# Scenario B time-split (read by benchmark/methods/scNODE/run.py)
+# ---------------------------------------------------------------------------
+scenario_params:
+  # Cells with abs_day NOT in train_times are removed before model training.
+  train_times: [0.5, 2.0, 4.0, 8.0, 12.0, 16.0]
+  # heldout_times: used by run_forecast_accuracy and run_embedding_coherence
+  # to build the full ODE integration axis and select eval timepoints.
+  heldout_times: [16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
+
+# ---------------------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------------------
+output:
+  # Separate directory; Scenario A outputs are not touched.
+  base_dir: "benchmark/results/scnode/scenario_B_scgpt_v1"
+
+# ---------------------------------------------------------------------------
+# scNODE model hyperparameters (unchanged from Scenario A for comparability)
+# ---------------------------------------------------------------------------
+scnode_params:
+  latent_dim: 50
+  drift_latent_size: [50, 50]
+  enc_latent_list: [64, 64]
+  dec_latent_list: [64, 64]
+  pretrain_iters: 200
+  epochs: 10
+  iters: 100
+  batch_size: 32
+  lr: 1.0e-3
+  latent_coeff: 1.0
+  kl_coeff: 0.0
+  seed: 42
+  n_sim_cells: null
+
+# ---------------------------------------------------------------------------
+# State-transition matrix construction (Lineage Fidelity)
+# ---------------------------------------------------------------------------
+lineage:
+  cell_state_key: "scgpt_pseudostate_provisional"
+  cell_state_annotation_is_proxy: false
+  state_system_version: "scgpt_v1"
+  reference_graph_path: "benchmark/datasets/scgpt_reference_graph_v1.json"
+  edge_confidence_mode: "medium_and_above"
+  exclude_uncertain_states: false
+
+# ---------------------------------------------------------------------------
+# Evaluation
+# ---------------------------------------------------------------------------
+evaluation:
+  run_eval_lineage: true
+  eval_script: "benchmark/evaluation/eval_lineage.py"
+  # Scenario B Lineage Fidelity reflects that scNODE only trained on early
+  # time points; late-only lineage edges cannot be recovered by construction.
+  # Expected to score below Scenario A (consistent with WOT/CR2 Scenario B).
+  status: "active"

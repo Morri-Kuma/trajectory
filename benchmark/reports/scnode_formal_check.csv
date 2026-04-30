@@ -1,0 +1,4 @@
+run,scenario,result_class,formal,forecast_status,wasserstein,gaussian_mmd,energy_mmd,hausdorff,embedding_status,ari,entropy,lineage_status,auroc,auprc,jaccard,single_step_recall,multi_step_recall,stm_nonfinite,stm_zero_rows,diag_nonfinite,diag_zero_rows,missing
+scenario_A_scgpt_v1_hvg2000_formal,A,official,True,completed,,,,,completed,0.07795829797373614,0.13102966668267227,completed,0.7618768328445747,0.3647539363742003,,,,0,0,,,
+scenario_B_scgpt_v1_hvg2000_formal,B,official,True,completed,,,,,completed,0.12054919508857102,0.0809329334077448,completed,0.5053763440860215,0.26960489736089854,,,,0,1,,,
+scenario_C_scgpt_v1_hvg2000_formal,C,official,True,completed,,,,,completed,0.06187526673257132,0.12270144687023335,completed,0.7135874877810362,0.30198303746186433,,,,0,0,,,

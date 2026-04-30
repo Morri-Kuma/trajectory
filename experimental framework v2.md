@@ -380,7 +380,23 @@ Use the same metric family as scTimeBench:
 - multi-step lineage recovery
 
 ### 9.6 Baseline
-Include a correlation-based baseline analogous to scTimeBench’s lineage baseline, so that lineage reconstruction quality is not judged only relative to other complex methods.
+Formal Lineage Fidelity must include a **scTimeBench-style correlation baseline**, not only a model-vs-model comparison.
+The baseline should be implemented as a direct reproduction of the `Correlation` method in the scTimeBench source code (`methods/correlation/run.py` with `configs/correlation/spearman_max.yaml`), so that baseline interpretation is aligned with the reference benchmark rather than being a project-specific approximation.
+
+Required formal implementation:
+
+1. Treat the baseline as a method-like lineage predictor that consumes the same scenario-filtered AnnData used by the evaluated method.
+2. Iterate over adjacent available training timepoint pairs `(t, t_next)` in sorted order; do not use held-out target timepoints unless they are part of that scenario's training/evaluation cell universe by design.
+3. For each adjacent pair, extract cell-level expression matrices `X_t` and `X_t_next`.
+4. Use **Spearman rank correlation** by ranking each cell's gene-expression vector across genes (`rankdata(..., axis=1, method="average")`) before z-scoring.
+5. Compute all cell-to-cell correlations between `t` and `t_next` as `corr = (z_t @ z_t_next.T) / n_features`, replacing non-finite values with zero and clipping scores to `[-1, 1]`.
+6. For each source cell at `t`, score every target state present at `t_next` by the **maximum** correlation to cells in that target state (`averaging_method: maximum`, matching `spearman_max.yaml`).
+7. Assign the source cell one vote for the target state with the largest score, accumulating votes into a source-state by target-state matrix.
+8. After all adjacent timepoint pairs are processed, row-normalize the vote matrix so each represented source-state row sums to 1; source states with no valid source cells should remain all-zero rows.
+9. Evaluate this weighted baseline state-transition matrix against the same provider reference graph and with the same Lineage Fidelity metrics used for WOT, CellRank2, and scNODE.
+10. For thresholded graph metrics, follow the scTimeBench principle of deriving a predicted graph from the weighted matrix by an automatic PR/precision+recall threshold, while retaining AUROC/AUPRC on the weighted matrix.
+
+This replaces the current state-level Pearson mean-expression baseline for formal reporting. The older baseline may remain only as a diagnostic legacy comparison and must be labeled explicitly as `state_mean_pearson_baseline`, not as the formal scTimeBench baseline.
 
 ### 9.7 Aggregation
 Within each scenario:
@@ -602,52 +618,91 @@ At the same time, it follows the same method-eligibility rule as scTimeBench:
 - methods that can generate unseen future cells: evaluate all three dimensions
 - methods that cannot generate unseen future cells, such as WOT-like methods: evaluate **Lineage Fidelity only**
 
-Under this rule, the current first-stage benchmark for **WOT vs CellRank2** activates only **Lineage Fidelity**. Forecast Accuracy and Embedding Coherence remain in the framework, but they are deferred until future models that actually support unseen-timepoint generation are added.
+Under this rule, **WOT** and **CellRank2** remain Lineage-Fidelity-only methods, while **scNODE** and **PRESCIENT** are official projection-capable methods evaluated across all three dimensions under the fixed `scgpt_v1` ground-truth provider. PRESCIENT first completed A/B/C CPU low-memory reduced-validation runs, then completed full formal A/B/C HVG2000 runs without per-timepoint training subsampling.
 
-No OT projection workaround is introduced. No repository-specific label asset is forcibly embedded into the active core pipeline at this stage. Instead, annotation-derived labels and lineage references are handled through an explicit ground-truth provider layer. The first priority is to make the scTimeBench-aligned core benchmark logic clean, strict, modular, and runnable.
+No OT projection workaround is introduced. No repository-specific label asset is forcibly embedded into the active core pipeline. Instead, annotation-derived labels and lineage references are handled through an explicit ground-truth provider layer. The current benchmark is runnable for the formal A/B/C observed-time scenarios, with formal reporting separated from smoke tests, HPC validation runs, pilot backups, and reduced-validation runs by explicit `result_class` metadata.
 
 ---
 
 ## 17. Experimental record
 
-**2026-04-18 — Repository rebuild, WOT pipeline, and scGPT integration**
-Repo rebuilt from scratch (v1→v2): legacy T1–T5 structure deleted; benchmark scaffold created (configs, adapters, evaluators, dispatcher). Preprocessing script updated (v3→v4) to produce `adata_benchmark.h5ad` (75,194 × 2,000; all required obs/var/obsm/uns fields validated). `GSE230659Dataset` pkl class, builder script, and `wot_gse230659_observed.yaml` config created. WOT `run.py` written; three bugs patched: GBK encoding on Windows, wrong `TransportMapModel.compute()` API (replaced with correct `OTModel → compute_all_transport_maps → from_directory → get_coupling` sequence), wrong coupling accessor (`.x` → `.X`). scGPT role defined as zero-shot embedding tool: embed all cells into 512-dim space → cluster → freeze pseudo-states for Lineage Fidelity. Pretrained whole-human model validated (`vocab.json`, `args.json`, `best_model.pt` 205 MB). Benchmark h5ad chosen for smoke test (92.3% vocab overlap); raw h5ad for production (84.8%, 27,267 genes, raw counts). Smoke-test script written at `benchmark/scgpt/smoke_test.py` (1,000-cell balanced subset → `embed_data` → UMAP/Leiden → save). Windows patch applied to `scgpt/tasks/cell_emb.py`: `os.sched_getaffinity` guarded with `hasattr` (`num_workers=0` on Windows). Status: WOT and scGPT smoke tests both pending local execution.
+**2026-04-18 - Repository rebuild, WOT pipeline, and scGPT integration**
+Repo rebuilt from the earlier project-specific T1-T5 layout into a scTimeBench-aligned benchmark structure with configs, adapters, evaluators, dispatcher, reports, and results directories. The preprocessing path produced `adata_benchmark.h5ad` (75,194 x 2,000) with the required benchmark fields. WOT execution was implemented and debugged against the correct `OTModel -> compute_all_transport_maps -> from_directory -> get_coupling` API. scGPT was selected as the zero-shot embedding source for a working state system, using pretrained whole-human scGPT embeddings to define provisional pseudostates for Lineage Fidelity.
 
 ---
 
-**2026-04-19 — scGPT v1 state system integration and CellRank2 adapter**
-scGPT v1 silver-standard state system established: 14 pseudostates (PS_00–PS_13) from Leiden clustering on `X_scGPT` (512-dim); reference graph frozen with 42 edges at three confidence tiers (3 high / 28 medium / 11 low). Parallel YAML configs created for WOT and CellRank2 (scgpt_v1 paths; `abs_day` time key; `scgpt_pseudostate_provisional` state key; `edge_confidence_mode: medium_and_above`, 31 edges). `eval_lineage.py`: reference graph loader implemented with confidence-tier filtering; honest `has_predictions` status field replacing always-"completed" placeholder. `eval_dispatch.py`: `--method-config` CLI flag added; `exclude_uncertain_states` wired end-to-end; scenario config (time key, state key, cellrank2 params) injected into adapter; UTF-8 encoding fix. WOT `run.py`: `day_field` hardcoding fixed (`time_label` → configurable); WOT confirmed producing non-empty outputs with scGPT-v1 config. CellRank2 adapter fully implemented (replacing scaffold): WOT transport → `RealTimeKernel.from_wot(path=...)` → state-level aggregation via sparse S@T@S.T. Three CellRank2 API errors patched: `from_wot` takes a directory path (not object); time key must be categorical; categorical must be sorted numerically (not lexicographically). Status: CellRank2 end-to-end run pending.
+**2026-04-19 - scGPT-v1 state system and CellRank2 integration**
+The `scgpt_v1` silver-standard provider was established with 14 pseudostates (`PS_00`-`PS_13`) and a frozen reference graph with 42 directed edges (3 high, 28 medium, 11 low). The active formal setting uses `edge_confidence_mode: medium_and_above`, giving 31 reference edges. WOT and CellRank2 configs were wired to `abs_day`, `scgpt_pseudostate_provisional`, and the scGPT-v1 reference. CellRank2 was implemented as a real adapter using WOT transport maps and `RealTimeKernel.from_wot()`, followed by sparse state-level aggregation.
 
 ---
 
-**2026-04-20 — Scenario B baseline leak diagnosis and cleanup**
-Baseline leak confirmed: `eval_dispatch.py` passed full adata (75,194 cells) to `run_lineage_evaluation` instead of the adapter's scenario-filtered view, so the Scenario B baseline incorrectly included held-out timepoints; all pilot-pass baseline CSVs were byte-identical across scenarios. Fix applied in dispatcher: `eval_adata = getattr(adapter, "adata", adata)` — baseline now computed on the same cell universe the method trained on; Scenario A unchanged (AUROC 0.6743 verified). `cellrank2_adapter.py` Step 0 now filters to `train_times` from config and reassigns `self.adata` (75,194 → 27,891 cells for Scenario B). `scripts/recompute_scenario_b_baseline.py` written and applied to both WOT-B and CR2-B (`subsample=0`); baseline CSVs are now byte-identical between methods (MD5 verified). WOT-B JSON files: NUL-byte padding stripped (Windows sync artefact); `result_class: "pilot"` and `sampling` block added to `run_metadata.json`. `summarize_lineage.py` rewritten: ranks on five framework metrics only (`jaccard_topk` diagnostic-only), one baseline per `(scenario, result_class)` with `baseline_consistent` flag, `--official-only` flag. Policy established: the correlation baseline is a property of the scenario split, not the method's subsample. Status: Scenario C ready to run.
+**2026-04-20 - Scenario B baseline leak diagnosis**
+A baseline leak was found and fixed: the dispatcher had passed the full AnnData object into `run_lineage_evaluation()` instead of the adapter's scenario-filtered training universe. After the fix, the correlation baseline is computed on the same cell universe used by the method. `summarize_lineage.py` was updated to rank only the five framework Lineage Fidelity metrics, keep `jaccard_similarity_topk` diagnostic-only, and collapse the correlation baseline to one row per `(scenario, result_class, ground_truth_provider)`.
 
 ---
 
-**2026-04-21 — Scenario C (interpolation + extrapolation) implemented and pilot-run**
-Scenario C split defined: 10 training time points (days 0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0; 49,820 cells); three interpolation holdouts (days 4.0, 12.0, 20.0); two extrapolation holdouts (days 28.0, 30.0). YAML configs created for WOT (`wot_gse230659_observed_scgpt_v1_scenarioC.yaml`) and CellRank2 (`cellrank2_gse230659_observed_scgpt_v1_scenarioC.yaml`); A/B configs untouched. Three code fixes to support memory-efficient runs: backed-mode loading added to `eval_dispatch.py` and `run.py` (load with `backed='r'`; materialize after scenario filter); `cellrank2_adapter.py` Step 0 fixed to use `.to_memory()` on backed slice; shutil.rmtree replaced with graceful per-file fallback (mounted-fs permission issue). Both methods run as pilot (300 cells/timepoint, 3,000 cells): WOT-C AUROC 0.686 / AUPRC 0.336 / SSR 0.387; CellRank2-C AUROC 0.694 / AUPRC 0.343 / SSR 0.387; both exceed baseline (AUROC 0.675). Baseline confirmed scenario-specific (computed on 3,000 pilot training cells). `lineage_summary.csv` regenerated covering A/B (official) + C (pilot). Full-data Scenario C runs pending on local machine (`conda activate traj_env`; same YAML configs; no further code changes needed).
+**2026-04-21 - Scenario C split and memory-efficient runs**
+Scenario C was defined as observed-time interpolation plus extrapolation: 10 training time points (0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0), interpolation holdouts (4.0, 12.0, 20.0), and extrapolation holdouts (28.0, 30.0). Backed AnnData loading and post-filter materialization were added for large Scenario B/C jobs. Pilot C runs confirmed the split and baseline logic before full-data execution.
 
 ---
 
-**2026-04-22 — Performance audit, code optimizations, WOT-C full run, and Shirokane HPC validation**
-Full-data WOT Scenario C completed on local machine (4.5 h, AUROC 0.817 / AUPRC 0.403 / SSR 0.452), confirming both methods score ~0.818 AUROC on Scenario C with full training data. Performance audit conducted across all source files; four optimizations implemented: (1) `_aggregate_to_state_level()` in `WOT/run.py` vectorized — Python O(n²) double loop replaced with sparse S_src @ M @ S_tgt.T, eliminating 80 M+ iterations on the largest transport maps; (2) `--skip-tmap-if-exists` CLI flag added to `WOT/run.py` for tmap reuse across reruns; (3) redundant `adata.copy()` eliminated in `CellRank2Adapter._run_lineage_fidelity_impl()` — reuses existing copy for both WOT and CellRank2 stages, reducing peak RAM from 3× to 2× dataset size; (4) all hard-coded Windows paths (`C:\Users\37620\trajectory`, `C:\...\scGPT`) removed from 9 source files and replaced with `TRAJ_PROJECT_ROOT` / `SCGPT_REPO` env-var overrides plus upward-search fallback, making the codebase portable to Linux/HPC. SGE job scripts written (`run_wot_validate.sh`, `run_cellrank_validate.sh`, `run_cellrank_validate_array.sh`) and project deployed to Shirokane HPC (`/home/xzy0723/projects/trajectory`). Four Shirokane jobs completed successfully (Apr 22 21:14–21:55 JST): WOT/A reproduced exactly (AUROC 0.8559, bit-for-bit match; tmap cache hit on 2nd run reduced runtime from 676 s to 24 s); CellRank2/A reproduced (AUROC 0.7634, Δ ≤ 0.001 vs local); CellRank2/B reproduced (AUROC 0.5665); CellRank2/C run at full scale for the first time (49,820 cells, 376 s, AUROC 0.8194 vs pilot 0.694). One SGE job failed due to a config filename typo in the shell script (non-critical; corrected). Confirmed: Scenario B below baseline for both methods (WOT AUROC 0.534, CR2 0.566 vs baseline 0.678) — early-only training is insufficient for full lineage recovery, a stable scientific finding. Outstanding: WOT/B and WOT/C not yet re-run on Shirokane; `result_class` label missing from CR2/C Shirokane result; summary CSV needs regeneration to cover all 6 runs.
----
-
-**2026-04-23 - scNODE adapter integration, HPC scripts, and full-cell HVG run**
-Added the first scNODE benchmark path: created `scnode_adapter.py`, registered `scnode` in `eval_dispatch.py`, injected `scnode_params` / `scenario_params` / `dataset_id`, and updated `method_capabilities.yaml`.
-Replaced the WOT scaffold entry by wiring `WOTAdapter` to the real `benchmark/methods/WOT/run.py` logic.
-Wrote Shirokane qsub scripts for scNODE smoke and full runs; the smoke test on GSE230659 human data completed successfully with all required outputs.
-The first naive full-cell run was killed by memory pressure, so an HVG2000 reduced-training route was designed and scripted.
-The original HVG selection failed because Scanpy's Seurat-style HVG routine hit `inf` values; this was fixed by replacing it with a finite sparse mean/variance dispersion selector.
-The rerun completed full-cell training plus forecast/embedding output generation on Shirokane, but lineage evaluation still produced NaNs in the state-transition matrix, so `lineage_metrics.json` is still missing.
+**2026-04-22 - Performance optimization and HPC validation**
+WOT state aggregation was vectorized from a Python double loop to sparse `S_src @ M @ S_tgt.T`, `--skip-tmap-if-exists` was added for transport-map reuse, CellRank2 memory use was reduced by avoiding an extra full AnnData copy, and hard-coded local paths were replaced with `TRAJ_PROJECT_ROOT` / `SCGPT_REPO` overrides plus project-root discovery. Shirokane validation reproduced WOT/A, CellRank2/A, CellRank2/B, and full CellRank2/C. Full WOT/C also completed with AUROC about 0.817. Scenario B consistently remained below baseline for WOT and CellRank2, supporting the interpretation that early-only training is insufficient for full lineage recovery.
 
 ---
 
-**2026-04-24 - scNODE A/B/C reduced runs and ground-truth provider modularization**
-Fixed scNODE Lineage Fidelity NaNs by replacing the naive soft assignment normalization with a stable softmax, adding zero-row handling for unsupported source states, and writing `lineage_diagnostics.json`.
-Re-ran scNODE full-cell HVG2000 Scenario A on Shirokane using the cached trained model; `lineage_metrics.json` completed successfully and the state-transition matrix contains no non-finite values.
-Added Shirokane array script support for scNODE Scenario B and Scenario C HVG2000 reduced runs; both completed with Forecast Accuracy and Lineage Fidelity outputs.
-Implemented the first modular ground-truth provider layer under `benchmark/ground_truth/`, with `scgpt_v1` registered as the current silver-standard working provider.
-The provider layer standardizes `state_labels.tsv`, `state_metadata.tsv`, `reference_graph.json`, `reference_graph_edges.csv`, and `ground_truth_metadata.json`, allowing future annotation systems such as CellTypist, scANVI, SingleR, marker-rule, or consensus providers to replace scGPT without changing model adapters.
-`eval_dispatch.py`, `eval_lineage.py`, and `summarize_lineage.py` now carry provider metadata so results can be grouped and ranked by `(scenario, result_class, ground_truth_provider)`.
+**2026-04-23 - scNODE adapter integration**
+scNODE was added as the first projection-capable benchmark method. `scnode_adapter.py` was registered in `eval_dispatch.py`, `method_capabilities.yaml` was updated, and scNODE was marked eligible for Forecast Accuracy, Embedding Coherence, and Lineage Fidelity. A memory-feasible HVG2000 route was introduced after the naive full-gene full-cell run exceeded memory. HVG selection was made robust by replacing Scanpy's failing Seurat-style routine with a finite sparse mean/variance dispersion selector.
+
+---
+
+**2026-04-24 - scNODE reduced and formal benchmark runs**
+scNODE Lineage Fidelity was stabilized by replacing naive soft-assignment normalization with a stable softmax, adding deterministic nearest-centroid fallback, zero-row handling for unsupported source states, and `lineage_diagnostics.json`. Reduced A/B/C validation runs completed, followed by formal A/B/C HVG2000 runs under `scgpt_v1` with `result_class: official`, `formal_benchmark: true`, `pretrain_iters=200`, `epochs=10`, `iters=100`, `batch_size=32`, `latent_dim=50`, and `n_sim_cells=2000`. The scNODE formal runs produced Forecast Accuracy, Embedding Coherence, and Lineage Fidelity outputs for all three observed-time scenarios.
+
+---
+
+**2026-04-25 - Formal A/B/C benchmark synchronization**
+Formal WOT, CellRank2, and scNODE results were synchronized into the local result tree. CellRank2 Scenario C was promoted from pilot backup to a full-data official result. The formal lineage comparison now contains WOT, CellRank2, and scNODE for Scenarios A, B, and C under the fixed `scgpt_v1` provider. WOT and CellRank2 remain Lineage-Fidelity-only by capability, while scNODE carries all three core dimensions.
+
+---
+
+**2026-04-28 - Result-class cleanup and report regeneration**
+All run directories with metadata were assigned explicit `result_class` values. Formal runs are marked `official`; smoke tests, Shirokane validation runs, pilot backups, and reduced-validation runs are marked as non-official classes (`smoke`, `hpc_validation`, `pilot_backup`, `reduced_validation`). `summarize_core_results.py` and `summarize_lineage.py` now recognize these classes, so `--official-only` excludes all diagnostic runs reliably. The report assets were regenerated:
+
+- `benchmark/reports/core_summary.csv` contains 18 traceability rows across all result classes.
+- `benchmark/reports/lineage_summary.csv` contains 33 rows grouped by result class.
+- `benchmark/reports/lineage_summary_official.csv` contains 15 official rows only.
+- `benchmark/reports/formal_benchmark_summary.csv` contains the 9 formal model-scenario rows.
+- `benchmark/reports/figures/lineage_auroc_by_model_scenario.png` and `benchmark/reports/scnode_formal_metrics_table.md` were rebuilt from the cleaned formal summary.
+
+Current formal result snapshot:
+
+- Scenario A Lineage AUROC: WOT 0.8559, CellRank2 0.7636, scNODE 0.7611.
+- Scenario B Lineage AUROC: WOT 0.5341, CellRank2 0.5631, scNODE 0.5015.
+- Scenario C Lineage AUROC: WOT 0.8174, CellRank2 0.8194, scNODE 0.7161.
+
+**2026-04-29 - PRESCIENT integration and neutral HVG benchmark input**
+The shared HVG2000 input was moved out of the scNODE result tree and renamed as a model-neutral benchmark input: `benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad`. Its metadata was changed from `scnode_hvg_*` to `benchmark_hvg_*`, with `benchmark_input_label` set to `GSE230659 scGPT-annotated HVG2000 benchmark input`. scNODE and PRESCIENT scripts/configs now consume this neutral input instead of a scNODE-owned path.
+
+PRESCIENT was added as a separate benchmark method with the original author repository vendored under `benchmark/methods/PRESCIENT/prescient_module`, matching the existing scNODE pattern (`benchmark/methods/scNODE/scNODE_module`). The PRESCIENT wrapper now defaults to this project-local author-code copy, while `PRESCIENT_REPO` remains available as an explicit override. The previous accidental fallback to scNODE's internal PRESCIENT baseline copy was removed from the normal search path.
+
+PRESCIENT A/B/C CPU low-memory runs completed on Shirokane with `result_class: reduced_validation` and `formal_benchmark: false`. These runs used capped training/reference cells and are treated as integration validation rather than official formal benchmark evidence. Outputs were synchronized locally, a malformed trailing-NUL metadata file for Scenario B was cleaned, and report summaries were regenerated. PRESCIENT reduced-validation metrics now appear in `benchmark/reports/core_summary.csv`, `benchmark/reports/lineage_summary.csv`, and `benchmark/reports/prescient_reduced_validation_metrics_table.md`, while `lineage_summary_official.csv` and `formal_benchmark_summary.csv` correctly exclude them.
+
+PRESCIENT reduced-validation snapshot:
+
+- Scenario A: Forecast WD 3.3461, Embedding ARI 0.1194, Lineage AUROC 0.6610.
+- Scenario B: Forecast WD 3.6448, Embedding ARI 0.1276, Lineage AUROC 0.5591.
+- Scenario C: Forecast WD 4.4809, Embedding ARI 0.1594, Lineage AUROC 0.6490.
+
+**2026-04-30 - Full formal PRESCIENT completion**
+Full formal PRESCIENT A/B/C HVG2000 runs completed on Shirokane with `result_class: official`, `formal_benchmark: true`, and `training_protocol: full_formal_hvg2000`. The runs used no per-timepoint training subsampling and no embedding reference-cell cap. The training universes were A: 75,194 cells, B: 27,891 cells, and C: 49,820 cells. The qsub logs show `s_vmem=128G`, internal-cache cleanup before execution, `missing: []`, and successful job completion. CUDA was unavailable in these runs, so the completed full formal PRESCIENT results are CPU full formal results.
+
+Formal summaries were regenerated after synchronization. PRESCIENT is now included in `benchmark/reports/core_summary.csv`, `benchmark/reports/lineage_summary.csv`, `benchmark/reports/lineage_summary_official.csv`, `benchmark/reports/formal_benchmark_summary.csv`, `benchmark/reports/figures/lineage_auroc_by_model_scenario.png`, and `benchmark/reports/projection_formal_metrics_table.md`.
+
+PRESCIENT full formal snapshot:
+
+- Scenario A: Forecast WD 3.1054, Gaussian MMD 0.1316, Embedding ARI 0.1449, Lineage AUROC 0.6766.
+- Scenario B: Forecast WD 4.0936, Gaussian MMD 0.1842, Embedding ARI 0.2345, Lineage AUROC 0.5470.
+- Scenario C: Forecast WD 4.4904, Gaussian MMD 0.2081, Embedding ARI 0.2881, Lineage AUROC 0.6524.
+
+The current next scientific step is interpretation rather than pipeline construction: compare official projection-capable methods (scNODE vs PRESCIENT), keep WOT and CellRank2 lineage-only, and explain why Scenario B remains difficult across methods.

@@ -16,6 +16,17 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 
+VALID_RESULT_CLASSES = {
+    "official",
+    "pilot",
+    "pilot_backup",
+    "reduced_validation",
+    "smoke",
+    "hpc_validation",
+    "diagnostic",
+}
+
+
 def _project_root() -> Path:
     here = Path(__file__).resolve().parent
     for candidate in [here, *here.parents]:
@@ -64,7 +75,7 @@ def _discover_runs(root: Path) -> List[Tuple[str, str, Path]]:
 
 def _infer_result_class(meta: Dict) -> str:
     declared = meta.get("result_class")
-    if declared in ("official", "pilot", "reduced_validation"):
+    if declared in VALID_RESULT_CLASSES:
         return declared
     sampling = meta.get("sampling") or {}
     if sampling.get("subsample_per_timepoint") not in (None, "", False):

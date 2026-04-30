@@ -1,4 +1,4 @@
-"""Recompute remaining Forecast Accuracy metrics for scNODE reduced runs."""
+﻿"""Recompute remaining Forecast Accuracy metrics for scNODE reduced runs."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ RUNS = [
     "benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced",
     "benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_reduced",
 ]
-HVG_ADATA = "benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad"
+HVG_ADATA = "benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad"
 
 
 def main() -> None:

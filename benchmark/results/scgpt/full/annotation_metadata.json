@@ -1,0 +1,55 @@
+{
+  "run_timestamp": "2026-04-19T11:04:01",
+  "script": "benchmark/scgpt/annotate_provisional.py",
+  "input_h5ad": "C:\\Users\\37620\\trajectory\\benchmark\\results\\scgpt\\full\\adata_scgpt_full.h5ad",
+  "cluster_map": "C:\\Users\\37620\\trajectory\\benchmark\\scgpt\\cluster_map_provisional.json",
+  "map_version": "v1",
+  "map_status": "provisional",
+  "leiden_key": "leiden_scgpt_res0.5",
+  "n_cells": 75194,
+  "n_leiden_clusters": 14,
+  "output_columns_added": [
+    "scgpt_pseudostate_provisional",
+    "scgpt_state_family",
+    "scgpt_state_status"
+  ],
+  "status_cell_counts": {
+    "merge_review": 46091,
+    "confirmed": 26793,
+    "uncertain": 2310
+  },
+  "family_cell_counts": {
+    "mid_transition": 14023,
+    "stageIII_transition": 12996,
+    "late_transition": 11404,
+    "somatic": 10470,
+    "stageIII_peak": 6990,
+    "pluripotent": 5879,
+    "stageII": 5328,
+    "late_branch": 4238,
+    "uncertain": 2310,
+    "pre_pluripotent": 1556
+  },
+  "confirmed_clusters": [
+    "3",
+    "4",
+    "5",
+    "6",
+    "10"
+  ],
+  "merge_review_clusters": [
+    "0",
+    "1",
+    "2",
+    "7",
+    "8",
+    "9",
+    "13"
+  ],
+  "uncertain_clusters": [
+    "11",
+    "12"
+  ],
+  "output_h5ad": "C:\\Users\\37620\\trajectory\\benchmark\\results\\scgpt\\full\\adata_scgpt_annotated.h5ad",
+  "output_h5ad_size_mb": 2570.5
+}

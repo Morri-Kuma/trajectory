@@ -1,0 +1,20 @@
+{
+  "cell_state_key": "scgpt_pseudostate_provisional",
+  "assignment_temperature": 1.0,
+  "source_transition_counts": {
+    "PS_00": 12996,
+    "PS_01": 11404,
+    "PS_02": 8819,
+    "PS_03": 7344,
+    "PS_04": 6686,
+    "PS_05": 71,
+    "PS_06": 5328,
+    "PS_07": 5204,
+    "PS_08": 1323,
+    "PS_09": 3126,
+    "PS_10": 1553,
+    "PS_11": 1284,
+    "PS_12": 610,
+    "PS_13": 304
+  }
+}

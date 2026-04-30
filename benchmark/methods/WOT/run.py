@@ -629,9 +629,9 @@ def main():
             reference_graph_path = lineage_cfg.get("reference_graph_path", None)
             if reference_graph_path == "null" or reference_graph_path == "":
                 reference_graph_path = None
-            # Pass the loaded train_adata and configured cell_state_key through
-            # so the correlation baseline can compute per-state mean expression
-            # on the exact same cell universe used by the method.
+            # Pass the loaded train_adata plus configured state/time keys so
+            # the scTimeBench-style correlation baseline uses the exact same
+            # cell universe and adjacent training timepoints as the method.
             metrics = run_lineage_evaluation(
                 state_transition_matrix_path=str(output_dir / "state_transition_matrix.csv"),
                 lineage_graph_edges_path=str(output_dir / "lineage_graph_edges.csv"),
@@ -641,6 +641,7 @@ def main():
                 edge_confidence_mode=edge_confidence_mode,
                 exclude_uncertain_states=exclude_uncertain_states,
                 cell_state_key=cell_state_key,
+                time_key=time_key,
             )
             print(f"  Lineage Fidelity status: {metrics.get('status', 'unknown')}")
         else:

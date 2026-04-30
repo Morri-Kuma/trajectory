@@ -1,0 +1,86 @@
+{
+  "method": "prescient",
+  "dataset": "GSE230659",
+  "scenario": "B",
+  "result_class": "reduced_validation",
+  "formal_benchmark": false,
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 40.26,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "scgpt_pseudostate_provisional",
+  "train_times": [
+    0.5,
+    2.0,
+    4.0,
+    8.0,
+    12.0,
+    16.0
+  ],
+  "heldout_times": [
+    16.33,
+    16.67,
+    17.0,
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    28.0,
+    30.0
+  ],
+  "n_sim_cells": 500,
+  "sampling": {
+    "subsample_per_timepoint": 500,
+    "embedding_reference_cells_per_timepoint": 500
+  },
+  "prescient_repo": "/home/xzy0723/projects/trajectory/benchmark/methods/PRESCIENT/prescient_module",
+  "prescient_params": {
+    "num_pcs": 20,
+    "k_dim": 64,
+    "layers": 1,
+    "activation": "softplus",
+    "pretrain_epochs": 10,
+    "train_epochs": 50,
+    "train_lr": 0.01,
+    "train_dt": 0.1,
+    "train_sd": 0.5,
+    "train_tau": 1e-06,
+    "train_batch": 0.02,
+    "train_clip": 0.25,
+    "save": 100,
+    "seed": 42,
+    "weight_name": "uniform",
+    "n_sim_cells": 500,
+    "metric_sample_cells": 300,
+    "assignment_temperature": 1.0,
+    "use_cuda": false,
+    "subsample_per_timepoint": 500,
+    "embedding_reference_cells_per_timepoint": 500,
+    "memory_note": "CPU low-memory run: capped at 500 training cells per timepoint, 20 PCs, k_dim=64, n_sim_cells=500."
+  },
+  "notes": "",
+  "ground_truth": {
+    "provider_id": "scgpt_v1",
+    "state_key": "scgpt_pseudostate_provisional",
+    "label_path": "benchmark/ground_truth/providers/scgpt_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/scgpt_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/scgpt_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/scgpt_v1/reference_graph_edges.csv",
+    "confidence_mode": "medium_and_above",
+    "exclude_uncertain_states": false,
+    "status": "silver_standard_working",
+    "n_states": 14,
+    "n_graph_edges": 42,
+    "source_h5ad": "benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad",
+    "annotation_method": "scGPT",
+    "notes": "Working v1 silver-standard state system derived from scGPT embeddings and consecutive-timepoint kNN transition counting. This is not final biological ground truth; it is the current frozen benchmark provider.\n"
+  }
+}

@@ -66,5 +66,6 @@
     "batch_size": 32,
     "n_sim_cells": 1000
   },
-  "scenario_variant": "B_hvg2000_reduced"
+  "scenario_variant": "B_hvg2000_reduced",
+  "formal_benchmark": false
 }

@@ -36,6 +36,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import Optional, Tuple, List
+from scipy.sparse import issparse
+from scipy.stats import rankdata
 
 
 def _mark_run_metadata_lineage_failed(out_dir: Path, reason: str) -> None:
@@ -368,15 +370,15 @@ def _build_baseline_edges(corr_df: pd.DataFrame,
     return edges_df, edges
 
 
-def compute_correlation_baseline(adata,
-                                  reference_matrix: pd.DataFrame,
-                                  reference_edges: set,
-                                  cell_state_key: Optional[str] = None,
-                                  output_dir: Optional[str] = None) -> dict:
+def compute_state_mean_pearson_baseline(adata,
+                                         reference_matrix: pd.DataFrame,
+                                         reference_edges: set,
+                                         cell_state_key: Optional[str] = None,
+                                         output_dir: Optional[str] = None) -> dict:
     """
     Correlation-based baseline for Lineage Fidelity (per v2 §9.6).
 
-    Analogous to scTimeBench's lineage baseline: uses pairwise Pearson
+    Legacy diagnostic only: uses pairwise Pearson
     correlation between per-state mean gene expression vectors as a naive
     predictor of lineage connectivity, then evaluates the resulting
     (symmetric) score matrix against the reference lineage using the same
@@ -469,7 +471,8 @@ def compute_correlation_baseline(adata,
     )
 
     # Provenance fields so the baseline row is traceable in the summary.
-    metrics["method"] = "correlation_baseline"
+    metrics["method"] = "state_mean_pearson_baseline"
+    metrics["baseline_style"] = "legacy_state_mean_pearson"
     metrics["cell_state_key"] = cell_state_key
     metrics["n_states_used"] = int(present_mask.sum())
     metrics["n_predicted_edges_topk"] = len(edges_set)
@@ -483,6 +486,260 @@ def compute_correlation_baseline(adata,
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
         corr_df.to_csv(out / "baseline_state_transition_matrix.csv")
+        edges_df.to_csv(out / "baseline_lineage_graph_edges.csv", index=False)
+
+    return metrics
+
+
+def _resolve_time_key(adata, time_key: Optional[str]) -> Optional[str]:
+    """Resolve the time column used by the scTimeBench-style baseline."""
+    if time_key and time_key in adata.obs.columns:
+        return time_key
+    for candidate in ("timepoint", "abs_day", "time_label", "day"):
+        if candidate in adata.obs.columns:
+            return candidate
+    return None
+
+
+def _sorted_timepoints(values) -> list:
+    """Sort timepoints numerically when possible, otherwise lexicographically."""
+    unique = pd.Series(values).dropna().unique().tolist()
+    try:
+        return sorted(unique, key=lambda x: float(x))
+    except (TypeError, ValueError):
+        return sorted(unique, key=lambda x: str(x))
+
+
+def _as_dense_float32(X) -> np.ndarray:
+    """Materialize a matrix slice as dense float32 for correlation math."""
+    X = X.toarray() if issparse(X) else np.asarray(X)
+    return X.astype(np.float32, copy=False)
+
+
+def _rank_zscore_cells(X) -> np.ndarray:
+    """Rank genes within each cell and z-score rows for Spearman correlation."""
+    ranked = rankdata(X, axis=1, method="average").astype(np.float32, copy=False)
+    mean = ranked.mean(axis=1, keepdims=True)
+    std = ranked.std(axis=1, keepdims=True)
+    std[std == 0] = 1.0
+    return (ranked - mean) / std
+
+
+def _build_pr_threshold_edges(score_df: pd.DataFrame,
+                              reference_edges: set) -> Tuple[pd.DataFrame, set, float]:
+    """
+    Build a sparse graph from a weighted matrix using an automatic PR threshold.
+
+    Candidate thresholds are unique finite off-diagonal scores. The selected
+    threshold maximizes precision + recall against the reference edge set.
+    """
+    vals = score_df.values.astype(float, copy=True)
+    np.fill_diagonal(vals, -np.inf)
+    finite_scores = np.unique(vals[np.isfinite(vals)])
+    if finite_scores.size == 0:
+        empty = pd.DataFrame(columns=["source_state", "target_state", "weight"])
+        return empty, set(), float("nan")
+
+    states = list(score_df.index)
+    ref = set(reference_edges)
+    best_threshold = float(finite_scores.max())
+    best_objective = -np.inf
+    best_edges: set = set()
+
+    for threshold in finite_scores:
+        pred = {
+            (states[i], states[j])
+            for i, j in zip(*np.where(vals >= threshold))
+        }
+        if not pred:
+            continue
+        tp = len(pred & ref)
+        precision = tp / len(pred)
+        recall = tp / len(ref) if ref else 0.0
+        objective = precision + recall
+        if (
+            objective > best_objective
+            or (
+                objective == best_objective
+                and (len(pred), -float(threshold)) < (len(best_edges), -best_threshold)
+            )
+        ):
+            best_objective = objective
+            best_threshold = float(threshold)
+            best_edges = pred
+
+    rows = [
+        {
+            "source_state": src,
+            "target_state": tgt,
+            "weight": float(score_df.loc[src, tgt]),
+        }
+        for src, tgt in sorted(best_edges)
+    ]
+    edges_df = pd.DataFrame(rows, columns=["source_state", "target_state", "weight"])
+    return edges_df, best_edges, best_threshold
+
+
+def compute_correlation_baseline(adata,
+                                  reference_matrix: pd.DataFrame,
+                                  reference_edges: set,
+                                  cell_state_key: Optional[str] = None,
+                                  output_dir: Optional[str] = None,
+                                  time_key: Optional[str] = None,
+                                  source_chunk_size: int = 512) -> dict:
+    """
+    scTimeBench-style correlation baseline for Lineage Fidelity.
+
+    Reproduces the scTimeBench Correlation method with
+    ``correlation_method: spearmanr`` and ``averaging_method: maximum``:
+    adjacent timepoint pairs, cell-level Spearman correlation, maximum score
+    per target state, one best-target vote per source cell, then row-normalized
+    source-state by target-state votes.
+    """
+    none_result = {
+        "auroc": None, "auprc": None, "jaccard_similarity": None,
+        "single_step_recovery": None, "multi_step_recovery": None,
+    }
+
+    if adata is None:
+        return {**none_result,
+                "note": "Correlation baseline skipped: no AnnData was passed to the evaluator."}
+    if reference_matrix is None or reference_matrix.empty:
+        return {**none_result,
+                "note": "Correlation baseline skipped: reference matrix is empty under the current edge_confidence_mode."}
+    if cell_state_key is None:
+        return {**none_result,
+                "note": "Correlation baseline skipped: cell_state_key was not supplied to the evaluator."}
+    if cell_state_key not in adata.obs.columns:
+        return {**none_result,
+                "note": f"Correlation baseline skipped: adata.obs does not contain {cell_state_key!r}."}
+
+    resolved_time_key = _resolve_time_key(adata, time_key)
+    if resolved_time_key is None:
+        return {**none_result,
+                "note": "Correlation baseline skipped: no timepoint column was available."}
+    if source_chunk_size <= 0:
+        source_chunk_size = 512
+
+    states = list(reference_matrix.index)
+    state_to_idx = {str(s): i for i, s in enumerate(states)}
+    obs = adata.obs
+    state_arr = obs[cell_state_key].astype(str).to_numpy()
+    time_arr = obs[resolved_time_key].to_numpy()
+    timepoints = _sorted_timepoints(time_arr)
+    if len(timepoints) < 2:
+        return {**none_result,
+                "note": (
+                    "Correlation baseline skipped: fewer than 2 timepoints are "
+                    f"represented in adata under {resolved_time_key!r}."
+                )}
+
+    votes = np.zeros((len(states), len(states)), dtype=np.float64)
+    n_pairs_used = 0
+    n_source_cell_votes = 0
+
+    try:
+        for t0, t1 in zip(timepoints[:-1], timepoints[1:]):
+            idx_t0 = np.where(time_arr == t0)[0]
+            idx_t1 = np.where(time_arr == t1)[0]
+            if idx_t0.size == 0 or idx_t1.size == 0:
+                continue
+
+            ct_t0 = state_arr[idx_t0]
+            ct_t1 = state_arr[idx_t1]
+            present_dst_states = [
+                s for s in states
+                if np.any(ct_t1 == str(s))
+            ]
+            if not present_dst_states:
+                continue
+
+            dst_cache = {}
+            for dst_state in present_dst_states:
+                dst_pos = idx_t1[ct_t1 == str(dst_state)]
+                X_dst = _as_dense_float32(adata.X[dst_pos])
+                dst_cache[str(dst_state)] = _rank_zscore_cells(X_dst)
+
+            n_features = next(iter(dst_cache.values())).shape[1]
+            n_pairs_used += 1
+
+            for start in range(0, idx_t0.size, source_chunk_size):
+                end = min(start + source_chunk_size, idx_t0.size)
+                src_pos = idx_t0[start:end]
+                src_states = ct_t0[start:end]
+                X_src = _as_dense_float32(adata.X[src_pos])
+                z_src = _rank_zscore_cells(X_src)
+
+                best_scores = np.full(z_src.shape[0], -np.inf, dtype=np.float32)
+                best_dst = np.full(z_src.shape[0], "", dtype=object)
+                for dst_state, z_dst in dst_cache.items():
+                    corr = (z_src @ z_dst.T) / n_features
+                    corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
+                    corr = np.clip(corr, -1.0, 1.0)
+                    scores = corr.max(axis=1)
+                    update = scores > best_scores
+                    best_scores[update] = scores[update]
+                    best_dst[update] = dst_state
+
+                for src_state, dst_state in zip(src_states, best_dst):
+                    src_i = state_to_idx.get(str(src_state))
+                    dst_i = state_to_idx.get(str(dst_state))
+                    if src_i is None or dst_i is None:
+                        continue
+                    votes[src_i, dst_i] += 1.0
+                    n_source_cell_votes += 1
+    except Exception as exc:  # pragma: no cover - defensive
+        return {**none_result,
+                "note": f"Correlation baseline failed during Spearman vote computation: {exc!s}"}
+
+    if n_source_cell_votes == 0:
+        return {**none_result,
+                "note": "Correlation baseline skipped: no valid source-cell votes were accumulated."}
+
+    row_sums = votes.sum(axis=1, keepdims=True)
+    nonzero_rows = row_sums[:, 0] > 0
+    score = np.zeros_like(votes, dtype=np.float64)
+    score[nonzero_rows] = votes[nonzero_rows] / row_sums[nonzero_rows]
+    baseline_df = pd.DataFrame(score, index=states, columns=states, dtype=float)
+
+    y_true = reference_matrix.values.flatten().astype(int)
+    y_score = baseline_df.values.flatten().astype(float)
+    metrics = {
+        "auroc": compute_auroc(y_true, y_score),
+        "auprc": compute_auprc(y_true, y_score),
+    }
+
+    edges_df, edges_set, graph_threshold = _build_pr_threshold_edges(
+        baseline_df, reference_edges
+    )
+    metrics["jaccard_similarity"] = compute_jaccard(edges_set, reference_edges)
+    metrics["single_step_recovery"] = compute_single_step_recovery(
+        baseline_df, reference_matrix
+    )
+    metrics["multi_step_recovery"] = compute_multi_step_recovery(
+        baseline_df, reference_matrix
+    )
+
+    metrics["method"] = "correlation_baseline"
+    metrics["baseline_style"] = "sctimebench_correlation"
+    metrics["correlation_method"] = "spearmanr"
+    metrics["averaging_method"] = "maximum"
+    metrics["cell_state_key"] = cell_state_key
+    metrics["time_key"] = resolved_time_key
+    metrics["n_states_used"] = int(nonzero_rows.sum())
+    metrics["n_timepoint_pairs_used"] = int(n_pairs_used)
+    metrics["n_source_cell_votes"] = int(n_source_cell_votes)
+    metrics["n_predicted_edges_thresholded"] = len(edges_set)
+    metrics["graph_threshold"] = graph_threshold
+    metrics["note"] = (
+        "scTimeBench-style cell-level Spearman correlation baseline with "
+        "maximum target-state aggregation and row-normalized source-state votes."
+    )
+
+    if output_dir is not None:
+        out = Path(output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        baseline_df.to_csv(out / "baseline_state_transition_matrix.csv")
         edges_df.to_csv(out / "baseline_lineage_graph_edges.csv", index=False)
 
     return metrics
@@ -534,6 +791,7 @@ def run_lineage_evaluation(
     edge_confidence_mode: str = "all",
     exclude_uncertain_states: bool = False,
     cell_state_key: Optional[str] = None,
+    time_key: Optional[str] = None,
     ground_truth: Optional[dict] = None,
 ) -> dict:
     """
@@ -567,6 +825,10 @@ def run_lineage_evaluation(
         method (e.g. ``"scgpt_pseudostate_provisional"``). Required by the
         correlation baseline; if absent the baseline reports a clear "skipped"
         status instead of returning silently empty values.
+    time_key : str, optional
+        Name of the obs column that holds the temporal coordinate used by the
+        scTimeBench-style correlation baseline. If absent, common names such as
+        ``timepoint``, ``abs_day``, and ``time_label`` are tried in order.
     ground_truth : dict, optional
         Provider metadata for the annotation/reference graph used by this run.
         Stored in lineage_metrics.json for downstream sensitivity analysis.
@@ -618,6 +880,7 @@ def run_lineage_evaluation(
             "edge_confidence_mode": edge_confidence_mode,
             "n_reference_edges": None,
             "cell_state_key": cell_state_key,
+            "time_key": time_key,
             "ground_truth": ground_truth,
         }
         metrics_path = out_dir / "lineage_metrics.json"
@@ -678,6 +941,7 @@ def run_lineage_evaluation(
                 "edge_confidence_mode": edge_confidence_mode,
                 "n_reference_edges": len(reference_edges),
                 "cell_state_key": cell_state_key,
+                "time_key": time_key,
                 "ground_truth": ground_truth,
             })
             metrics_path = out_dir / "lineage_metrics.json"
@@ -738,21 +1002,23 @@ def run_lineage_evaluation(
             )
 
     # Correlation baseline (per v2 §9.6).
-    # Uses per-state mean expression Pearson correlation as a naive lineage
-    # predictor and is evaluated against the SAME reference graph using the
-    # SAME metric functions, so baseline rows are directly comparable to
-    # method rows in the summary table.
+    # Uses the same scTimeBench Correlation policy as spearman_max.yaml:
+    # adjacent-time cell-level Spearman, maximum target-state score, and
+    # row-normalized source-state votes. It is evaluated against the SAME
+    # reference graph with the SAME metric functions as method outputs.
     metrics["baseline"] = compute_correlation_baseline(
         adata=adata,
         reference_matrix=reference_matrix,
         reference_edges=reference_edges,
         cell_state_key=cell_state_key,
+        time_key=time_key,
         output_dir=str(out_dir),
     )
     metrics["status"] = completion_status
     metrics["edge_confidence_mode"] = edge_confidence_mode
     metrics["n_reference_edges"] = len(reference_edges)
     metrics["cell_state_key"] = cell_state_key
+    metrics["time_key"] = time_key
     metrics["ground_truth"] = ground_truth
 
     metrics_path = out_dir / "lineage_metrics.json"

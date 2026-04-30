@@ -45,6 +45,8 @@ def main() -> None:
     parser.add_argument("--edge-confidence-mode", default="medium_and_above")
     parser.add_argument("--cell-state-key",
                         default="scgpt_pseudostate_provisional")
+    parser.add_argument("--time-key", default=None,
+                        help="Time column for scTimeBench-style adjacent-pair baseline.")
     parser.add_argument("--exclude-uncertain-states", action="store_true",
                         default=False)
     args = parser.parse_args()
@@ -85,6 +87,7 @@ def main() -> None:
             edge_confidence_mode=args.edge_confidence_mode,
             exclude_uncertain_states=args.exclude_uncertain_states,
             cell_state_key=args.cell_state_key,
+            time_key=args.time_key,
         )
 
 
