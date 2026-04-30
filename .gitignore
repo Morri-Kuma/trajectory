@@ -38,6 +38,7 @@ models/
 # Benchmark-heavy intermediates. Keep lightweight metrics/reports trackable.
 benchmark/results/**/tmaps/
 benchmark/results/**/tmaps_cr2/
+benchmark/results/mioflow/*_cpu/
 benchmark/results/**/*.h5ad
 benchmark/results/**/*.h5
 benchmark/results/**/*.npy
@@ -55,6 +56,7 @@ benchmark/methods/MIOFlow/tutorials/
 benchmark/methods/MIOFlow/docs/
 benchmark/methods/MIOFlow/data/
 benchmark/methods/MIOFlow/.github/
+benchmark/methods/MIOFlow/.gitignore
 benchmark/methods/MIOFlow/uv.lock
 benchmark/methods/MIOFlow/CLAUDE.md
 benchmark/methods/MIOFlow/mkdocs.yml
