@@ -10,6 +10,7 @@ __pycache__/
 # Editor and local metadata
 .idea/
 .vscode/
+benchmark/methods/**/.git/
 
 # Logs and scheduler output
 logs/
@@ -47,3 +48,15 @@ benchmark/results/**/*.pt
 # OS files
 .DS_Store
 Thumbs.db
+
+# Vendored method extras that are not needed for benchmark execution
+benchmark/methods/MIOFlow/notebooks/
+benchmark/methods/MIOFlow/tutorials/
+benchmark/methods/MIOFlow/docs/
+benchmark/methods/MIOFlow/data/
+benchmark/methods/MIOFlow/.github/
+benchmark/methods/MIOFlow/uv.lock
+benchmark/methods/MIOFlow/CLAUDE.md
+benchmark/methods/MIOFlow/mkdocs.yml
+benchmark/methods/MIOFlow/Makefile
+benchmark/methods/MIOFlow/.python-version

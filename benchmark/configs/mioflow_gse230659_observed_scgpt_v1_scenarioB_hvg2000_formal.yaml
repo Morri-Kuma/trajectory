@@ -1,0 +1,47 @@
+run_id: mioflow_gse230659_B_scgpt_v1_hvg2000_formal
+method: mioflow
+scenario: B
+scenario_name: Scenario B formal MIOFlow run (HVG2000, scGPT-v1)
+framework_version: v2
+result_class: official
+formal_benchmark: true
+ground_truth:
+  provider_id: scgpt_v1
+  state_key: scgpt_pseudostate_provisional
+  confidence_mode: medium_and_above
+  exclude_uncertain_states: false
+dataset:
+  id: GSE230659
+  h5ad_path: benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times: [0.5, 2.0, 4.0, 8.0, 12.0, 16.0]
+  heldout_times: [16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
+output:
+  base_dir: benchmark/results/mioflow/scenario_B_scgpt_v1_hvg2000_formal
+mioflow_params:
+  pca_dims: 50
+  hidden_dim: 64
+  n_epochs: 40
+  batch_size: 64
+  learning_rate: 0.001
+  lambda_ot: 1.0
+  use_density_loss: false
+  lambda_density: 5.0
+  lambda_energy: 0.01
+  energy_time_steps: 10
+  seed: 42
+  n_sim_cells: 2000
+  metric_sample_cells: 1000
+  use_cuda: true
+lineage:
+  cell_state_key: scgpt_pseudostate_provisional
+  cell_state_annotation_is_proxy: false
+  state_system_version: scgpt_v1
+  reference_graph_path: benchmark/datasets/scgpt_reference_graph_v1.json
+  edge_confidence_mode: medium_and_above
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: active

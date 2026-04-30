@@ -36,6 +36,7 @@ METHOD_REGISTRY = {
     "cellrank2": "benchmark.adapters.cellrank2_adapter.CellRank2Adapter",
     "scnode": "benchmark.adapters.scnode_adapter.ScNODEAdapter",
     "prescient": "benchmark.adapters.prescient_adapter.PRESCIENTAdapter",
+    "mioflow": "benchmark.adapters.mioflow_adapter.MIOFlowAdapter",
 }
 
 
@@ -303,6 +304,7 @@ def main():
             "wot_params",
             "scnode_params",
             "prescient_params",
+            "mioflow_params",
         ):
             if method_config.get(top_key) and top_key not in scenario_config:
                 scenario_config[top_key] = method_config[top_key]

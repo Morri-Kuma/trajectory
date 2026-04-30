@@ -67,6 +67,18 @@ methods:
       - embedding_coherence
       - lineage_fidelity
 
+  mioflow:
+    label: "MIOFlow"
+    supports_unseen_timepoint_projection: true
+    supports_lineage_inference: true
+    # MIOFlow is a neural ODE / optimal-flow model. Following scTimeBench, this
+    # benchmark runs it in PCA space so projected cells can be inverse-transformed
+    # back to gene expression for Forecast Accuracy.
+    eligible_dimensions:
+      - forecast_accuracy
+      - embedding_coherence
+      - lineage_fidelity
+
 # =============================================================================
 # Template for future generative / forecasting models
 # =============================================================================
