@@ -1,0 +1,49 @@
+# Python/cache artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Editor and local metadata
+.idea/
+.vscode/
+
+# Logs and scheduler output
+logs/
+*.log
+*.out
+*.err
+
+# Local render/check artifacts
+docx_render_check/
+project_tree.txt
+_sctimebench_text.txt
+
+# Large scientific data and model artifacts
+data/
+models/
+*.h5ad
+*.h5
+*.loom
+*.mtx
+*.npy
+*.npz
+*.pth
+*.pt
+
+# Benchmark-heavy intermediates. Keep lightweight metrics/reports trackable.
+benchmark/results/**/tmaps/
+benchmark/results/**/tmaps_cr2/
+benchmark/results/**/*.h5ad
+benchmark/results/**/*.h5
+benchmark/results/**/*.npy
+benchmark/results/**/*.npz
+benchmark/results/**/*.pth
+benchmark/results/**/*.pt
+
+# OS files
+.DS_Store
+Thumbs.db

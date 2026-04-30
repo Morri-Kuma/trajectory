@@ -1,229 +1,0 @@
-============================================================
-Job started at: 2026年  4月 24日 金曜日 15:52:18 JST
-Host          : pc046
-Project root  : /home/xzy0723/projects/trajectory
-SCGPT repo    : /home/xzy0723/projects/scGPT
-Method        : scnode
-Scenario      : B HVG2000 reduced-training
-HVG adata     : benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad
-Base config   : benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioB.yaml
-Reduced config: benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioB_hvg2000_reduced.yaml
-Output dir    : benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced
-Job ID        : 121401931
-Task ID       : 1
-============================================================
-Python        : /home/xzy0723/miniconda3/envs/traj_env/bin/python
-Python 3.10.20
-<stdin>:8: FutureWarning: `__version__` is deprecated, use `importlib.metadata.version('scanpy')` instead
-imports OK
-anndata  : 0.11.4
-scanpy   : 1.11.5
-scipy    : 1.15.3
-torch    : 2.11.0+cu130
-torchdiffeq import OK
-------------------------------------------------------------
-Preparing Scenario B reduced config
-------------------------------------------------------------
-HVG adata shape=(75194, 2000)
-timepoints: [np.float64(0.5), np.float64(2.0), np.float64(4.0), np.float64(8.0), np.float64(12.0), np.float64(16.0), np.float64(16.33), np.float64(16.67), np.float64(17.0), np.float64(18.0), np.float64(20.0), np.float64(22.0), np.float64(24.0), np.float64(28.0), np.float64(30.0)]
-states: 14
-wrote reduced config: /home/xzy0723/projects/trajectory/benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioB_hvg2000_reduced.yaml
-train_times: [0.5, 2.0, 4.0, 8.0, 12.0, 16.0]
-heldout_times: [16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
-------------------------------------------------------------
-Running command:
- python -m benchmark.evaluation.eval_dispatch --method scnode --scenario B --adata benchmark/results/scnode/hvg_inputs/adata_scnode_full_A_hvg2000.h5ad --output-dir benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced --method-config benchmark/configs/scnode_gse230659_observed_scgpt_v1_scenarioB_hvg2000_reduced.yaml
-------------------------------------------------------------
-
-============================================================
-Method       : scnode
-Scenario     : B
-Eligible for : ['lineage_fidelity', 'forecast_accuracy', 'embedding_coherence']
-============================================================
-[dispatch] Running Lineage Fidelity ...
-[ScNODEAdapter] scenario_params.train_times applied: 75194 -> 27891 cells (dropped 47303).
-  [data] tp=0.50: 6217 cells
-  [data] tp=2.00: 4168 cells
-  [data] tp=4.00: 522 cells
-  [data] tp=8.00: 5385 cells
-  [data] tp=12.00: 5985 cells
-  [data] tp=16.00: 5614 cells
-[ScNODEAdapter] n_genes=2000, n_sim_cells=1000, train_times=[0.5, 2.0, 4.0, 8.0, 12.0, 16.0], heldout_times=[16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
-[scNODE] Training: pretrain_iters=50, epochs=3, seed=42
-[ Pre-Training ]:   0%|          | 0/50 [00:00<?, ?it/s][ Pre-Training ]:   0%|          | 0/50 [00:05<?, ?it/s, Loss=979.226][ Pre-Training ]:   2%|▏         | 1/50 [00:10<08:28, 10.37s/it, Loss=979.226][ Pre-Training ]:   2%|▏         | 1/50 [00:11<08:28, 10.37s/it, Loss=969.626][ Pre-Training ]:   4%|▍         | 2/50 [00:13<04:52,  6.09s/it, Loss=969.626][ Pre-Training ]:   4%|▍         | 2/50 [00:14<04:52,  6.09s/it, Loss=956.373][ Pre-Training ]:   6%|▌         | 3/50 [00:16<03:41,  4.72s/it, Loss=956.373][ Pre-Training ]:   6%|▌         | 3/50 [00:17<03:41,  4.72s/it, Loss=941.397][ Pre-Training ]:   8%|▊         | 4/50 [00:19<03:07,  4.08s/it, Loss=941.397][ Pre-Training ]:   8%|▊         | 4/50 [00:20<03:07,  4.08s/it, Loss=930.761][ Pre-Training ]:  10%|█         | 5/50 [00:22<02:45,  3.69s/it, Loss=930.761][ Pre-Training ]:  10%|█         | 5/50 [00:23<02:45,  3.69s/it, Loss=926.768][ Pre-Training ]:  12%|█▏        | 6/50 [00:25<02:34,  3.51s/it, Loss=926.768][ Pre-Training ]:  12%|█▏        | 6/50 [00:26<02:34,  3.51s/it, Loss=915.240][ Pre-Training ]:  14%|█▍        | 7/50 [00:28<02:26,  3.40s/it, Loss=915.240][ Pre-Training ]:  14%|█▍        | 7/50 [00:29<02:26,  3.40s/it, Loss=898.562][ Pre-Training ]:  16%|█▌        | 8/50 [00:32<02:18,  3.31s/it, Loss=898.562][ Pre-Training ]:  16%|█▌        | 8/50 [00:33<02:18,  3.31s/it, Loss=883.317][ Pre-Training ]:  18%|█▊        | 9/50 [00:35<02:12,  3.24s/it, Loss=883.317][ Pre-Training ]:  18%|█▊        | 9/50 [00:36<02:12,  3.24s/it, Loss=869.941][ Pre-Training ]:  20%|██        | 10/50 [00:38<02:08,  3.22s/it, Loss=869.941][ Pre-Training ]:  20%|██        | 10/50 [00:39<02:08,  3.22s/it, Loss=855.305][ Pre-Training ]:  22%|██▏       | 11/50 [00:41<02:04,  3.19s/it, Loss=855.305][ Pre-Training ]:  22%|██▏       | 11/50 [00:42<02:04,  3.19s/it, Loss=838.002][ Pre-Training ]:  24%|██▍       | 12/50 [00:44<02:00,  3.18s/it, Loss=838.002][ Pre-Training ]:  24%|██▍       | 12/50 [00:45<02:00,  3.18s/it, Loss=818.425][ Pre-Training ]:  26%|██▌       | 13/50 [00:47<01:57,  3.17s/it, Loss=818.425][ Pre-Training ]:  26%|██▌       | 13/50 [00:48<01:57,  3.17s/it, Loss=798.239][ Pre-Training ]:  28%|██▊       | 14/50 [00:50<01:54,  3.18s/it, Loss=798.239][ Pre-Training ]:  28%|██▊       | 14/50 [00:52<01:54,  3.18s/it, Loss=777.752][ Pre-Training ]:  30%|███       | 15/50 [00:54<01:51,  3.18s/it, Loss=777.752][ Pre-Training ]:  30%|███       | 15/50 [00:55<01:51,  3.18s/it, Loss=754.724][ Pre-Training ]:  32%|███▏      | 16/50 [00:57<01:48,  3.20s/it, Loss=754.724][ Pre-Training ]:  32%|███▏      | 16/50 [00:58<01:48,  3.20s/it, Loss=727.852][ Pre-Training ]:  34%|███▍      | 17/50 [01:00<01:45,  3.20s/it, Loss=727.852][ Pre-Training ]:  34%|███▍      | 17/50 [01:01<01:45,  3.20s/it, Loss=699.525][ Pre-Training ]:  36%|███▌      | 18/50 [01:03<01:42,  3.19s/it, Loss=699.525][ Pre-Training ]:  36%|███▌      | 18/50 [01:04<01:42,  3.19s/it, Loss=671.857][ Pre-Training ]:  38%|███▊      | 19/50 [01:06<01:38,  3.19s/it, Loss=671.857][ Pre-Training ]:  38%|███▊      | 19/50 [01:07<01:38,  3.19s/it, Loss=645.511][ Pre-Training ]:  40%|████      | 20/50 [01:10<01:36,  3.20s/it, Loss=645.511][ Pre-Training ]:  40%|████      | 20/50 [01:11<01:36,  3.20s/it, Loss=618.879][ Pre-Training ]:  42%|████▏     | 21/50 [01:13<01:32,  3.21s/it, Loss=618.879][ Pre-Training ]:  42%|████▏     | 21/50 [01:14<01:32,  3.21s/it, Loss=592.062][ Pre-Training ]:  44%|████▍     | 22/50 [01:16<01:29,  3.19s/it, Loss=592.062][ Pre-Training ]:  44%|████▍     | 22/50 [01:17<01:29,  3.19s/it, Loss=565.890][ Pre-Training ]:  46%|████▌     | 23/50 [01:19<01:25,  3.18s/it, Loss=565.890][ Pre-Training ]:  46%|████▌     | 23/50 [01:20<01:25,  3.18s/it, Loss=540.578][ Pre-Training ]:  48%|████▊     | 24/50 [01:22<01:22,  3.16s/it, Loss=540.578][ Pre-Training ]:  48%|████▊     | 24/50 [01:23<01:22,  3.16s/it, Loss=515.274][ Pre-Training ]:  50%|█████     | 25/50 [01:25<01:18,  3.13s/it, Loss=515.274][ Pre-Training ]:  50%|█████     | 25/50 [01:26<01:18,  3.13s/it, Loss=490.461][ Pre-Training ]:  52%|█████▏    | 26/50 [01:28<01:14,  3.10s/it, Loss=490.461][ Pre-Training ]:  52%|█████▏    | 26/50 [01:29<01:14,  3.10s/it, Loss=467.320][ Pre-Training ]:  54%|█████▍    | 27/50 [01:31<01:10,  3.07s/it, Loss=467.320][ Pre-Training ]:  54%|█████▍    | 27/50 [01:32<01:10,  3.07s/it, Loss=445.601][ Pre-Training ]:  56%|█████▌    | 28/50 [01:34<01:07,  3.06s/it, Loss=445.601][ Pre-Training ]:  56%|█████▌    | 28/50 [01:35<01:07,  3.06s/it, Loss=424.970][ Pre-Training ]:  58%|█████▊    | 29/50 [01:38<01:04,  3.06s/it, Loss=424.970][ Pre-Training ]:  58%|█████▊    | 29/50 [01:38<01:04,  3.06s/it, Loss=406.294][ Pre-Training ]:  60%|██████    | 30/50 [01:41<01:01,  3.07s/it, Loss=406.294][ Pre-Training ]:  60%|██████    | 30/50 [01:42<01:01,  3.07s/it, Loss=389.650][ Pre-Training ]:  62%|██████▏   | 31/50 [01:44<00:58,  3.09s/it, Loss=389.650][ Pre-Training ]:  62%|██████▏   | 31/50 [01:45<00:58,  3.09s/it, Loss=374.057][ Pre-Training ]:  64%|██████▍   | 32/50 [01:47<00:56,  3.12s/it, Loss=374.057][ Pre-Training ]:  64%|██████▍   | 32/50 [01:48<00:56,  3.12s/it, Loss=359.504][ Pre-Training ]:  66%|██████▌   | 33/50 [01:50<00:53,  3.12s/it, Loss=359.504][ Pre-Training ]:  66%|██████▌   | 33/50 [01:51<00:53,  3.12s/it, Loss=346.786][ Pre-Training ]:  68%|██████▊   | 34/50 [01:53<00:50,  3.13s/it, Loss=346.786][ Pre-Training ]:  68%|██████▊   | 34/50 [01:54<00:50,  3.13s/it, Loss=335.319][ Pre-Training ]:  70%|███████   | 35/50 [01:56<00:47,  3.15s/it, Loss=335.319][ Pre-Training ]:  70%|███████   | 35/50 [01:57<00:47,  3.15s/it, Loss=324.752][ Pre-Training ]:  72%|███████▏  | 36/50 [02:00<00:44,  3.15s/it, Loss=324.752][ Pre-Training ]:  72%|███████▏  | 36/50 [02:01<00:44,  3.15s/it, Loss=315.656][ Pre-Training ]:  74%|███████▍  | 37/50 [02:03<00:41,  3.16s/it, Loss=315.656][ Pre-Training ]:  74%|███████▍  | 37/50 [02:04<00:41,  3.16s/it, Loss=307.659][ Pre-Training ]:  76%|███████▌  | 38/50 [02:06<00:38,  3.18s/it, Loss=307.659][ Pre-Training ]:  76%|███████▌  | 38/50 [02:07<00:38,  3.18s/it, Loss=300.052][ Pre-Training ]:  78%|███████▊  | 39/50 [02:09<00:34,  3.18s/it, Loss=300.052][ Pre-Training ]:  78%|███████▊  | 39/50 [02:10<00:34,  3.18s/it, Loss=293.390][ Pre-Training ]:  80%|████████  | 40/50 [02:12<00:32,  3.20s/it, Loss=293.390][ Pre-Training ]:  80%|████████  | 40/50 [02:13<00:32,  3.20s/it, Loss=287.685][ Pre-Training ]:  82%|████████▏ | 41/50 [02:15<00:28,  3.17s/it, Loss=287.685][ Pre-Training ]:  82%|████████▏ | 41/50 [02:16<00:28,  3.17s/it, Loss=282.224][ Pre-Training ]:  84%|████████▍ | 42/50 [02:19<00:25,  3.15s/it, Loss=282.224][ Pre-Training ]:  84%|████████▍ | 42/50 [02:20<00:25,  3.15s/it, Loss=277.380][ Pre-Training ]:  86%|████████▌ | 43/50 [02:22<00:21,  3.13s/it, Loss=277.380][ Pre-Training ]:  86%|████████▌ | 43/50 [02:23<00:21,  3.13s/it, Loss=273.155][ Pre-Training ]:  88%|████████▊ | 44/50 [02:25<00:18,  3.12s/it, Loss=273.155][ Pre-Training ]:  88%|████████▊ | 44/50 [02:26<00:18,  3.12s/it, Loss=269.099][ Pre-Training ]:  90%|█████████ | 45/50 [02:28<00:15,  3.14s/it, Loss=269.099][ Pre-Training ]:  90%|█████████ | 45/50 [02:29<00:15,  3.14s/it, Loss=265.472][ Pre-Training ]:  92%|█████████▏| 46/50 [02:31<00:12,  3.14s/it, Loss=265.472][ Pre-Training ]:  92%|█████████▏| 46/50 [02:32<00:12,  3.14s/it, Loss=262.549][ Pre-Training ]:  94%|█████████▍| 47/50 [02:34<00:09,  3.16s/it, Loss=262.549][ Pre-Training ]:  94%|█████████▍| 47/50 [02:35<00:09,  3.16s/it, Loss=259.732][ Pre-Training ]:  96%|█████████▌| 48/50 [02:38<00:06,  3.18s/it, Loss=259.732][ Pre-Training ]:  96%|█████████▌| 48/50 [02:39<00:06,  3.18s/it, Loss=257.415][ Pre-Training ]:  98%|█████████▊| 49/50 [02:41<00:03,  3.16s/it, Loss=257.415][ Pre-Training ]:  98%|█████████▊| 49/50 [02:42<00:03,  3.16s/it, Loss=255.509][ Pre-Training ]: 100%|██████████| 50/50 [02:44<00:00,  3.16s/it, Loss=255.509][ Pre-Training ]: 100%|██████████| 50/50 [02:44<00:00,  3.29s/it, Loss=255.509]
-[ Epoch 1 ]:   0%|          | 0/20 [00:00<?, ?it/s][ Epoch 1 ]:   0%|          | 0/20 [00:38<?, ?it/s, Loss=1131292.625 | OT=709360.000, Dynamic_Reg=421932.656][ Epoch 1 ]:   5%|▌         | 1/20 [00:48<15:27, 48.81s/it, Loss=1131292.625 | OT=709360.000, Dynamic_Reg=421932.656][ Epoch 1 ]:   5%|▌         | 1/20 [01:24<15:27, 48.81s/it, Loss=671032.750 | OT=528650.312, Dynamic_Reg=142382.453] [ Epoch 1 ]:  10%|█         | 2/20 [01:34<14:04, 46.92s/it, Loss=671032.750 | OT=528650.312, Dynamic_Reg=142382.453][ Epoch 1 ]:  10%|█         | 2/20 [02:09<14:04, 46.92s/it, Loss=610933.875 | OT=534001.812, Dynamic_Reg=76932.078] [ Epoch 1 ]:  15%|█▌        | 3/20 [02:19<13:03, 46.09s/it, Loss=610933.875 | OT=534001.812, Dynamic_Reg=76932.078][ Epoch 1 ]:  15%|█▌        | 3/20 [02:56<13:03, 46.09s/it, Loss=657018.562 | OT=605634.938, Dynamic_Reg=51383.641][ Epoch 1 ]:  20%|██        | 4/20 [03:06<12:23, 46.49s/it, Loss=657018.562 | OT=605634.938, Dynamic_Reg=51383.641][ Epoch 1 ]:  20%|██        | 4/20 [03:41<12:23, 46.49s/it, Loss=639701.062 | OT=599028.438, Dynamic_Reg=40672.625][ Epoch 1 ]:  25%|██▌       | 5/20 [03:51<11:27, 45.86s/it, Loss=639701.062 | OT=599028.438, Dynamic_Reg=40672.625][ Epoch 1 ]:  25%|██▌       | 5/20 [04:26<11:27, 45.86s/it, Loss=535686.375 | OT=489118.219, Dynamic_Reg=46568.176][ Epoch 1 ]:  30%|███       | 6/20 [04:36<10:38, 45.64s/it, Loss=535686.375 | OT=489118.219, Dynamic_Reg=46568.176][ Epoch 1 ]:  30%|███       | 6/20 [05:11<10:38, 45.64s/it, Loss=529499.375 | OT=487659.125, Dynamic_Reg=41840.262][ Epoch 1 ]:  35%|███▌      | 7/20 [05:21<09:50, 45.40s/it, Loss=529499.375 | OT=487659.125, Dynamic_Reg=41840.262][ Epoch 1 ]:  35%|███▌      | 7/20 [05:58<09:50, 45.40s/it, Loss=493586.688 | OT=426776.031, Dynamic_Reg=66810.641][ Epoch 1 ]:  40%|████      | 8/20 [06:07<09:08, 45.71s/it, Loss=493586.688 | OT=426776.031, Dynamic_Reg=66810.641][ Epoch 1 ]:  40%|████      | 8/20 [06:43<09:08, 45.71s/it, Loss=562133.000 | OT=493038.750, Dynamic_Reg=69094.242][ Epoch 1 ]:  45%|████▌     | 9/20 [06:52<08:20, 45.53s/it, Loss=562133.000 | OT=493038.750, Dynamic_Reg=69094.242][ Epoch 1 ]:  45%|████▌     | 9/20 [07:28<08:20, 45.53s/it, Loss=760873.875 | OT=675413.312, Dynamic_Reg=85460.555][ Epoch 1 ]:  50%|█████     | 10/20 [07:37<07:31, 45.17s/it, Loss=760873.875 | OT=675413.312, Dynamic_Reg=85460.555][ Epoch 1 ]:  50%|█████     | 10/20 [08:12<07:31, 45.17s/it, Loss=640606.500 | OT=572934.375, Dynamic_Reg=67672.133][ Epoch 1 ]:  55%|█████▌    | 11/20 [08:22<06:45, 45.05s/it, Loss=640606.500 | OT=572934.375, Dynamic_Reg=67672.133][ Epoch 1 ]:  55%|█████▌    | 11/20 [08:57<06:45, 45.05s/it, Loss=630147.000 | OT=572630.312, Dynamic_Reg=57516.688][ Epoch 1 ]:  60%|██████    | 12/20 [09:07<06:00, 45.03s/it, Loss=630147.000 | OT=572630.312, Dynamic_Reg=57516.688][ Epoch 1 ]:  60%|██████    | 12/20 [09:42<06:00, 45.03s/it, Loss=464462.219 | OT=421686.531, Dynamic_Reg=42775.676][ Epoch 1 ]:  65%|██████▌   | 13/20 [09:52<05:14, 44.99s/it, Loss=464462.219 | OT=421686.531, Dynamic_Reg=42775.676][ Epoch 1 ]:  65%|██████▌   | 13/20 [10:26<05:14, 44.99s/it, Loss=477378.406 | OT=444907.094, Dynamic_Reg=32471.299][ Epoch 1 ]:  70%|███████   | 14/20 [10:35<04:28, 44.67s/it, Loss=477378.406 | OT=444907.094, Dynamic_Reg=32471.299][ Epoch 1 ]:  70%|███████   | 14/20 [11:10<04:28, 44.67s/it, Loss=500747.531 | OT=450726.000, Dynamic_Reg=50021.527][ Epoch 1 ]:  75%|███████▌  | 15/20 [11:20<03:42, 44.50s/it, Loss=500747.531 | OT=450726.000, Dynamic_Reg=50021.527][ Epoch 1 ]:  75%|███████▌  | 15/20 [11:55<03:42, 44.50s/it, Loss=523458.500 | OT=497917.094, Dynamic_Reg=25541.416][ Epoch 1 ]:  80%|████████  | 16/20 [12:05<02:58, 44.71s/it, Loss=523458.500 | OT=497917.094, Dynamic_Reg=25541.416][ Epoch 1 ]:  80%|████████  | 16/20 [12:40<02:58, 44.71s/it, Loss=485951.531 | OT=467904.906, Dynamic_Reg=18046.631][ Epoch 1 ]:  85%|████████▌ | 17/20 [12:50<02:14, 44.75s/it, Loss=485951.531 | OT=467904.906, Dynamic_Reg=18046.631][ Epoch 1 ]:  85%|████████▌ | 17/20 [13:25<02:14, 44.75s/it, Loss=423441.969 | OT=397296.594, Dynamic_Reg=26145.385][ Epoch 1 ]:  90%|█████████ | 18/20 [13:34<01:29, 44.61s/it, Loss=423441.969 | OT=397296.594, Dynamic_Reg=26145.385][ Epoch 1 ]:  90%|█████████ | 18/20 [14:09<01:29, 44.61s/it, Loss=565287.750 | OT=541980.438, Dynamic_Reg=23307.344][ Epoch 1 ]:  95%|█████████▌| 19/20 [14:18<00:44, 44.40s/it, Loss=565287.750 | OT=541980.438, Dynamic_Reg=23307.344][ Epoch 1 ]:  95%|█████████▌| 19/20 [14:52<00:44, 44.40s/it, Loss=427607.188 | OT=394581.000, Dynamic_Reg=33026.203][ Epoch 1 ]: 100%|██████████| 20/20 [15:01<00:00, 44.14s/it, Loss=427607.188 | OT=394581.000, Dynamic_Reg=33026.203][ Epoch 1 ]: 100%|██████████| 20/20 [15:02<00:00, 45.10s/it, Loss=427607.188 | OT=394581.000, Dynamic_Reg=33026.203]
-[ Epoch 2 ]:   0%|          | 0/20 [00:00<?, ?it/s][ Epoch 2 ]:   0%|          | 0/20 [00:34<?, ?it/s, Loss=471287.125 | OT=448694.625, Dynamic_Reg=22592.508][ Epoch 2 ]:   5%|▌         | 1/20 [00:43<13:46, 43.51s/it, Loss=471287.125 | OT=448694.625, Dynamic_Reg=22592.508][ Epoch 2 ]:   5%|▌         | 1/20 [01:17<13:46, 43.51s/it, Loss=518870.156 | OT=494286.750, Dynamic_Reg=24583.406][ Epoch 2 ]:  10%|█         | 2/20 [01:25<12:42, 42.34s/it, Loss=518870.156 | OT=494286.750, Dynamic_Reg=24583.406][ Epoch 2 ]:  10%|█         | 2/20 [01:59<12:42, 42.34s/it, Loss=430476.719 | OT=403282.844, Dynamic_Reg=27193.883][ Epoch 2 ]:  15%|█▌        | 3/20 [02:08<12:07, 42.79s/it, Loss=430476.719 | OT=403282.844, Dynamic_Reg=27193.883][ Epoch 2 ]:  15%|█▌        | 3/20 [02:43<12:07, 42.79s/it, Loss=519447.188 | OT=443705.344, Dynamic_Reg=75741.852][ Epoch 2 ]:  20%|██        | 4/20 [02:52<11:32, 43.28s/it, Loss=519447.188 | OT=443705.344, Dynamic_Reg=75741.852][ Epoch 2 ]:  20%|██        | 4/20 [03:26<11:32, 43.28s/it, Loss=649426.312 | OT=595548.812, Dynamic_Reg=53877.484][ Epoch 2 ]:  25%|██▌       | 5/20 [03:35<10:48, 43.25s/it, Loss=649426.312 | OT=595548.812, Dynamic_Reg=53877.484][ Epoch 2 ]:  25%|██▌       | 5/20 [04:12<10:48, 43.25s/it, Loss=572909.375 | OT=522783.125, Dynamic_Reg=50126.281][ Epoch 2 ]:  30%|███       | 6/20 [04:21<10:20, 44.31s/it, Loss=572909.375 | OT=522783.125, Dynamic_Reg=50126.281][ Epoch 2 ]:  30%|███       | 6/20 [04:59<10:20, 44.31s/it, Loss=608757.500 | OT=564613.688, Dynamic_Reg=44143.801][ Epoch 2 ]:  35%|███▌      | 7/20 [05:10<09:54, 45.69s/it, Loss=608757.500 | OT=564613.688, Dynamic_Reg=44143.801][ Epoch 2 ]:  35%|███▌      | 7/20 [05:50<09:54, 45.69s/it, Loss=509916.656 | OT=462623.500, Dynamic_Reg=47293.160][ Epoch 2 ]:  40%|████      | 8/20 [06:00<09:25, 47.15s/it, Loss=509916.656 | OT=462623.500, Dynamic_Reg=47293.160][ Epoch 2 ]:  40%|████      | 8/20 [06:34<09:25, 47.15s/it, Loss=589868.250 | OT=526116.562, Dynamic_Reg=63751.656][ Epoch 2 ]:  45%|████▌     | 9/20 [06:44<08:25, 45.99s/it, Loss=589868.250 | OT=526116.562, Dynamic_Reg=63751.656][ Epoch 2 ]:  45%|████▌     | 9/20 [07:19<08:25, 45.99s/it, Loss=592943.250 | OT=559197.938, Dynamic_Reg=33745.340][ Epoch 2 ]:  50%|█████     | 10/20 [07:28<07:34, 45.43s/it, Loss=592943.250 | OT=559197.938, Dynamic_Reg=33745.340][ Epoch 2 ]:  50%|█████     | 10/20 [08:02<07:34, 45.43s/it, Loss=488716.812 | OT=461719.000, Dynamic_Reg=26997.803][ Epoch 2 ]:  55%|█████▌    | 11/20 [08:12<06:44, 44.98s/it, Loss=488716.812 | OT=461719.000, Dynamic_Reg=26997.803][ Epoch 2 ]:  55%|█████▌    | 11/20 [08:46<06:44, 44.98s/it, Loss=458266.125 | OT=434870.281, Dynamic_Reg=23395.838][ Epoch 2 ]:  60%|██████    | 12/20 [08:55<05:56, 44.55s/it, Loss=458266.125 | OT=434870.281, Dynamic_Reg=23395.838][ Epoch 2 ]:  60%|██████    | 12/20 [09:30<05:56, 44.55s/it, Loss=444082.156 | OT=423516.250, Dynamic_Reg=20565.918][ Epoch 2 ]:  65%|██████▌   | 13/20 [09:39<05:10, 44.41s/it, Loss=444082.156 | OT=423516.250, Dynamic_Reg=20565.918][ Epoch 2 ]:  65%|██████▌   | 13/20 [10:14<05:10, 44.41s/it, Loss=433338.969 | OT=413831.000, Dynamic_Reg=19507.975][ Epoch 2 ]:  70%|███████   | 14/20 [10:24<04:25, 44.31s/it, Loss=433338.969 | OT=413831.000, Dynamic_Reg=19507.975][ Epoch 2 ]:  70%|███████   | 14/20 [10:59<04:25, 44.31s/it, Loss=424578.656 | OT=402396.219, Dynamic_Reg=22182.451][ Epoch 2 ]:  75%|███████▌  | 15/20 [11:08<03:41, 44.34s/it, Loss=424578.656 | OT=402396.219, Dynamic_Reg=22182.451][ Epoch 2 ]:  75%|███████▌  | 15/20 [11:42<03:41, 44.34s/it, Loss=432283.469 | OT=405847.719, Dynamic_Reg=26435.752][ Epoch 2 ]:  80%|████████  | 16/20 [11:51<02:56, 44.08s/it, Loss=432283.469 | OT=405847.719, Dynamic_Reg=26435.752][ Epoch 2 ]:  80%|████████  | 16/20 [12:26<02:56, 44.08s/it, Loss=447886.062 | OT=431247.000, Dynamic_Reg=16639.057][ Epoch 2 ]:  85%|████████▌ | 17/20 [12:36<02:12, 44.07s/it, Loss=447886.062 | OT=431247.000, Dynamic_Reg=16639.057][ Epoch 2 ]:  85%|████████▌ | 17/20 [13:10<02:12, 44.07s/it, Loss=420228.562 | OT=401013.125, Dynamic_Reg=19215.439][ Epoch 2 ]:  90%|█████████ | 18/20 [13:19<01:27, 43.92s/it, Loss=420228.562 | OT=401013.125, Dynamic_Reg=19215.439][ Epoch 2 ]:  90%|█████████ | 18/20 [13:54<01:27, 43.92s/it, Loss=492730.125 | OT=470025.250, Dynamic_Reg=22704.877][ Epoch 2 ]:  95%|█████████▌| 19/20 [14:03<00:43, 43.98s/it, Loss=492730.125 | OT=470025.250, Dynamic_Reg=22704.877][ Epoch 2 ]:  95%|█████████▌| 19/20 [14:39<00:43, 43.98s/it, Loss=385559.656 | OT=369221.719, Dynamic_Reg=16337.926][ Epoch 2 ]: 100%|██████████| 20/20 [14:48<00:00, 44.34s/it, Loss=385559.656 | OT=369221.719, Dynamic_Reg=16337.926][ Epoch 2 ]: 100%|██████████| 20/20 [14:48<00:00, 44.44s/it, Loss=385559.656 | OT=369221.719, Dynamic_Reg=16337.926]
-[ Epoch 3 ]:   0%|          | 0/20 [00:00<?, ?it/s][ Epoch 3 ]:   0%|          | 0/20 [00:35<?, ?it/s, Loss=428951.969 | OT=412293.094, Dynamic_Reg=16658.881][ Epoch 3 ]:   5%|▌         | 1/20 [00:44<13:56, 44.03s/it, Loss=428951.969 | OT=412293.094, Dynamic_Reg=16658.881][ Epoch 3 ]:   5%|▌         | 1/20 [01:18<13:56, 44.03s/it, Loss=421504.625 | OT=396772.625, Dynamic_Reg=24732.008][ Epoch 3 ]:  10%|█         | 2/20 [01:27<13:09, 43.86s/it, Loss=421504.625 | OT=396772.625, Dynamic_Reg=24732.008][ Epoch 3 ]:  10%|█         | 2/20 [02:01<13:09, 43.86s/it, Loss=408423.844 | OT=384995.219, Dynamic_Reg=23428.617][ Epoch 3 ]:  15%|█▌        | 3/20 [02:11<12:23, 43.71s/it, Loss=408423.844 | OT=384995.219, Dynamic_Reg=23428.617][ Epoch 3 ]:  15%|█▌        | 3/20 [02:45<12:23, 43.71s/it, Loss=410617.719 | OT=389456.531, Dynamic_Reg=21161.188][ Epoch 3 ]:  20%|██        | 4/20 [02:54<11:37, 43.61s/it, Loss=410617.719 | OT=389456.531, Dynamic_Reg=21161.188][ Epoch 3 ]:  20%|██        | 4/20 [03:29<11:37, 43.61s/it, Loss=414766.781 | OT=393190.719, Dynamic_Reg=21576.068][ Epoch 3 ]:  25%|██▌       | 5/20 [03:38<10:54, 43.63s/it, Loss=414766.781 | OT=393190.719, Dynamic_Reg=21576.068][ Epoch 3 ]:  25%|██▌       | 5/20 [04:16<10:54, 43.63s/it, Loss=462846.188 | OT=442819.281, Dynamic_Reg=20026.916][ Epoch 3 ]:  30%|███       | 6/20 [04:22<10:13, 43.85s/it, Loss=462846.188 | OT=442819.281, Dynamic_Reg=20026.916][ Epoch 3 ]:  30%|███       | 6/20 [04:58<10:13, 43.85s/it, Loss=430086.062 | OT=410749.281, Dynamic_Reg=19336.779][ Epoch 3 ]:  35%|███▌      | 7/20 [05:07<09:34, 44.20s/it, Loss=430086.062 | OT=410749.281, Dynamic_Reg=19336.779][ Epoch 3 ]:  35%|███▌      | 7/20 [05:42<09:34, 44.20s/it, Loss=524565.875 | OT=497794.844, Dynamic_Reg=26771.031][ Epoch 3 ]:  40%|████      | 8/20 [05:51<08:49, 44.12s/it, Loss=524565.875 | OT=497794.844, Dynamic_Reg=26771.031][ Epoch 3 ]:  40%|████      | 8/20 [06:26<08:49, 44.12s/it, Loss=413056.062 | OT=390158.031, Dynamic_Reg=22898.037][ Epoch 3 ]:  45%|████▌     | 9/20 [06:35<08:04, 44.03s/it, Loss=413056.062 | OT=390158.031, Dynamic_Reg=22898.037][ Epoch 3 ]:  45%|████▌     | 9/20 [07:09<08:04, 44.03s/it, Loss=442990.375 | OT=422660.406, Dynamic_Reg=20329.982][ Epoch 3 ]:  50%|█████     | 10/20 [07:18<07:18, 43.84s/it, Loss=442990.375 | OT=422660.406, Dynamic_Reg=20329.982][ Epoch 3 ]:  50%|█████     | 10/20 [07:53<07:18, 43.84s/it, Loss=443694.969 | OT=420165.375, Dynamic_Reg=23529.594][ Epoch 3 ]:  55%|█████▌    | 11/20 [08:02<06:34, 43.80s/it, Loss=443694.969 | OT=420165.375, Dynamic_Reg=23529.594][ Epoch 3 ]:  55%|█████▌    | 11/20 [08:36<06:34, 43.80s/it, Loss=378902.594 | OT=365644.000, Dynamic_Reg=13258.585][ Epoch 3 ]:  60%|██████    | 12/20 [08:45<05:48, 43.53s/it, Loss=378902.594 | OT=365644.000, Dynamic_Reg=13258.585][ Epoch 3 ]:  60%|██████    | 12/20 [09:19<05:48, 43.53s/it, Loss=492278.031 | OT=482151.156, Dynamic_Reg=10126.871][ Epoch 3 ]:  65%|██████▌   | 13/20 [09:28<05:03, 43.43s/it, Loss=492278.031 | OT=482151.156, Dynamic_Reg=10126.871][ Epoch 3 ]:  65%|██████▌   | 13/20 [10:03<05:03, 43.43s/it, Loss=442189.156 | OT=423948.000, Dynamic_Reg=18241.148][ Epoch 3 ]:  70%|███████   | 14/20 [10:11<04:19, 43.23s/it, Loss=442189.156 | OT=423948.000, Dynamic_Reg=18241.148][ Epoch 3 ]:  70%|███████   | 14/20 [10:46<04:19, 43.23s/it, Loss=378428.969 | OT=359723.219, Dynamic_Reg=18705.752][ Epoch 3 ]:  75%|███████▌  | 15/20 [10:55<03:37, 43.47s/it, Loss=378428.969 | OT=359723.219, Dynamic_Reg=18705.752][ Epoch 3 ]:  75%|███████▌  | 15/20 [11:29<03:37, 43.47s/it, Loss=429834.875 | OT=416374.844, Dynamic_Reg=13460.019][ Epoch 3 ]:  80%|████████  | 16/20 [11:38<02:53, 43.30s/it, Loss=429834.875 | OT=416374.844, Dynamic_Reg=13460.019][ Epoch 3 ]:  80%|████████  | 16/20 [12:11<02:53, 43.30s/it, Loss=419598.656 | OT=402260.531, Dynamic_Reg=17338.119][ Epoch 3 ]:  85%|████████▌ | 17/20 [12:20<02:09, 43.08s/it, Loss=419598.656 | OT=402260.531, Dynamic_Reg=17338.119][ Epoch 3 ]:  85%|████████▌ | 17/20 [12:55<02:09, 43.08s/it, Loss=478049.469 | OT=465471.875, Dynamic_Reg=12577.605][ Epoch 3 ]:  90%|█████████ | 18/20 [13:04<01:26, 43.12s/it, Loss=478049.469 | OT=465471.875, Dynamic_Reg=12577.605][ Epoch 3 ]:  90%|█████████ | 18/20 [13:38<01:26, 43.12s/it, Loss=396283.031 | OT=384162.719, Dynamic_Reg=12120.312][ Epoch 3 ]:  95%|█████████▌| 19/20 [13:47<00:43, 43.25s/it, Loss=396283.031 | OT=384162.719, Dynamic_Reg=12120.312][ Epoch 3 ]:  95%|█████████▌| 19/20 [14:21<00:43, 43.25s/it, Loss=349046.531 | OT=335424.875, Dynamic_Reg=13621.648][ Epoch 3 ]: 100%|██████████| 20/20 [14:30<00:00, 43.08s/it, Loss=349046.531 | OT=335424.875, Dynamic_Reg=13621.648][ Epoch 3 ]: 100%|██████████| 20/20 [14:30<00:00, 43.52s/it, Loss=349046.531 | OT=335424.875, Dynamic_Reg=13621.648]
-[scNODE] Model saved → benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/trained_scnode_model.pth
-[Forecast] Predicting from t0=0.5 across 15 tps (train=6, heldout=9, n_sim_cells=1000) ...
-  [Forecast] t=16.33: Wasserstein=234239.9888 L2=823.0102
-  [Forecast] t=16.67: Wasserstein=176511.8026 L2=802.1744
-  [Forecast] t=17.00: Wasserstein=175492.7874 L2=743.7222
-  [Forecast] t=18.00: Wasserstein=309871.8510 L2=803.9194
-  [Forecast] t=20.00: Wasserstein=317785.5853 L2=864.5909
-  [Forecast] t=22.00: Wasserstein=369727.9262 L2=1028.9134
-  [Forecast] t=24.00: Wasserstein=500582.6304 L2=1092.1826
-  [Forecast] t=28.00: Wasserstein=724008.1248 L2=1267.4105
-  [Forecast] t=30.00: Wasserstein=243301.5303 L2=815.6734
-[Forecast] Done. Mean Wasserstein=339058.02520938654
-[Embedding] Computed centroids for 14 states.
-[Embedding] projected_embedding.npy shape: (9000, 50)
-[Lineage] 14 states, 6 training tps
-[Lineage] Computing state centroids ...
-  [Lineage] 0.50 → 2.00: 6217 cells
-  [Lineage] 2.00 → 4.00: 4168 cells
-  [Lineage] 4.00 → 8.00: 522 cells
-  [Lineage] 8.00 → 12.00: 5385 cells
-  [Lineage] 12.00 → 16.00: 5985 cells
-[Lineage] STM written  (14×14): benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/state_transition_matrix.csv
-[Lineage] Edges written (166 edges): benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/lineage_graph_edges.csv
-[Lineage] Unsupported source states written as zero rows: ['PS_13']
-[dispatch] Lineage Fidelity outputs: {'state_transition_matrix': 'benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/state_transition_matrix.csv', 'lineage_graph_edges': 'benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/lineage_graph_edges.csv'}
-[eval_lineage] Reference graph loaded: 14 nodes, 31 edges (mode='medium_and_above')
-[eval_lineage] Metrics written to benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/lineage_metrics.json
-[dispatch] Running Forecast Accuracy ...
-[dispatch] Forecast metrics already produced by adapter; using benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/forecast_metrics.json
-[dispatch] Running Embedding Coherence ...
-[dispatch] Embedding metrics already produced by adapter; using benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced/embedding_metrics.json
-
-[dispatch] Run complete for scnode / B.
-
-real	53m31.409s
-user	3867m48.344s
-sys	4m49.898s
-------------------------------------------------------------
-Output check
-------------------------------------------------------------
-output_dir: /home/xzy0723/projects/trajectory/benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_reduced
-missing: []
-stm_shape: (14, 14)
-stm_nonfinite: 0
-stm_zero_rows: ['PS_13']
-
-== run_metadata.json ==
-{
-  "method": "scnode",
-  "dataset": "GSE230659",
-  "scenario": "B",
-  "capability_flags": {
-    "supports_unseen_timepoint_projection": true,
-    "supports_lineage_inference": true
-  },
-  "dimensions_executed": [
-    "forecast_accuracy",
-    "embedding_coherence",
-    "lineage_fidelity"
-  ],
-  "runtime_seconds": 3148.71,
-  "status": "completed",
-  "time_key": "abs_day",
-  "cell_state_key": "scgpt_pseudostate_provisional",
-  "train_times": [
-    0.5,
-    2.0,
-    4.0,
-    8.0,
-    12.0,
-    16.0
-  ],
-  "heldout_times": [
-    16.33,
-    16.67,
-    17.0,
-    18.0,
-    20.0,
-    22.0,
-    24.0,
-    28.0,
-    30.0
-  ],
-  "n_sim_cells": 1000,
-  "notes": ""
-}
-
-== forecast_metrics.json ==
-{
-  "wasserstein_distance": 339058.02520938654,
-  "gaussian_mmd": null,
-  "energy_distance_mmd": null,
-  "hausdorff_loss": null,
-  "n_eval_timepoints": 9,
-  "eval_timepoints": [
-    16.33,
-    16.67,
-    17.0,
-    18.0,
-    20.0,
-    22.0,
-    24.0,
-    28.0,
-    30.0
-  ],
-  "scenario_type": "forecast",
-  "status": "completed"
-}
-
-== embedding_metrics.json ==
-{
-  "adjusted_rand_index": null,
-  "avg_normalized_classifier_entropy": null,
-  "projected_latent_dim": 50,
-  "n_eval_timepoints": 9,
-  "status": "embedding_produced_metrics_deferred"
-}
-
-== lineage_diagnostics.json ==
-{
-  "unsupported_source_states": [
-    "PS_13"
-  ],
-  "n_unsupported_source_states": 1,
-  "source_transition_counts": {
-    "PS_00": 98,
-    "PS_01": 77,
-    "PS_02": 2868,
-    "PS_03": 7323,
-    "PS_04": 61,
-    "PS_05": 11,
-    "PS_06": 5279,
-    "PS_07": 2907,
-    "PS_08": 76,
-    "PS_09": 3091,
-    "PS_10": 1,
-    "PS_11": 413,
-    "PS_12": 72,
-    "PS_13": 0
-  },
-  "soft_assignment_nearest_fallback_count": 0,
-  "soft_assignment_skipped_count": 0,
-  "note": "States with zero source_transition_counts are written as all-zero STM rows because no valid source-cell transitions were available for those states in the training timepoint pairs."
-}
-
-== lineage_metrics.json ==
-{
-  "auroc": 0.5446725317693061,
-  "auprc": 0.24737393999777763,
-  "jaccard_similarity": 0.13218390804597702,
-  "jaccard_similarity_topk": 0.19230769230769232,
-  "single_step_recovery": 0.2903225806451613,
-  "multi_step_recovery": 0.3269230769230769,
-  "baseline": {
-    "auroc": 0.6807429130009776,
-    "auprc": 0.24022940750296212,
-    "jaccard_similarity": 0.2653061224489796,
-    "single_step_recovery": 0.2903225806451613,
-    "multi_step_recovery": 0.40384615384615385,
-    "method": "correlation_baseline",
-    "cell_state_key": "scgpt_pseudostate_provisional",
-    "n_states_used": 14,
-    "n_predicted_edges_topk": 31,
-    "note": "Per-state mean-expression Pearson correlation (symmetric), top-31 off-diagonal entries as predicted lineage edges."
-  },
-  "status": "completed",
-  "edge_confidence_mode": "medium_and_above",
-  "n_reference_edges": 31,
-  "cell_state_key": "scgpt_pseudostate_provisional"
-}
-============================================================
-Job finished at: 2026年  4月 24日 金曜日 16:54:21 JST
-============================================================
