@@ -162,21 +162,19 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
         fa_result = adapter.run_forecast_accuracy(scenario_id=scenario_id)
         results["forecast_accuracy"] = fa_result
 
-        forecast_metrics_path = fa_result.get("forecast_metrics")
-        if forecast_metrics_path and Path(forecast_metrics_path).exists():
-            with open(forecast_metrics_path, encoding="utf-8") as f:
-                fa_metrics = json.load(f)
-            print(
-                "[dispatch] Forecast metrics already produced by adapter; "
-                f"using {forecast_metrics_path}"
-            )
-        else:
-            from benchmark.evaluation.eval_forecast import run_forecast_evaluation
-            fa_metrics = run_forecast_evaluation(
-                projected_expression_path=fa_result["projected_expression"],
-                adata=adata,
-                output_dir=output_dir,
-            )
+        # Forecast metrics are official only when recomputed by the unified
+        # evaluator. Adapter-written metrics are method-native diagnostics and
+        # may use method-specific definitions or normalization.
+        from benchmark.evaluation.eval_forecast import run_forecast_evaluation
+        fa_metrics = run_forecast_evaluation(
+            projected_expression_path=fa_result["projected_expression"],
+            adata=adata,
+            output_dir=output_dir,
+            eval_timepoints=(scenario_config.get("scenario_params") or {}).get(
+                "heldout_times"
+            ),
+            time_key=time_key or scenario_config.get("time_key", "abs_day"),
+        )
         results["forecast_accuracy"]["metrics"] = fa_metrics
     else:
         print(

@@ -25,6 +25,7 @@ Aggregation (per v2 §7.4):
 """
 
 import json
+import shutil
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
@@ -38,72 +39,101 @@ from typing import Optional
 
 def wasserstein_distance(X_pred: np.ndarray, X_obs: np.ndarray) -> float:
     """
-    Compute Wasserstein-1 distance between predicted and observed distributions.
-    Uses a sliced approximation for high-dimensional gene expression data.
+    scTimeBench Wasserstein OT loss.
+
+    Matches scTimeBench's OTLossMetric/WassersteinOTLoss definition:
+    geomloss SamplesLoss("sinkhorn", p=2, blur=0.05, scaling=0.5,
+    debias=True, backend="tensorized"), normalized by n_genes.
     """
-    # TODO: implement sliced Wasserstein or use scipy.stats.wasserstein_distance
-    # for each gene then aggregate.
-    raise NotImplementedError("Wasserstein distance not yet implemented.")
+    return _geomloss_metric(
+        X_pred,
+        X_obs,
+        loss="sinkhorn",
+        normalize_by_n_genes=True,
+        p=2,
+        blur=0.05,
+        scaling=0.5,
+        debias=True,
+        backend="tensorized",
+    )
 
 
 def gaussian_mmd(X_pred: np.ndarray, X_obs: np.ndarray,
                   sigma: Optional[float] = None) -> float:
     """
-    Compute Gaussian Maximum Mean Discrepancy between predicted and observed cells.
+    scTimeBench Gaussian MMD loss.
+
+    The sigma argument is retained for API compatibility but ignored; scTimeBench
+    uses GeomLoss with blur=1.0.
     """
-    from sklearn.metrics import pairwise_distances
-
-    if X_pred.size == 0 or X_obs.size == 0:
-        return float("nan")
-    X = np.vstack([X_pred, X_obs])
-    if sigma is None:
-        # Median heuristic on a deterministic subset of the combined sample.
-        if X.shape[0] > 500:
-            rng = np.random.default_rng(0)
-            X_med = X[rng.choice(X.shape[0], size=500, replace=False)]
-        else:
-            X_med = X
-        d = pairwise_distances(X_med, metric="euclidean")
-        tri = d[np.triu_indices_from(d, k=1)]
-        med = float(np.median(tri[tri > 0])) if np.any(tri > 0) else 1.0
-        sigma = med if med > 0 else 1.0
-
-    gamma = 1.0 / (2.0 * sigma * sigma)
-    d_xx = pairwise_distances(X_pred, metric="sqeuclidean")
-    d_yy = pairwise_distances(X_obs, metric="sqeuclidean")
-    d_xy = pairwise_distances(X_pred, X_obs, metric="sqeuclidean")
-    mmd2 = (
-        np.exp(-gamma * d_xx).mean()
-        + np.exp(-gamma * d_yy).mean()
-        - 2.0 * np.exp(-gamma * d_xy).mean()
+    _ = sigma
+    return _geomloss_metric(
+        X_pred,
+        X_obs,
+        loss="gaussian",
+        normalize_by_n_genes=True,
+        blur=1.0,
+        debias=True,
+        backend="tensorized",
     )
-    return float(max(mmd2, 0.0))
 
 
 def energy_distance_mmd(X_pred: np.ndarray, X_obs: np.ndarray) -> float:
     """
-    Compute Energy Distance MMD between predicted and observed cells.
+    scTimeBench Energy Distance loss.
     """
-    from sklearn.metrics import pairwise_distances
-
-    if X_pred.size == 0 or X_obs.size == 0:
-        return float("nan")
-    d_xy = pairwise_distances(X_pred, X_obs, metric="euclidean")
-    d_xx = pairwise_distances(X_pred, metric="euclidean")
-    d_yy = pairwise_distances(X_obs, metric="euclidean")
-    return float(2.0 * d_xy.mean() - d_xx.mean() - d_yy.mean())
+    return _geomloss_metric(
+        X_pred,
+        X_obs,
+        loss="energy",
+        normalize_by_n_genes=True,
+        blur=1.0,
+        debias=True,
+        backend="tensorized",
+    )
 
 
 def hausdorff_loss(X_pred: np.ndarray, X_obs: np.ndarray) -> float:
     """
-    Compute Hausdorff distance between predicted and observed cell sets.
-    """
-    from sklearn.metrics import pairwise_distances
+    scTimeBench Hausdorff loss.
 
+    Bidirectional nearest-neighbor Hausdorff distance computed with torch.cdist.
+    Not normalized by n_genes by default, matching scTimeBench.
+    """
     if X_pred.size == 0 or X_obs.size == 0:
         return float("nan")
-    d_xy = pairwise_distances(X_pred, X_obs, metric="euclidean")
-    return float(max(d_xy.min(axis=1).max(), d_xy.min(axis=0).max()))
+    import torch
+
+    pred = torch.as_tensor(np.asarray(X_pred), dtype=torch.double)
+    obs = torch.as_tensor(np.asarray(X_obs), dtype=torch.double)
+    d_xy = torch.cdist(pred, obs)
+    return float(
+        torch.maximum(
+            d_xy.min(dim=1).values.max(),
+            d_xy.min(dim=0).values.max(),
+        ).item()
+    )
+
+
+def _geomloss_metric(
+    X_pred: np.ndarray,
+    X_obs: np.ndarray,
+    loss: str,
+    normalize_by_n_genes: bool,
+    **samples_loss_kwargs,
+) -> float:
+    if X_pred.size == 0 or X_obs.size == 0:
+        return float("nan")
+    import torch
+    from geomloss import SamplesLoss
+
+    pred = torch.as_tensor(np.asarray(X_pred), dtype=torch.double)
+    obs = torch.as_tensor(np.asarray(X_obs), dtype=torch.double)
+    metric = SamplesLoss(loss, **samples_loss_kwargs)
+    value = metric(pred, obs)
+    if normalize_by_n_genes:
+        value = value / pred.shape[1]
+    return float(value.item())
 
 
 def _to_dense_float32(X) -> np.ndarray:
@@ -192,6 +222,7 @@ def run_forecast_evaluation(
 
     existing_metrics = _read_json(out_dir / "forecast_metrics.json")
     existing_per_tp = out_dir / "per_timepoint_forecast_metrics.csv"
+    _preserve_native_metrics(out_dir, existing_metrics, existing_per_tp)
     if eval_timepoints is None:
         eval_timepoints = held_out_time_labels or existing_metrics.get("eval_timepoints")
     if eval_timepoints is None:
@@ -251,6 +282,7 @@ def run_forecast_evaluation(
             if not match.empty:
                 row.update(match.iloc[0].to_dict())
         row.update({
+            "wasserstein_distance": wasserstein_distance(X_pred_sample, X_obs_sample),
             "gaussian_mmd": gaussian_mmd(X_pred_sample, X_obs_sample),
             "energy_distance_mmd": energy_distance_mmd(X_pred_sample, X_obs_sample),
             "hausdorff_loss": hausdorff_loss(X_pred_sample, X_obs_sample),
@@ -266,7 +298,7 @@ def run_forecast_evaluation(
         return float(np.nanmean(per_tp[col].astype(float))) if col in per_tp else None
 
     metrics = {
-        "wasserstein_distance": existing_metrics.get("wasserstein_distance"),
+        "wasserstein_distance": _mean_col("wasserstein_distance"),
         "gaussian_mmd": _mean_col("gaussian_mmd"),
         "energy_distance_mmd": _mean_col("energy_distance_mmd"),
         "hausdorff_loss": _mean_col("hausdorff_loss"),
@@ -274,6 +306,37 @@ def run_forecast_evaluation(
         "eval_timepoints": eval_timepoints,
         "scenario_type": existing_metrics.get("scenario_type"),
         "max_cells_per_timepoint": max_cells_per_timepoint,
+        "metric_backend": "scTimeBench_geomloss",
+        "metric_definitions": {
+            "wasserstein_distance": {
+                "loss": "sinkhorn",
+                "p": 2,
+                "blur": 0.05,
+                "scaling": 0.5,
+                "debias": True,
+                "backend": "tensorized",
+                "normalize_by_n_genes": True,
+            },
+            "gaussian_mmd": {
+                "loss": "gaussian",
+                "blur": 1.0,
+                "debias": True,
+                "backend": "tensorized",
+                "normalize_by_n_genes": True,
+            },
+            "energy_distance_mmd": {
+                "loss": "energy",
+                "blur": 1.0,
+                "debias": True,
+                "backend": "tensorized",
+                "normalize_by_n_genes": True,
+            },
+            "hausdorff_loss": {
+                "implementation": "torch.cdist_bidirectional_hausdorff",
+                "normalize_by_n_genes": False,
+            },
+        },
+        "aggregation": "mean_over_eval_timepoints",
         "status": "completed",
     }
     _write_metrics(metrics, out_dir)
@@ -293,3 +356,22 @@ def _write_metrics(metrics: dict, out_dir: Path):
         json.dump(metrics, f, indent=2)
 
     print(f"[eval_forecast] Metrics written to {metrics_path}")
+
+
+def _preserve_native_metrics(
+    out_dir: Path,
+    existing_metrics: dict,
+    existing_per_tp: Path,
+) -> None:
+    if not existing_metrics:
+        return
+    if existing_metrics.get("metric_backend") == "scTimeBench_geomloss":
+        return
+
+    native_metrics_path = out_dir / "method_native_forecast_metrics.json"
+    with open(native_metrics_path, "w", encoding="utf-8") as f:
+        json.dump(existing_metrics, f, indent=2)
+
+    if existing_per_tp.exists() and existing_per_tp.stat().st_size > 0:
+        native_per_tp_path = out_dir / "method_native_per_timepoint_forecast_metrics.csv"
+        shutil.copy2(existing_per_tp, native_per_tp_path)
