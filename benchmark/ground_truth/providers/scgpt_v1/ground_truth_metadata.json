@@ -25,6 +25,7 @@
     "PS_13"
   ],
   "graph_method": "consecutive_timepoint_kNN_transition_counting",
+  "reference_status_note": "Silver-standard working reference derived from scGPT embeddings of the same GSE230659 cells used in the benchmark. This creates a representational circularity risk for methods that use scGPT-like features and must not be reported as independent biological ground truth. Rankings should be sensitivity-tested against alternative providers such as CellTypist, SingleR, scANVI, marker-rule labels, or a consensus graph.",
   "knn_k": 10,
   "min_edge_weight": 0.02,
   "n_timepoint_pairs": 14,

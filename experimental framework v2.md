@@ -95,6 +95,8 @@ The benchmark keeps the same scenario logic as a temporal benchmarking framework
 
 ### 4.2 Pseudotime scenarios
 
+Pseudotime scenarios are specified for framework completeness, but they are **out of scope for the current GSE230659 manuscript-stage report**. The primary dataset has no biological or technical replicates across time points, so pseudotime derived from the same time-confounded expression matrix would be difficult to interpret as an independent temporal axis. Scenarios D-F should therefore be reported as planned supplementary work unless an alternative dataset or independent pseudotime provider is introduced.
+
 #### Scenario D: Pseudotime interpolation
 - Time axis: pseudotime bins
 
@@ -113,6 +115,20 @@ For a given method:
 For the current benchmark stage:
 - **WOT**: Lineage Fidelity only
 - **CellRank2**: Lineage Fidelity only
+- **scNODE, PRESCIENT, MIOFlow**: active for Scenarios A-C across Forecast Accuracy, Embedding Coherence, and Lineage Fidelity
+- **Scenarios D-F**: inactive for the current manuscript-stage report
+
+### 4.4 Primary dataset limitations
+
+GSE230659 is a single-cell-line, single-library-per-timepoint series. Time point and library are therefore perfectly confounded: every observed time point is represented by one library from cell line 0618, with no independent donors, no technical replicates, and no statistical design that can separate temporal biology from library-specific technical variation.
+
+This limitation affects all metric interpretation. A method that recovers the expected lineage may be learning a true reprogramming trajectory, library-specific artifacts, or both. Formal results on this dataset should therefore be described as performance against a frozen silver-standard temporal reference, not as proof that a method has recovered replicate-validated biology.
+
+The minimum sensitivity plan for submission is:
+- report leave-one-timepoint-out metric stability for Scenarios A-C where feasible
+- explicitly inspect the Stage I Day 4 sample because it has the smallest post-QC cell count
+- explicitly inspect the hCiPSC endpoint because it has the highest low-quality-cell rate before filtering
+- repeat Lineage Fidelity with `edge_confidence_mode: high_only` as a supplementary threshold sensitivity analysis
 
 ---
 
@@ -205,6 +221,19 @@ Use the same metric family as scTimeBench:
 - Energy Distance MMD
 - Hausdorff Loss
 
+### 7.3.1 Metric implementation contract
+Forecast Accuracy metrics must be computed by the unified benchmark evaluator, not by individual method wrappers. Method code may emit native diagnostic metrics for debugging, but those values must not be used for official ranking unless they are recomputed by the shared evaluator.
+
+The official implementation follows the scTimeBench `OTLossMetric` family:
+- Wasserstein Distance: `geomloss.SamplesLoss("sinkhorn", p=2, blur=0.05, scaling=0.5, debias=True, backend="tensorized")`, divided by the number of genes.
+- Gaussian MMD: `geomloss.SamplesLoss("gaussian", blur=1.0, debias=True, backend="tensorized")`, divided by the number of genes.
+- Energy Distance MMD: `geomloss.SamplesLoss("energy", blur=1.0, debias=True, backend="tensorized")`, divided by the number of genes.
+- Hausdorff Loss: bidirectional nearest-neighbor Hausdorff distance computed with `torch.cdist`, without gene-count normalization by default.
+
+For every eligible method, the evaluator must compute metrics per evaluation time point and aggregate by the mean across evaluation time points. Dispatcher logic must not bypass the unified evaluator simply because an adapter has already written `forecast_metrics.json`; adapter-produced values should be preserved only as native diagnostics, for example `method_native_forecast_metrics.json`.
+
+This rule prevents metric drift across models. In particular, scNODE, PRESCIENT, and MIOFlow must be compared on the same expression arrays with the same metric definitions, normalization policy, sampling policy, and aggregation policy.
+
 ### 7.4 Aggregation
 Within each scenario:
 1. compute the four forecast metrics
@@ -241,6 +270,8 @@ Within each scenario:
 
 ### 8.5 Current benchmark status
 This task is currently **inactive** for the WOT vs CellRank2 stage. It will be activated only after adding models that qualify for future-cell generation.
+
+For the current projection-capable formal report, Embedding Coherence ARI values are low in absolute magnitude and should not be overinterpreted without a null. The required next reporting step is to add a within-dataset random-projection or label-permutation null for each scenario, then report method ARI relative to that null distribution. Until that null is available, ARI should be framed as a relative coherence diagnostic against the scGPT-v1 state system, not as an absolute biological-validity score.
 
 ---
 
@@ -337,6 +368,8 @@ This means the active reference contains 31 edges (high + medium), while low-con
 
 This scGPT-v1 provider is a **silver-standard working reference**, not final biological ground truth. Its role is to make the benchmark executable, reproducible, and comparable while preserving the option to replace or compare annotation systems later.
 
+Because the reference graph is derived from scGPT embeddings of the same GSE230659 cells used in the benchmark, the provider carries a representational circularity risk. This is acceptable only if it is reported as a silver-standard reference and not as independent biological truth. Any method that uses scGPT-like representations, directly or indirectly, must be interpreted with this caveat. Ranking sensitivity to alternative providers such as CellTypist, SingleR, scANVI, marker-rule labels, or a consensus graph is a planned validation experiment rather than an optional cosmetic extension.
+
 Future providers may include, for example:
 - CellTypist-derived labels and lineage graph
 - scANVI-derived labels and lineage graph
@@ -398,6 +431,12 @@ Required formal implementation:
 
 This replaces the current state-level Pearson mean-expression baseline for formal reporting. The older baseline may remain only as a diagnostic legacy comparison and must be labeled explicitly as `state_mean_pearson_baseline`, not as the formal scTimeBench baseline.
 
+### 9.6.1 Baseline interpretation
+
+The scTimeBench-style Spearman correlation baseline is not merely a sanity check in GSE230659. In Scenarios A and C it outperforms several trajectory methods on Lineage AUROC, which means the benchmark reference graph is strongly recoverable from static gene-expression similarity alone. This pattern should be reported as a primary result, not buried as a control.
+
+The interpretation is that Lineage Fidelity on this dataset measures alignment with a coarse scGPT-derived state graph under strong time-library confounding. A trajectory model that does not beat the correlation baseline may still have useful generative or dynamic properties, but it has not demonstrated additional lineage-recovery value beyond expression-state similarity under this reference. Scenario B remains especially difficult because early-only training leaves later reprogramming states unobserved and the single-library-per-timepoint design makes extrapolation vulnerable to library-specific shifts.
+
 ### 9.7 Aggregation
 Within each scenario:
 1. compute AUROC
@@ -431,6 +470,8 @@ It is:
 - excluded from Embedding Coherence
 - included in Lineage Fidelity only
 
+The current CellRank2 adapter uses WOT transport maps through `RealTimeKernel.from_wot()`. The result should therefore be described as CellRank2 fate/lineage post-processing on WOT-derived transport maps, not as an independent velocity-kernel CellRank2 benchmark. A native CellRank2 evaluation with an RNA-velocity or other independent kernel can be added as a separate method configuration if the required inputs are available.
+
 ### 10.3 Future generative / forecasting models
 If a future model can directly generate unseen timepoint cells or projected future expression profiles, then it will be evaluated on:
 - Forecast Accuracy
@@ -442,6 +483,12 @@ If a future method is similar to WOT and still cannot generate unseen future cel
 - Lineage Fidelity only
 
 No exception layer should be created just to force benchmark symmetry.
+
+### 10.5 Projection-method run limitations
+
+Full formal PRESCIENT A-C runs completed as CPU formal runs because CUDA was unavailable on the HPC execution path. These results are valid outputs of the recorded protocol, but should be labeled CPU full-formal results. Poor PRESCIENT performance, especially in Scenario B, should not be overinterpreted as a definitive method failure until GPU-enabled repeat runs or seed replicates are available.
+
+All stochastic projection-capable methods require uncertainty estimates before final submission. The minimum acceptable plan is either at least three independent seeds per method-scenario combination or a bootstrap over held-out cells for the reported metrics. Until then, small rank differences should be treated as descriptive rather than statistically resolved.
 
 ---
 
@@ -484,6 +531,10 @@ Only for eligible methods:
 - `projected_expression.npy`
 - `forecast_metrics.json`
 - `per_timepoint_forecast_metrics.csv`
+
+`forecast_metrics.json` and `per_timepoint_forecast_metrics.csv` are official benchmark outputs only when written by the unified evaluator described in Section 7.3.1. If a method wrapper writes its own forecast diagnostics, those files must be treated as method-native diagnostics and preserved separately, for example:
+- `method_native_forecast_metrics.json`
+- `method_native_per_timepoint_forecast_metrics.csv`
 
 ### 12.2 Embedding Coherence outputs
 Only for eligible methods:
@@ -618,9 +669,11 @@ At the same time, it follows the same method-eligibility rule as scTimeBench:
 - methods that can generate unseen future cells: evaluate all three dimensions
 - methods that cannot generate unseen future cells, such as WOT-like methods: evaluate **Lineage Fidelity only**
 
-Under this rule, **WOT** and **CellRank2** remain Lineage-Fidelity-only methods, while **scNODE** and **PRESCIENT** are official projection-capable methods evaluated across all three dimensions under the fixed `scgpt_v1` ground-truth provider. PRESCIENT first completed A/B/C CPU low-memory reduced-validation runs, then completed full formal A/B/C HVG2000 runs without per-timepoint training subsampling.
+Under this rule, **WOT** and **CellRank2** remain Lineage-Fidelity-only methods, while **scNODE**, **PRESCIENT**, and **MIOFlow** are official projection-capable methods evaluated across all three dimensions under the fixed `scgpt_v1` ground-truth provider. PRESCIENT first completed A/B/C CPU low-memory reduced-validation runs, then completed full formal A/B/C HVG2000 runs without per-timepoint training subsampling. MIOFlow full formal A/B/C HVG2000 runs are included in the primary projection-capable table.
 
 No OT projection workaround is introduced. No repository-specific label asset is forcibly embedded into the active core pipeline. Instead, annotation-derived labels and lineage references are handled through an explicit ground-truth provider layer. The current benchmark is runnable for the formal A/B/C observed-time scenarios, with formal reporting separated from smoke tests, HPC validation runs, pilot backups, and reduced-validation runs by explicit `result_class` metadata.
+
+The experimental record below is retained as a reproducibility log. Manuscript-facing text should use the stable framework sections above; the chronological record should be moved to a supplementary appendix or `CHANGELOG.md` before submission.
 
 ---
 
@@ -706,3 +759,34 @@ PRESCIENT full formal snapshot:
 - Scenario C: Forecast WD 4.4904, Gaussian MMD 0.2081, Embedding ARI 0.2881, Lineage AUROC 0.6524.
 
 The current next scientific step is interpretation rather than pipeline construction: compare official projection-capable methods (scNODE vs PRESCIENT), keep WOT and CellRank2 lineage-only, and explain why Scenario B remains difficult across methods.
+
+**2026.4.30 - MIOFlow integration and formal benchmark completion**
+MIOFlow was added as a projection-capable benchmark method using the project-local source under `benchmark/methods/MIOFlow`, with PCA-space training/inverse-PCA expression reconstruction kept consistent with scTimeBench rather than applying nonnegative clipping.
+CPU reduced A/B/C validation runs completed first, then full formal A/B/C HVG2000 runs completed on Shirokane and were synchronized locally with all required metric/result files present.
+Formal MIOFlow snapshot: A WD 5.2884, ARI 0.0585, Lineage AUROC 0.7589; B WD 8.5655, ARI 0.1896, Lineage AUROC 0.4990; C WD 4.5306, ARI 0.1097, Lineage AUROC 0.7720.
+Scenario B remains the main failure case, showing residual negative extrapolation drift and near-random lineage AUROC despite improvement over the reduced validation run.
+The MIOFlow integration, formal lightweight `json/csv` metrics, and ignore rules for local heavy artifacts were committed in `df5f6e8`, `e873ed2`, and `ef628f1`.
+
+**2026-05-02 - GSE178325 metric-definition drift diagnosis**
+During the first GSE178325 0618-only projection benchmark, scNODE showed extremely large Forecast WD while PRESCIENT and MIOFlow showed small WD. Direct range checks showed this was not caused by scNODE expression-scale explosion. The real issue was evaluator drift: scNODE reported its author-code GeomLoss value without gene-count normalization, while PRESCIENT and MIOFlow wrappers reported project-local per-gene/scipy-style metrics. This violates the scTimeBench framework contract because models were not being compared through one evaluator.
+
+The framework rule is now explicit: projection-capable methods output standardized predicted expression arrays, and official Forecast Accuracy metrics are recomputed centrally with the scTimeBench `OTLossMetric` definitions. Method-native metrics may be retained only as diagnostics and must not drive benchmark interpretation or ranking.
+
+**2026.5.03 - GSE178325 scGPT-aligned benchmark completion**
+GSE178325 0618-only processing was realigned with the GSE230659/scTimeBench-style route: build raw/full-gene input first, derive scGPT embeddings/pseudostates on full genes, then create the shared HVG2000 benchmark input.
+Duplicate gene symbols in GSE178325 are now merged by summed raw expression before normalization/log1p so that scGPT embedding uses unique gene-symbol features.
+The active provider is `scgpt_v1_gse178325_0618`, with `scgpt_pseudostate_provisional` as the state key and a frozen reference lineage graph used for Lineage Fidelity.
+scNODE, PRESCIENT, and MIOFlow A/B/C runs were rerun on the aligned input; all 9 result directories completed with Forecast Accuracy, Embedding Coherence, and Lineage Fidelity metrics.
+Forecast metrics are centrally recomputed with the `scTimeBench_geomloss` backend, while embedding and lineage metrics use the scGPT-derived provider rather than the earlier stage-proxy labels.
+Aggregate ranking and the GSE178325 projection benchmark report were regenerated; current aggregate leaders are scNODE for Scenarios A/B and MIOFlow for Scenario C.
+Local/Shirokane scripts were updated to use the aligned input/provider paths, H100 scGPT provider construction where required, and clean output handling before reruns.
+scTimeBench code review found fixed seeds/random states for reproducibility, but no standard multi-random-seed repeated-run protocol; the current single-seed design is therefore framework-consistent.
+
+---
+
+**2026-05-03 - Unified GSE230659 forecast re-evaluation and reviewer-response updates**
+All GSE230659 projection-capable formal forecast metrics were recomputed from existing `projected_expression.npy` outputs using the centralized `scTimeBench_geomloss` evaluator in `benchmark/evaluation/eval_forecast.py`. This replaced method-native wrapper metrics in `forecast_metrics.json` and preserved older wrapper outputs in `method_native_forecast_metrics.json` / `method_native_per_timepoint_forecast_metrics.csv`.
+
+Unified Forecast WD snapshot: scNODE A/B/C 81.7124, 414.6872, 266.7125; PRESCIENT A/B/C 114.6700, 153.1575, 224.9176; MIOFlow A/B/C 163.3884, 406.9134, 224.4649. `benchmark/reports/formal_benchmark_summary.csv` and `benchmark/reports/projection_formal_metrics_table.md` were regenerated/updated to include MIOFlow and the unified forecast metrics.
+
+Reviewer-facing limitations were added for the GSE230659 time-library confound, scGPT-v1 silver-standard circularity, low ARI interpretability without a null, the strong Spearman-correlation baseline, WOT-backed CellRank2, CPU-only PRESCIENT formal runs, inactive pseudotime Scenarios D-F, and the need for seed/bootstrap uncertainty estimates.

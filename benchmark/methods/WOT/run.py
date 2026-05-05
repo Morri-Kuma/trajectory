@@ -553,13 +553,19 @@ def main():
     scenario_cfg = cfg.get("scenario_params", cfg.get("scenario_split", {})) or {}
     train_times = scenario_cfg.get("train_times")
     if train_times:
-        import anndata as ad  # noqa: F401
+        from benchmark.shared.dataset.preprocessors.scenario_timepoint_split import (
+            split_adata_by_timepoints,
+        )
+
         train_times = [float(t) for t in train_times]
         before = train_adata.n_obs
-        mask = train_adata.obs[time_key].astype(float).isin(train_times).values
-        # .copy() both applies the boolean mask AND materializes the slice from
-        # backed storage (if the h5ad was opened with backed='r').
-        train_adata = train_adata[mask].to_memory()
+        train_adata, _ = split_adata_by_timepoints(
+            train_adata,
+            time_key=time_key,
+            train_times=train_times,
+            heldout_times=None,
+            test_includes_start=False,
+        )
         print(
             f"\n  [scenario] Restricted train_adata to {train_times}: "
             f"{before} → {train_adata.n_obs} cells "

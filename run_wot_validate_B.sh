@@ -3,7 +3,7 @@
 #$ -cwd
 #$ -j y
 #$ -o logs/run_wot_validate_C.$JOB_ID.log
-#$ -l s_vmem=32G
+#$ -l s_vmem=96G
 
 set -euo pipefail
 
@@ -14,7 +14,7 @@ CONDA_SH="/home/xzy0723/miniconda3/etc/profile.d/conda.sh"
 CONDA_ENV="traj_env"
 
 CONFIG="benchmark/configs/wot_gse230659_observed_scgpt_v1_scenarioB.yaml"
-OUTPUT_DIR="benchmark/results/wot/scenario_B_scgpt_v1_shirokane_test"
+OUTPUT_DIR="benchmark/results/wot/scenario_B_scgpt_v1_split_fullcheck"
 
 # For a quick smoke test, set this to a number like 500.
 # For full validation, leave it empty.

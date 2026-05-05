@@ -1,4 +1,4 @@
-﻿run_id: scnode_gse230659_C_scgpt_v1_hvg2000_formal
+run_id: scnode_gse230659_C_scgpt_v1_hvg2000_formal
 method: scnode
 scenario: C
 scenario_name: Scenario C formal scNODE run (HVG2000, scGPT-v1)

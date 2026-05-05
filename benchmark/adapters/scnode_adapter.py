@@ -23,6 +23,9 @@ from pathlib import Path
 import numpy as np
 
 from .base_adapter import BaseAdapter
+from benchmark.shared.dataset.preprocessors.scenario_timepoint_split import (
+    split_adata_by_timepoints,
+)
 
 DEFAULT_N_SIM_CELLS_CAP = 2000
 
@@ -230,13 +233,12 @@ class ScNODEAdapter(BaseAdapter):
             return adata.to_memory() if getattr(adata, "isbacked", False) else adata
 
         before = adata.n_obs
-        train_set = set(float(t) for t in train_times)
-        mask = adata.obs[time_key].astype(float).isin(train_set).values
-        subset = adata[mask]
-        train_adata = (
-            subset.to_memory()
-            if hasattr(subset, "to_memory") and getattr(subset, "isbacked", False)
-            else subset.copy()
+        train_adata, _ = split_adata_by_timepoints(
+            adata,
+            time_key=time_key,
+            train_times=train_times,
+            heldout_times=None,
+            test_includes_start=False,
         )
         print(
             f"[ScNODEAdapter] scenario_params.train_times applied: "
