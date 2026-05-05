@@ -1,0 +1,22 @@
+{
+  "adjusted_rand_index": 0.13520442087354037,
+  "avg_normalized_classifier_entropy": 0.17788908974227644,
+  "projected_latent_dim": 50,
+  "n_eval_timepoints": 8,
+  "eval_timepoints": [
+    1.0,
+    12.0,
+    20.0,
+    25.0,
+    26.0,
+    28.0,
+    34.0,
+    36.0
+  ],
+  "status": "completed",
+  "latent_space": "PCA",
+  "ground_truth_provider": "scgpt_v1_gse178325_0618",
+  "cell_state_key": "scgpt_pseudostate_provisional",
+  "provider_state_key": "scgpt_pseudostate_provisional",
+  "embedding_label_source": "scGPT-derived pseudostates from scgpt_v1_gse178325_0618"
+}

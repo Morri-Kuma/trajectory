@@ -13,7 +13,7 @@
     "embedding_coherence",
     "lineage_fidelity"
   ],
-  "runtime_seconds": 11522.03,
+  "runtime_seconds": 11113.03,
   "status": "completed",
   "time_key": "abs_day",
   "cell_state_key": "scgpt_pseudostate_provisional",

@@ -1,6 +1,6 @@
 {
   "adjusted_rand_index": 0.10972962361336913,
-  "avg_normalized_classifier_entropy": 0.10907345063161572,
+  "avg_normalized_classifier_entropy": 0.11279546917809805,
   "projected_latent_dim": 50,
   "n_eval_timepoints": 5,
   "eval_timepoints": [
