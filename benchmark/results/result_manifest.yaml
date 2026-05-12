@@ -1,0 +1,86 @@
+schema_version: 1
+description: >
+  Canonical index for benchmark result sets. The physical result directories are
+  left in their historical locations; this manifest defines which runs are used
+  for official reports, external validation, pilot checks, and archived/debug
+  material.
+
+official:
+  gse230659_scgpt_v1_hvg2000:
+    description: "Primary iPSC benchmark on GSE230659 with scGPT-v1 pseudo-state ground truth."
+    dataset_role: "primary_benchmark"
+    status: "reportable"
+    scenarios: [A, B, C]
+    summary: "benchmark/reports/formal_benchmark_summary.csv"
+    notes: >
+      Formal A/B/C result set. WOT and CellRank2 are lineage-only methods;
+      MIOFlow, PRESCIENT, and scNODE provide forecast, embedding, and lineage
+      outputs where available.
+    result_dirs:
+      cellrank2:
+        A: "benchmark/results/cellrank2/scenario_A_scgpt_v1"
+        B: "benchmark/results/cellrank2/scenario_B_scgpt_v1"
+        C: "benchmark/results/cellrank2/scenario_C_scgpt_v1"
+      mioflow:
+        A: "benchmark/results/mioflow/scenario_A_scgpt_v1_hvg2000_formal"
+        B: "benchmark/results/mioflow/scenario_B_scgpt_v1_hvg2000_formal"
+        C: "benchmark/results/mioflow/scenario_C_scgpt_v1_hvg2000_formal"
+      prescient:
+        A: "benchmark/results/prescient/scenario_A_scgpt_v1_hvg2000_formal"
+        B: "benchmark/results/prescient/scenario_B_scgpt_v1_hvg2000_formal"
+        C: "benchmark/results/prescient/scenario_C_scgpt_v1_hvg2000_formal"
+      scnode:
+        A: "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal"
+        B: "benchmark/results/scnode/scenario_B_scgpt_v1_hvg2000_formal"
+        C: "benchmark/results/scnode/scenario_C_scgpt_v1_hvg2000_formal"
+      wot:
+        A: "benchmark/results/wot/scenario_A_scgpt_v1"
+        B: "benchmark/results/wot/scenario_B_scgpt_v1"
+        C: "benchmark/results/wot/scenario_C_scgpt_v1"
+
+external_validation:
+  gse178325_0618_hvg2000:
+    description: "External iPSC validation benchmark on GSE178325_0618 HVG2000."
+    dataset_role: "external_validation"
+    status: "reportable"
+    scenarios: [A, B, C]
+    summary: "benchmark/results/summary_gse178325_0618_forecast_embedding.csv"
+    result_dirs:
+      mioflow:
+        A: "benchmark/results/mioflow/gse178325_0618_scenario_A_hvg2000"
+        B: "benchmark/results/mioflow/gse178325_0618_scenario_B_hvg2000"
+        C: "benchmark/results/mioflow/gse178325_0618_scenario_C_hvg2000"
+      prescient:
+        A: "benchmark/results/prescient/gse178325_0618_scenario_A_hvg2000"
+        B: "benchmark/results/prescient/gse178325_0618_scenario_B_hvg2000"
+        C: "benchmark/results/prescient/gse178325_0618_scenario_C_hvg2000"
+      scnode:
+        A: "benchmark/results/scnode/gse178325_0618_scenario_A_hvg2000"
+        B: "benchmark/results/scnode/gse178325_0618_scenario_B_hvg2000"
+        C: "benchmark/results/scnode/gse178325_0618_scenario_C_hvg2000"
+
+pilot:
+  cpu_checks:
+    description: "CPU-oriented development checks."
+    patterns:
+      - "benchmark/results/*/*cpu*"
+  reduced_checks:
+    description: "Reduced or small-scale development checks."
+    patterns:
+      - "benchmark/results/*/*reduced*"
+  smoke_checks:
+    description: "Smoke-test inputs and smoke runs."
+    patterns:
+      - "benchmark/results/*/*smoke*"
+
+archive:
+  shirokane_tests:
+    description: "Historical Shirokane test runs retained for traceability."
+    patterns:
+      - "benchmark/results/*/*shirokane_test*"
+  debug_and_backups:
+    description: "Debug, split-check, backup, and local development artifacts."
+    patterns:
+      - "benchmark/results/*/*debug*"
+      - "benchmark/results/*/*backup*"
+      - "benchmark/results/*/*split*"

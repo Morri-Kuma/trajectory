@@ -6,6 +6,13 @@
 # as the benchmark time axis.
 
 time_axis: pseudotime_bins
+time_key: dpt_pseudotime_bin_numeric
+pseudotime_key: dpt_pseudotime
+pseudotime_bin_key: dpt_pseudotime_bin
+pseudotime_bin_numeric_key: dpt_pseudotime_bin_numeric
+default_num_bins: 15
+binning_policy: equal_cell_count_by_sorted_dpt_pseudotime
+source_method: scanpy_dpt
 
 scenarios:
 
@@ -20,6 +27,11 @@ scenarios:
       forecast_accuracy: true_if_method_supports_projection
       embedding_coherence: true_if_method_supports_projection
       lineage_fidelity: true_if_method_supports_lineage_inference
+    scenario_params:
+      # Internal-bin holdout on a 15-bin DPT axis.
+      train_times: [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]
+      heldout_times: [3, 7, 11]
+      test_includes_start: true
 
   E:
     id: E
@@ -32,6 +44,11 @@ scenarios:
       forecast_accuracy: true_if_method_supports_projection
       embedding_coherence: true_if_method_supports_projection
       lineage_fidelity: true_if_method_supports_lineage_inference
+    scenario_params:
+      # Late-bin holdout on a 15-bin DPT axis.
+      train_times: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      heldout_times: [10, 11, 12, 13, 14]
+      test_includes_start: true
 
   F:
     id: F
@@ -44,3 +61,8 @@ scenarios:
       forecast_accuracy: true_if_method_supports_projection
       embedding_coherence: true_if_method_supports_projection
       lineage_fidelity: true_if_method_supports_lineage_inference
+    scenario_params:
+      # Mixed internal + late-bin holdout on a 15-bin DPT axis.
+      train_times: [0, 1, 2, 4, 5, 6, 8, 9]
+      heldout_times: [3, 7, 10, 11, 12, 13, 14]
+      test_includes_start: true

@@ -1,0 +1,90 @@
+{
+  "dataset_id": "GSE230659",
+  "input_h5ad": "benchmark\\inputs\\gse230659_milestone_real_sensitivity_hvg2000\\GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad",
+  "provider_ids": [
+    "gse230659_milestone_consensus_v1",
+    "gse230659_milestone_embedding_v1",
+    "gse230659_milestone_classifier_v1"
+  ],
+  "label_modes": [
+    "consensus",
+    "embedding_based",
+    "classifier_based"
+  ],
+  "state_keys": [
+    "consensus_milestone_label",
+    "milestone_embedding_label",
+    "milestone_classifier_label"
+  ],
+  "n_cells_total": 10000,
+  "n_cells_compared": 9620,
+  "excluded_labels": [
+    "ambiguous"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "pairwise_adjusted_rand_index": {
+    "consensus_vs_embedding_based": 1.0,
+    "consensus_vs_classifier_based": 1.0,
+    "embedding_based_vs_classifier_based": 1.0
+  },
+  "pairwise_exact_match_fraction": {
+    "consensus_vs_embedding_based": 1.0,
+    "consensus_vs_classifier_based": 1.0,
+    "embedding_based_vs_classifier_based": 1.0
+  },
+  "pairwise_crosstabs": {
+    "consensus_vs_embedding_based": {
+      "epithelial_like": {
+        "epithelial_like": 9428,
+        "hCiPS": 0,
+        "intermediate_plastic": 0
+      },
+      "hCiPS": {
+        "epithelial_like": 0,
+        "hCiPS": 3,
+        "intermediate_plastic": 0
+      },
+      "intermediate_plastic": {
+        "epithelial_like": 0,
+        "hCiPS": 0,
+        "intermediate_plastic": 189
+      }
+    },
+    "consensus_vs_classifier_based": {
+      "epithelial_like": {
+        "epithelial_like": 9428,
+        "hCiPS": 0,
+        "intermediate_plastic": 0
+      },
+      "hCiPS": {
+        "epithelial_like": 0,
+        "hCiPS": 3,
+        "intermediate_plastic": 0
+      },
+      "intermediate_plastic": {
+        "epithelial_like": 0,
+        "hCiPS": 0,
+        "intermediate_plastic": 189
+      }
+    },
+    "embedding_based_vs_classifier_based": {
+      "epithelial_like": {
+        "epithelial_like": 9428,
+        "hCiPS": 0,
+        "intermediate_plastic": 0
+      },
+      "hCiPS": {
+        "epithelial_like": 0,
+        "hCiPS": 3,
+        "intermediate_plastic": 0
+      },
+      "intermediate_plastic": {
+        "epithelial_like": 0,
+        "hCiPS": 0,
+        "intermediate_plastic": 189
+      }
+    }
+  },
+  "status": "completed",
+  "timestamp": "2026-05-10T15:50:31.887872+00:00"
+}

@@ -1,10 +1,10 @@
 {
-  "auroc": 0.7390937236138474,
-  "auprc": 0.3034175312105709,
+  "auroc": 0.7382493667323389,
+  "auprc": 0.301532917174008,
   "jaccard_similarity": 0.1688888888888889,
-  "jaccard_similarity_topk": 0.288135593220339,
-  "single_step_recovery": 0.2894736842105263,
-  "multi_step_recovery": 0.5342465753424658,
+  "jaccard_similarity_topk": 0.26666666666666666,
+  "single_step_recovery": 0.3157894736842105,
+  "multi_step_recovery": 0.5068493150684932,
   "baseline": {
     "auroc": 0.859766394596116,
     "auprc": 0.4510751171527586,

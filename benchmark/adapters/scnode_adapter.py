@@ -190,6 +190,7 @@ class ScNODEAdapter(BaseAdapter):
 
         finally:
             elapsed = time.time() - t0
+            _gt = self.scenario_config.get("ground_truth") or {}
             metadata = {
                 "method": "scnode",
                 "dataset": dataset_id,
@@ -207,6 +208,9 @@ class ScNODEAdapter(BaseAdapter):
                 "status": status,
                 "time_key": time_key,
                 "cell_state_key": cell_state_key,
+                "provider_id": _gt.get("provider_id") or None,
+                "label_mode": _gt.get("label_mode") or None,
+                "analysis_role": _gt.get("analysis_role") or None,
                 "train_times": train_times if train_times else "all",
                 "heldout_times": heldout_times,
                 "n_sim_cells": locals().get("n_sim_cells"),

@@ -1,0 +1,46 @@
+run_id: cellrank2_gse230659_A_milestone_consensus_v1_hvg2000
+method: cellrank2
+scenario: A
+scenario_name: Observed-time CellRank2 run (HVG2000, milestone consensus v1)
+framework_version: v2
+result_class: milestone_smoke_config
+formal_benchmark: false
+state_system:
+  version: gse230659_milestone_consensus_v1
+  status: silver_standard_milestone_provider
+  n_states: 3
+  n_graph_edges: 2
+  source_h5ad: benchmark/inputs/gse230659_milestone_real_sensitivity_hvg2000/GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad
+  note: Real-sensitivity milestone provider for GSE230659; primary consensus from
+    marker, scGPT-embedding, and CellTypist majority vote. state_key=consensus_milestone_label.
+ground_truth:
+  provider_id: gse230659_milestone_consensus_v1
+  state_key: consensus_milestone_label
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE230659
+  h5ad_path: benchmark/inputs/gse230659_milestone_real_sensitivity_hvg2000/GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+output:
+  base_dir: benchmark/results/cellrank2/gse230659_milestone_consensus_A_hvg2000
+cellrank2_params:
+  wot_params:
+    epsilon: 0.05
+    lambda1: 1.0
+    lambda2: 50.0
+    local_pca: 30
+    growth_iters: 3
+lineage:
+  cell_state_key: consensus_milestone_label
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse230659_milestone_consensus_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse230659_milestone_consensus_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: active
+  label_mode: consensus
+  analysis_role: primary_report

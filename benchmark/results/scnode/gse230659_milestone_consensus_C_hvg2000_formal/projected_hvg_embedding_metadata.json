@@ -1,0 +1,23 @@
+{
+  "source_expression_path": "benchmark\\results\\scnode\\gse230659_milestone_consensus_C_hvg2000_formal\\projected_expression.npy",
+  "source_expression_shape": [
+    5,
+    2000,
+    2000
+  ],
+  "flattened_projected_cell_count": 10000,
+  "n_genes": 2000,
+  "provider_model_path": "C:\\Users\\37620\\trajectory\\benchmark\\annotation_runs\\gse230659_real_sensitivity\\embedding_model_pca_hvg2000\\hvg_pca_embedding_milestone_model.joblib",
+  "provider_method": "hvg2000_pca_logistic_regression",
+  "n_components": 50,
+  "gene_universe": "HVG2000",
+  "feature_order_matched_exactly": true,
+  "n_genes_missing_in_expr": 0,
+  "missing_genes_sample": [],
+  "extra_genes_in_expr": 0,
+  "output_shape": [
+    10000,
+    50
+  ],
+  "creation_timestamp": "2026-05-10T15:49:58.848115+00:00"
+}

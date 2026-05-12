@@ -1,0 +1,32 @@
+{
+  "provider_id": "gse178325_milestone_classifier_v1",
+  "dataset_id": "GSE178325",
+  "label_mode": "classifier_based",
+  "state_key": "milestone_classifier_label",
+  "annotation_method": "marker_defined_milestone_provider",
+  "status": "silver_standard_milestone_provider",
+  "analysis_role": "sensitivity_classifier_based",
+  "version": "v1",
+  "source_markers_yaml": "benchmark/annotation/milestone_markers.yaml",
+  "reference_graph_path": "benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/reference_graph.json",
+  "reference_edges_path": "benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/reference_graph_edges.csv",
+  "label_path": "benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/state_labels.tsv",
+  "metadata_path": "benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/state_metadata.tsv",
+  "annotation_votes_path": "benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/annotation_votes.tsv",
+  "n_states": 4,
+  "n_graph_edges": 3,
+  "primary_milestones": [
+    "epithelial_like",
+    "intermediate_plastic",
+    "xen_like",
+    "hCiPS"
+  ],
+  "diagnostic_milestones_excluded_from_graph": [
+    "stromal_or_failure",
+    "branchx_failure"
+  ],
+  "input_h5ad": "benchmark/inputs/gse178325_milestone_full_gene/GSE178325_milestone_annotated_full_gene_benchmark_input.h5ad",
+  "state_labels_status": "populated_from_input_h5ad",
+  "placeholder_warning": "This state_key column may be a Step-3 marker-copy placeholder until Steps 4-5 embedding/classifier/consensus annotation models are implemented.  Do not treat the current label distribution as final biology.",
+  "generated_by": "benchmark/annotation/build_milestone_providers.py"
+}

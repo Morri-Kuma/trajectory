@@ -2,7 +2,11 @@ providers:
   scgpt_v1:
     provider_id: scgpt_v1
     annotation_method: scGPT
-    status: silver_standard_working
+    status: deprecated_legacy_pseudostate_provider
+    label_mode: legacy_scgpt_pseudostate
+    analysis_role: legacy_reference_only
+    deprecated: true
+    legacy: true
     state_key: scgpt_pseudostate_provisional
     label_path: benchmark/ground_truth/providers/scgpt_v1/state_labels.tsv
     metadata_path: benchmark/ground_truth/providers/scgpt_v1/state_metadata.tsv
@@ -13,17 +17,20 @@ providers:
     n_states: 14
     n_graph_edges: 42
     source_h5ad: benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
-    notes: >
-      Working v1 silver-standard state system derived from scGPT embeddings
-      and consecutive-timepoint kNN transition counting. This is not final
-      biological ground truth; it is the current frozen benchmark provider.
+    notes: 'LEGACY (Step 12): This provider is retained for backward compatibility
+      only. It must not be used as a primary benchmark reference. Primary results
+      should use milestone consensus providers (gse230659_milestone_consensus_v1).
+      Originally a working v1 silver-standard state system derived from scGPT embeddings
+      and consecutive-timepoint kNN transition counting for GSE230659. Not final biological
+      ground truth.
 
+      '
   gse178325_0618_stage_proxy:
     provider_id: gse178325_0618_stage_proxy
     annotation_method: stage_proxy_from_GSE178325_sample_metadata
     status: silver_standard_stage_proxy_frozen
     state_key: scTimeBench_cell_type
-    label_path:
+    label_path: null
     metadata_path: benchmark/ground_truth/providers/gse178325_0618_stage_proxy/state_metadata.tsv
     reference_graph_path: benchmark/ground_truth/providers/gse178325_0618_stage_proxy/reference_graph.json
     reference_edges_path: benchmark/ground_truth/providers/gse178325_0618_stage_proxy/reference_graph_edges.csv
@@ -32,17 +39,20 @@ providers:
     n_states: 5
     n_graph_edges: 4
     source_h5ad: benchmark/inputs/gse178325_human_hvg2000/GSE178325_human_HVG2000_benchmark_input.h5ad
-    notes: >
-      Frozen 0618-only GSE178325 stage-proxy lineage graph over
-      scTimeBench_cell_type. The graph follows the observed reprogramming
-      sequence somatic_or_initiating -> early_transition -> intermediate ->
-      late_transition -> pluripotent. This is a benchmark reference proxy,
-      not final curated biological ground truth.
+    notes: 'Frozen 0618-only GSE178325 stage-proxy lineage graph over scTimeBench_cell_type.
+      The graph follows the observed reprogramming sequence somatic_or_initiating
+      -> early_transition -> intermediate -> late_transition -> pluripotent. This
+      is a benchmark reference proxy, not final curated biological ground truth.
 
+      '
   gse178325_0618_scgpt_v1:
     provider_id: gse178325_0618_scgpt_v1
     annotation_method: scGPT
-    status: silver_standard_scgpt_frozen
+    status: deprecated_legacy_pseudostate_provider
+    label_mode: legacy_scgpt_pseudostate
+    analysis_role: legacy_reference_only
+    deprecated: true
+    legacy: true
     state_key: gse178325_scgpt_pseudostate_v1
     label_path: benchmark/ground_truth/providers/gse178325_0618_scgpt_v1/state_labels.tsv
     metadata_path: benchmark/ground_truth/providers/gse178325_0618_scgpt_v1/state_metadata.tsv
@@ -53,16 +63,22 @@ providers:
     n_states: 17
     n_graph_edges: 39
     source_h5ad: benchmark/results/scgpt/gse178325_0618/adata_gse178325_0618_scgpt_annotated.h5ad
-    notes: >
-      Frozen GSE178325 0618-only scGPT-derived provider. Pseudostates are
-      Leiden clusters in scGPT embedding space, and reference edges are built
-      by consecutive-timepoint kNN transition counting in X_scGPT. Generated
-      by benchmark/scgpt/build_gse178325_0618_provider.py.
+    notes: 'LEGACY (Step 12): This provider is retained for backward compatibility
+      only. It must not be used as a primary benchmark reference. Primary results
+      should use milestone consensus providers (gse178325_milestone_consensus_v1).
+      Originally a frozen GSE178325 0618-only scGPT-derived provider; pseudostates
+      are Leiden clusters in scGPT embedding space with edges from consecutive-timepoint
+      kNN transition counting. Provider files absent from disk (no provider dir).
 
+      '
   scgpt_v1_gse178325_0618:
     provider_id: scgpt_v1_gse178325_0618
     annotation_method: scGPT
-    status: silver_standard_working
+    status: deprecated_legacy_pseudostate_provider
+    label_mode: legacy_scgpt_pseudostate
+    analysis_role: legacy_reference_only
+    deprecated: true
+    legacy: true
     state_key: scgpt_pseudostate_provisional
     label_path: benchmark/ground_truth/providers/scgpt_v1_gse178325_0618/state_labels.tsv
     metadata_path: benchmark/ground_truth/providers/scgpt_v1_gse178325_0618/state_metadata.tsv
@@ -73,9 +89,175 @@ providers:
     n_states: 15
     n_graph_edges: 39
     source_h5ad: benchmark/results/scgpt/gse178325_0618/full/adata_scgpt_annotated.h5ad
-    notes: >
-      Working v1 silver-standard state system derived from scGPT embeddings
-      and consecutive-timepoint kNN transition counting for the GSE178325
-      0618-only dataset. This entry is aligned to the GSE230659 scGPT-v1
-      provider schema and supersedes gse178325_0618_scgpt_v1 for future
-      fully aligned GSE178325 benchmark runs.
+    notes: 'LEGACY (Step 12): This provider is retained for backward compatibility
+      only. It must not be used as a primary benchmark reference. Primary results
+      should use milestone consensus providers (gse178325_milestone_consensus_v1).
+      Originally a working v1 silver-standard state system derived from scGPT embeddings
+      for the GSE178325 0618-only dataset, aligned to the GSE230659 scGPT-v1 provider
+      schema.
+
+      '
+  gse178325_milestone_consensus_v1:
+    provider_id: gse178325_milestone_consensus_v1
+    annotation_method: marker_defined_milestone_provider
+    status: silver_standard_milestone_provider
+    state_key: consensus_milestone_label
+    label_path: benchmark/ground_truth/providers/gse178325_milestone_consensus_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse178325_milestone_consensus_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse178325_milestone_consensus_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse178325_milestone_consensus_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    n_states: 4
+    n_graph_edges: 3
+    source_h5ad: benchmark/inputs/gse178325_milestone_full_gene/GSE178325_milestone_annotated_full_gene_benchmark_input.h5ad
+    label_mode: consensus
+    analysis_role: primary_report
+    notes: Milestone-based provider for GSE178325 (consensus mode). state_key=consensus_milestone_label.
+      Step-3 placeholder warning applies until Steps 4-5 complete.
+  gse178325_milestone_embedding_v1:
+    provider_id: gse178325_milestone_embedding_v1
+    annotation_method: marker_defined_milestone_provider
+    status: silver_standard_milestone_provider
+    state_key: milestone_embedding_label
+    label_path: benchmark/ground_truth/providers/gse178325_milestone_embedding_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse178325_milestone_embedding_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse178325_milestone_embedding_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse178325_milestone_embedding_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    n_states: 4
+    n_graph_edges: 3
+    source_h5ad: benchmark/inputs/gse178325_milestone_full_gene/GSE178325_milestone_annotated_full_gene_benchmark_input.h5ad
+    label_mode: embedding_based
+    analysis_role: sensitivity_embedding_based
+    notes: Milestone-based provider for GSE178325 (embedding_based mode). state_key=milestone_embedding_label.
+      Step-3 placeholder warning applies until Steps 4-5 complete.
+  gse178325_milestone_classifier_v1:
+    provider_id: gse178325_milestone_classifier_v1
+    annotation_method: marker_defined_milestone_provider
+    status: silver_standard_milestone_provider
+    state_key: milestone_classifier_label
+    label_path: benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse178325_milestone_classifier_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    n_states: 4
+    n_graph_edges: 3
+    source_h5ad: benchmark/inputs/gse178325_milestone_full_gene/GSE178325_milestone_annotated_full_gene_benchmark_input.h5ad
+    label_mode: classifier_based
+    analysis_role: sensitivity_classifier_based
+    notes: Milestone-based provider for GSE178325 (classifier_based mode). state_key=milestone_classifier_label.
+      Step-3 placeholder warning applies until Steps 4-5 complete.
+  gse230659_milestone_consensus_v1:
+    provider_id: gse230659_milestone_consensus_v1
+    annotation_method: marker_defined_milestone_provider
+    status: silver_standard_milestone_provider
+    state_key: consensus_milestone_label
+    label_path: benchmark/ground_truth/providers/gse230659_milestone_consensus_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse230659_milestone_consensus_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse230659_milestone_consensus_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse230659_milestone_consensus_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    n_states: 3
+    n_graph_edges: 2
+    source_h5ad: benchmark/inputs/gse230659_milestone_real_sensitivity_hvg2000/GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad
+    label_mode: consensus
+    analysis_role: primary_report
+    notes: Milestone-based provider for GSE230659 (consensus mode). state_key=consensus_milestone_label.
+      Step-3 placeholder warning applies until Steps 4-5 complete.
+  gse230659_milestone_embedding_v1:
+    provider_id: gse230659_milestone_embedding_v1
+    annotation_method: marker_defined_milestone_provider
+    status: silver_standard_milestone_provider
+    state_key: milestone_embedding_label
+    label_path: benchmark/ground_truth/providers/gse230659_milestone_embedding_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse230659_milestone_embedding_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse230659_milestone_embedding_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse230659_milestone_embedding_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    n_states: 3
+    n_graph_edges: 2
+    source_h5ad: benchmark/inputs/gse230659_milestone_real_sensitivity_hvg2000/GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad
+    label_mode: embedding_based
+    analysis_role: sensitivity_embedding_based
+    notes: Milestone-based provider for GSE230659 (embedding_based mode). state_key=milestone_embedding_label.
+      Step-3 placeholder warning applies until Steps 4-5 complete.
+  gse230659_milestone_classifier_v1:
+    provider_id: gse230659_milestone_classifier_v1
+    annotation_method: marker_defined_milestone_provider
+    status: silver_standard_milestone_provider
+    state_key: milestone_classifier_label
+    label_path: benchmark/ground_truth/providers/gse230659_milestone_classifier_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse230659_milestone_classifier_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse230659_milestone_classifier_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse230659_milestone_classifier_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    n_states: 3
+    n_graph_edges: 2
+    source_h5ad: benchmark/inputs/gse230659_milestone_real_sensitivity_hvg2000/GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad
+    label_mode: classifier_based
+    analysis_role: sensitivity_classifier_based
+    notes: Milestone-based provider for GSE230659 (classifier_based mode). state_key=milestone_classifier_label.
+      Step-3 placeholder warning applies until Steps 4-5 complete.
+  gse178325_marker_fm_transition_silver_v1:
+    provider_id: gse178325_marker_fm_transition_silver_v1
+    annotation_method: marker_fm_transition_silver_provider
+    status: frozen_silver_standard_milestone_provider
+    state_key: final_milestone_label_coarse
+    label_path: benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: true
+    excluded_labels:
+    - ambiguous
+    - unknown_or_ood
+    n_states: 5
+    n_graph_edges: 4
+    n_cell_labels: 80475
+    source_h5ad: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    label_mode: official_silver
+    label_type: frozen_silver_standard
+    analysis_role: primary_report
+    coarse_label_key: final_milestone_label_coarse
+    expanded_label_key: final_milestone_label_expanded
+    official_embedding_label_key: final_milestone_label_coarse
+    supplementary_embedding_label_key: final_milestone_label_expanded
+    notes: 'Official frozen silver-standard milestone provider for GSE178325. state_key=final_milestone_label_coarse.
+      Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
+      official metrics: ambiguous, unknown_or_ood.'
+  gse230659_marker_fm_transition_silver_v1:
+    provider_id: gse230659_marker_fm_transition_silver_v1
+    annotation_method: marker_fm_transition_silver_provider
+    status: frozen_silver_standard_milestone_provider
+    state_key: final_milestone_label_coarse
+    label_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: true
+    excluded_labels:
+    - ambiguous
+    - unknown_or_ood
+    n_states: 4
+    n_graph_edges: 3
+    n_cell_labels: 75194
+    source_h5ad: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    label_mode: official_silver
+    label_type: frozen_silver_standard
+    analysis_role: primary_report
+    coarse_label_key: final_milestone_label_coarse
+    expanded_label_key: final_milestone_label_expanded
+    official_embedding_label_key: final_milestone_label_coarse
+    supplementary_embedding_label_key: final_milestone_label_expanded
+    notes: 'Official frozen silver-standard milestone provider for GSE230659. state_key=final_milestone_label_coarse.
+      Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
+      official metrics: ambiguous, unknown_or_ood.'

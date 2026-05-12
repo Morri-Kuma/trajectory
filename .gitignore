@@ -49,6 +49,9 @@ benchmark/results/**/*.npz
 benchmark/results/**/*.pth
 benchmark/results/**/*.pt
 
+# Annotation module verification scratch outputs
+benchmark/tmp_annotation_step*/
+
 # OS files
 .DS_Store
 Thumbs.db

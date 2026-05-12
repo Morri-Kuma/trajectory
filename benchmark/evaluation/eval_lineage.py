@@ -782,6 +782,39 @@ def _topk_predicted_edges(predicted_matrix: pd.DataFrame, k: int) -> set:
     return edges
 
 
+def _enrich_lineage_metrics_compat(
+    metrics: dict,
+    ground_truth: dict,
+    reference_graph_path: Optional[str],
+) -> dict:
+    """Promote Step 10 compatibility fields to top-level of lineage_metrics.json.
+
+    The fields label_mode, provider_id, reference_graph_path, and
+    compatibility_note are required at the top level so that summary scripts
+    and the output naming validator can distinguish consensus / embedding_based /
+    classifier_based results without inspecting the nested ground_truth block.
+
+    This helper is intentionally non-destructive: it only adds keys that are
+    not already present at the top level.
+    """
+    gt = ground_truth or {}
+    if "label_mode" not in metrics and gt.get("label_mode"):
+        metrics["label_mode"] = gt["label_mode"]
+    if "provider_id" not in metrics and gt.get("provider_id"):
+        metrics["provider_id"] = gt["provider_id"]
+    if "reference_graph_path" not in metrics:
+        graph_path = gt.get("reference_graph_path") or reference_graph_path
+        if graph_path:
+            metrics["reference_graph_path"] = str(graph_path)
+    if "compatibility_note" not in metrics:
+        metrics["compatibility_note"] = (
+            "label_mode and provider_id are promoted from ground_truth for "
+            "Step 10 output naming compatibility. "
+            "See smoke_metadata.json for full evaluation context."
+        )
+    return metrics
+
+
 def run_lineage_evaluation(
     state_transition_matrix_path: str,
     lineage_graph_edges_path: str,
@@ -883,6 +916,7 @@ def run_lineage_evaluation(
             "time_key": time_key,
             "ground_truth": ground_truth,
         }
+        _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
         metrics_path = out_dir / "lineage_metrics.json"
         with open(metrics_path, "w") as f:
             json.dump(metrics, f, indent=2)
@@ -944,6 +978,7 @@ def run_lineage_evaluation(
                 "time_key": time_key,
                 "ground_truth": ground_truth,
             })
+            _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
             metrics_path = out_dir / "lineage_metrics.json"
             with open(metrics_path, "w", encoding="utf-8") as f:
                 json.dump(metrics, f, indent=2)
@@ -1020,6 +1055,7 @@ def run_lineage_evaluation(
     metrics["cell_state_key"] = cell_state_key
     metrics["time_key"] = time_key
     metrics["ground_truth"] = ground_truth
+    _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
 
     metrics_path = out_dir / "lineage_metrics.json"
     with open(metrics_path, "w") as f:

@@ -49,5 +49,7 @@
     "iters": 100,
     "batch_size": 32,
     "n_sim_cells": 2000
-  }
+  },
+  "dataset_role": "primary_benchmark",
+  "benchmark_dataset": "gse230659_scgpt_v1_hvg2000"
 }

@@ -1,0 +1,30 @@
+{
+  "script": "run_gse230659_marker_fm_transition_silver_annotation.sh",
+  "dataset_id": "GSE230659",
+  "status": "completed",
+  "source_stage1_full_gene_h5ad": "benchmark/inputs/gse230659_marker_fm_transition_silver_full_gene/GSE230659_stage1_marker_seed_full_gene.h5ad",
+  "target_hvg_h5ad": "benchmark/inputs/gse230659_scgpt_hvg2000/GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad",
+  "output_h5ad": "benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_stage1_marker_seed_HVG2000.h5ad",
+  "alignment": "obs_names_ordered",
+  "columns_transferred": [
+    "milestone_score_hADSCs",
+    "milestone_score_epithelial_like",
+    "milestone_score_intermediate_plastic",
+    "milestone_score_hCiPS",
+    "milestone_marker_label",
+    "milestone_marker_score",
+    "milestone_marker_margin",
+    "milestone_embedding_label",
+    "milestone_embedding_confidence",
+    "milestone_classifier_label",
+    "milestone_classifier_confidence",
+    "consensus_milestone_label",
+    "consensus_confidence",
+    "stage1_label",
+    "stage1_confidence",
+    "stage1_margin",
+    "stage1_status",
+    "stage1_source"
+  ],
+  "timestamp": "2026-05-11T12:58:23.514840+00:00"
+}

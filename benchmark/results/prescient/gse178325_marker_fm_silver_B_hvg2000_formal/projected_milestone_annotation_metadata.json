@@ -1,0 +1,22 @@
+{
+  "dataset_id": "GSE178325",
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "label_mode": "official_silver",
+  "state_key": "final_milestone_label_coarse",
+  "source": "projected_cluster_labels.csv copied to official_silver projected labels",
+  "n_projected_cells": 14000,
+  "primary_labels": [
+    "epithelial_like",
+    "hADSCs",
+    "hCiPS",
+    "intermediate_plastic",
+    "xen_like"
+  ],
+  "coarse_to_expanded": {
+    "hADSCs": "stage_00_hADSCs",
+    "epithelial_like": "stage_02_epithelial_like",
+    "intermediate_plastic": "stage_04_intermediate_plastic",
+    "hCiPS": "stage_08_hCiPS",
+    "xen_like": "stage_06_xen_like"
+  }
+}

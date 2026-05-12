@@ -1,0 +1,68 @@
+{
+  "dataset_id": "GSE230659",
+  "label_mode": "classifier_based",
+  "state_key": "milestone_classifier_label",
+  "provider_id": "gse230659_milestone_classifier_v1",
+  "input_h5ad": "benchmark\\inputs\\gse230659_milestone_real_sensitivity_hvg2000\\GSE230659_real_sensitivity_milestone_HVG2000_benchmark_input.h5ad",
+  "embedding_key": "X_scGPT",
+  "cluster_source": "run_output:projected_cluster_labels.csv",
+  "label_source": "projected_milestone_labels_csv",
+  "n_cells_total": 18000,
+  "n_cells_evaluated": 18000,
+  "excluded_labels": [
+    "ambiguous"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "n_labels": 3,
+  "labels_used": [
+    "epithelial_like",
+    "hCiPS",
+    "intermediate_plastic"
+  ],
+  "label_counts": {
+    "epithelial_like": 11687,
+    "intermediate_plastic": 1256,
+    "hCiPS": 5057
+  },
+  "cluster_counts": {
+    "16.33": 2000,
+    "16.67": 2000,
+    "17.0": 2000,
+    "18.0": 2000,
+    "20.0": 2000,
+    "22.0": 2000,
+    "24.0": 2000,
+    "28.0": 2000,
+    "30.0": 2000
+  },
+  "n_clusters": 9,
+  "ambiguous_count": 0,
+  "ambiguous_fraction": 0.0,
+  "missing_label_count": 0,
+  "adjusted_rand_index": 0.008364,
+  "ari_status": "ok",
+  "mean_prediction_entropy": null,
+  "weighted_prediction_entropy": null,
+  "per_cluster_prediction_entropy": {},
+  "prediction_entropy_note": "probability vector unavailable",
+  "entropy_basis": "unavailable",
+  "n_probability_classes": 0,
+  "mean_normalized_entropy": 0.718011,
+  "weighted_mean_normalized_entropy": 0.718011,
+  "per_cluster_entropy": {
+    "16.33": 0.841232,
+    "16.67": 0.842579,
+    "17.0": 0.845254,
+    "18.0": 0.836689,
+    "20.0": 0.809663,
+    "22.0": 0.753661,
+    "24.0": 0.67715,
+    "28.0": 0.486184,
+    "30.0": 0.369688
+  },
+  "entropy_note": "",
+  "note": "",
+  "status": "completed",
+  "timestamp": "2026-05-10T15:50:29.203631+00:00",
+  "compatibility_note": "Mode-specific embedding coherence metrics for label_mode='classifier_based'. See provider_agreement_metrics.json for cross-provider comparison. Step 10 output naming policy: these files are the preferred outputs for summary scripts; embedding_metrics.json (legacy) is not written."
+}

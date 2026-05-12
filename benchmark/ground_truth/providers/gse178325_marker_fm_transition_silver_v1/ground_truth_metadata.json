@@ -1,0 +1,78 @@
+{
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "dataset_id": "GSE178325",
+  "label_mode": "official_silver",
+  "label_type": "frozen_silver_standard",
+  "annotation_method": "marker_fm_transition_silver_provider",
+  "status": "frozen_silver_standard_milestone_provider",
+  "state_key": "final_milestone_label_coarse",
+  "expanded_state_key": "final_milestone_label_expanded",
+  "confidence_key": "final_milestone_confidence",
+  "source_key": "final_milestone_source",
+  "membership_key": "trajectory_membership_label",
+  "official_embedding_label_key": "final_milestone_label_coarse",
+  "supplementary_embedding_label_key": "final_milestone_label_expanded",
+  "analysis_role": "primary_report",
+  "version": "v1",
+  "source_markers_yaml": "benchmark/annotation/milestone_markers.yaml",
+  "excluded_from_official_metrics": [
+    "ambiguous",
+    "unknown_or_ood"
+  ],
+  "expanded_trajectory_order": [
+    "stage_00_hADSCs",
+    "stage_01_hADSCs_to_epithelial_like",
+    "stage_02_epithelial_like",
+    "stage_03_epithelial_like_to_intermediate_plastic",
+    "stage_04_intermediate_plastic",
+    "stage_05_intermediate_plastic_to_xen_like",
+    "stage_06_xen_like",
+    "stage_07_xen_like_to_hCiPS",
+    "stage_08_hCiPS"
+  ],
+  "primary_milestones": [
+    "hADSCs",
+    "epithelial_like",
+    "intermediate_plastic",
+    "xen_like",
+    "hCiPS"
+  ],
+  "n_states": 5,
+  "n_graph_edges": 4,
+  "n_cell_labels": 80475,
+  "coarse_label_counts": {
+    "epithelial_like": 67817,
+    "hADSCs": 5706,
+    "intermediate_plastic": 4654,
+    "hCiPS": 2144,
+    "xen_like": 154
+  },
+  "expanded_label_counts": {
+    "stage_02_epithelial_like": 67817,
+    "stage_00_hADSCs": 5706,
+    "stage_04_intermediate_plastic": 4654,
+    "stage_08_hCiPS": 2144,
+    "stage_06_xen_like": 154
+  },
+  "source_counts": {
+    "marker_primary": 74769,
+    "sample_time": 5706
+  },
+  "membership_counts": {
+    "in_trajectory": 80475
+  },
+  "label_coverage_fraction": 1.0,
+  "input_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+  "state_labels_status": "populated_from_input_h5ad",
+  "reference_graph_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph.json",
+  "reference_edges_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph_edges.csv",
+  "label_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/state_labels.tsv",
+  "metadata_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/state_metadata.tsv",
+  "annotation_votes_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/annotation_votes.tsv",
+  "generated_by": "benchmark/annotation/build_milestone_providers.py",
+  "provenance": [
+    "Liuyang et al. 2023, Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008",
+    "Guan et al. 2022, Nature, DOI: 10.1038/s41586-022-04593-5",
+    "Companion code: https://github.com/sajuukLyu/CSC_2023"
+  ]
+}

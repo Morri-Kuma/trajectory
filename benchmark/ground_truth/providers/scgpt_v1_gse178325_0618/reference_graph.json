@@ -21,7 +21,12 @@
       "States are Leiden clusters in scGPT embedding space ordered by median abs_day.",
       "Edges are consecutive-timepoint kNN transition probabilities in X_scGPT.",
       "Self-loops are excluded and edges below min_edge_weight are pruned."
-    ]
+    ],
+    "label_mode": "legacy_scgpt_pseudostate",
+    "analysis_role": "legacy_reference_only",
+    "deprecated": true,
+    "legacy": true,
+    "compatibility_note": "Retained for backward compatibility only. Must not be used as a primary benchmark reference. Primary results should use milestone consensus providers."
   },
   "nodes": [
     {

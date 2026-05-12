@@ -130,6 +130,7 @@ class WOTAdapter(BaseAdapter):
         )
 
         elapsed = time.time() - self._start_time if self._start_time else None
+        _gt = self.scenario_config.get("ground_truth") or {}
         run_meta = {
             "method": "wot",
             "dataset": dataset_id,
@@ -143,6 +144,9 @@ class WOTAdapter(BaseAdapter):
             "status": "completed",
             "time_key": time_key,
             "cell_state_key": cell_state_key,
+            "provider_id": _gt.get("provider_id") or None,
+            "label_mode": _gt.get("label_mode") or None,
+            "analysis_role": _gt.get("analysis_role") or None,
             "scenario_params": scenario_cfg,
             "wot_params": wot_params,
             "notes": (
@@ -213,6 +217,7 @@ class WOTAdapter(BaseAdapter):
         stm.to_csv(stm_path)
         edges.to_csv(edges_path, index=False)
 
+        _gt = self.scenario_config.get("ground_truth") or {}
         metadata = {
             "method": "wot",
             "dataset": self.scenario_config.get("dataset_id", "unknown"),
@@ -227,6 +232,10 @@ class WOTAdapter(BaseAdapter):
                 if self._start_time else None
             ),
             "status": f"scaffold_only ({reason})",
+            "cell_state_key": self.scenario_config.get("cell_state_key"),
+            "provider_id": _gt.get("provider_id") or None,
+            "label_mode": _gt.get("label_mode") or None,
+            "analysis_role": _gt.get("analysis_role") or None,
             "notes": (
                 "WOT package is unavailable, so the adapter wrote empty outputs. "
                 "Install WOT in the active environment to produce real predictions."

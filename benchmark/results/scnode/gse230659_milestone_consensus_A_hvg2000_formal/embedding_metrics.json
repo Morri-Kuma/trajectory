@@ -1,0 +1,38 @@
+{
+  "adjusted_rand_index": 0.0549970413713566,
+  "avg_normalized_classifier_entropy": 0.5047018029057608,
+  "projected_latent_dim": 50,
+  "n_eval_timepoints": 15,
+  "eval_timepoints": [
+    0.5,
+    2.0,
+    4.0,
+    8.0,
+    12.0,
+    16.0,
+    16.33,
+    16.67,
+    17.0,
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    28.0,
+    30.0
+  ],
+  "status": "completed",
+  "ari_reference": "nearest observed cell at the same evaluation timepoint in scNODE VAE latent space",
+  "entropy_reference": "balanced logistic regression trained on observed scNODE VAE latent embeddings and provider state labels",
+  "result_class": "milestone_formal",
+  "formal_benchmark": true,
+  "method_config": "benchmark/configs/runtime/scnode_gse230659_A_milestone_consensus_v1_hvg2000_formal.yaml",
+  "label_mode": "consensus",
+  "provider_id": "gse230659_milestone_consensus_v1",
+  "cell_state_key": "consensus_milestone_label",
+  "ground_truth": {
+    "provider_id": "gse230659_milestone_consensus_v1",
+    "label_mode": "consensus",
+    "state_key": "consensus_milestone_label"
+  },
+  "compatibility_note": "Legacy generic embedding_metrics.json emitted by adapter; label_mode/provider_id added for milestone output naming compatibility. Prefer embedding_milestone_eval/embedding_metrics_consensus.json when available."
+}

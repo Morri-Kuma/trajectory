@@ -1,0 +1,82 @@
+{
+  "dataset_id": "GSE230659",
+  "label_modes_available": [
+    "consensus",
+    "embedding_based",
+    "classifier_based"
+  ],
+  "state_keys_available": [
+    "consensus_milestone_label",
+    "milestone_embedding_label",
+    "milestone_classifier_label"
+  ],
+  "provider_ids_available": [
+    "gse230659_milestone_consensus_v1",
+    "gse230659_milestone_embedding_v1",
+    "gse230659_milestone_classifier_v1"
+  ],
+  "reference_h5ad": "benchmark/inputs/gse230659_milestone_hvg2000/GSE230659_milestone_annotated_HVG2000_benchmark_input.h5ad",
+  "run_output_dir": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal",
+  "projected_expression_path": null,
+  "projected_embedding_path": null,
+  "projected_cluster_labels_path": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/projected_cluster_labels.csv",
+  "output_csv": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/projected_milestone_labels.csv",
+  "n_projected_cells": 30000,
+  "timepoints": [
+    "0.5",
+    "12.0",
+    "16.0",
+    "16.33",
+    "16.67",
+    "17.0",
+    "18.0",
+    "2.0",
+    "20.0",
+    "22.0",
+    "24.0",
+    "28.0",
+    "30.0",
+    "4.0",
+    "8.0"
+  ],
+  "annotation_policy": "cluster_majority_projection_smoke",
+  "smoke_test": true,
+  "formal_benchmark": false,
+  "label_columns_written": [
+    "projected_cell_id",
+    "timepoint",
+    "milestone_embedding_label",
+    "milestone_classifier_label",
+    "consensus_milestone_label",
+    "consensus_confidence"
+  ],
+  "excluded_labels": [
+    "ambiguous"
+  ],
+  "label_counts_consensus": {
+    "epithelial_like": 26463,
+    "hCiPS": 3537
+  },
+  "placeholder_warning": "milestone_embedding_label and milestone_classifier_label are copies of cluster-majority consensus label (placeholder policy).",
+  "marker_copy_warning": "milestone_embedding_label and milestone_classifier_label are placeholder copies; independent embedding/classifier models have not been trained.",
+  "timestamp": "2026-05-08T12:31:09.214315+00:00",
+  "obs_cluster_col": "scgpt_pseudostate_provisional",
+  "obs_milestone_col": "consensus_milestone_label",
+  "cluster_label_map": {
+    "PS_03": "epithelial_like",
+    "PS_09": "epithelial_like",
+    "PS_11": "epithelial_like",
+    "PS_01": "epithelial_like",
+    "PS_00": "epithelial_like",
+    "PS_12": "epithelial_like",
+    "PS_02": "epithelial_like",
+    "PS_04": "epithelial_like",
+    "PS_08": "epithelial_like",
+    "PS_06": "epithelial_like",
+    "PS_07": "epithelial_like",
+    "PS_05": "hCiPS",
+    "PS_10": "hCiPS",
+    "PS_13": "epithelial_like"
+  },
+  "n_unmapped_clusters": 0
+}

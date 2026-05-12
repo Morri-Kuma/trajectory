@@ -1,8 +1,8 @@
 {
-  "wasserstein_distance": 0.08608543533652672,
-  "gaussian_mmd": 0.335366510293649,
-  "energy_distance_mmd": 9.439153943743024,
-  "hausdorff_loss": 21.29954665047782,
+  "wasserstein_distance": 0.08608544165831414,
+  "gaussian_mmd": 0.3353715879272618,
+  "energy_distance_mmd": 9.439154761178154,
+  "hausdorff_loss": 21.29955073765346,
   "n_eval_timepoints": 7,
   "eval_timepoints": [
     20.0,

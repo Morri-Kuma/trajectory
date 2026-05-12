@@ -2,7 +2,7 @@
   "run_timestamp": "2026-04-19T11:22:55",
   "script": "benchmark/scgpt/export_v1.py",
   "version": "v1",
-  "status": "silver_standard_working",
+  "status": "deprecated_legacy_pseudostate_provider",
   "input_h5ad": "C:\\Users\\37620\\trajectory\\benchmark\\results\\scgpt\\full\\adata_scgpt_annotated.h5ad",
   "cluster_map": "C:\\Users\\37620\\trajectory\\benchmark\\scgpt\\cluster_map_provisional.json",
   "cluster_map_version": "v1",
@@ -64,5 +64,10 @@
   },
   "graph_runtime_sec": 3.2,
   "total_runtime_sec": 4.3,
-  "total_runtime_min": 0.07
+  "total_runtime_min": 0.07,
+  "label_mode": "legacy_scgpt_pseudostate",
+  "analysis_role": "legacy_reference_only",
+  "deprecated": true,
+  "legacy": true,
+  "compatibility_note": "Retained for backward compatibility only. Must not be used as a primary benchmark reference. Primary results should use milestone consensus providers."
 }

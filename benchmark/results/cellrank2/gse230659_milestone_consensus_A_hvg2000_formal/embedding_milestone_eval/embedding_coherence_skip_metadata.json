@@ -1,0 +1,23 @@
+{
+  "status": "skipped",
+  "reason": "Projected expression, projected embedding, or projected_cluster_labels.csv is missing.",
+  "method": "cellrank2",
+  "scenario": "A",
+  "dataset_id": "GSE230659",
+  "run_output_dir": "benchmark/results/cellrank2/gse230659_milestone_consensus_A_hvg2000_formal",
+  "required_files": [
+    "benchmark/results/cellrank2/gse230659_milestone_consensus_A_hvg2000_formal/projected_expression.npy",
+    "benchmark/results/cellrank2/gse230659_milestone_consensus_A_hvg2000_formal/projected_embedding.npy",
+    "benchmark/results/cellrank2/gse230659_milestone_consensus_A_hvg2000_formal/projected_cluster_labels.csv"
+  ],
+  "existing_files": {
+    "projected_expression.npy": false,
+    "projected_embedding.npy": false,
+    "projected_cluster_labels.csv": false
+  },
+  "label_mode": "consensus",
+  "provider_id": "gse230659_milestone_consensus_v1",
+  "cell_state_key": "consensus_milestone_label",
+  "formal_benchmark": true,
+  "timestamp": "2026-05-09T02:25:05.327404+00:00"
+}

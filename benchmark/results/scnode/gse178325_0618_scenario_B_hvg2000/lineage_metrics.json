@@ -1,9 +1,9 @@
 {
-  "auroc": 0.6842105263157896,
-  "auprc": 0.36259152814497164,
+  "auroc": 0.6828032648466085,
+  "auprc": 0.3725634467551573,
   "jaccard_similarity": 0.16417910447761194,
   "jaccard_similarity_topk": 0.2459016393442623,
-  "single_step_recovery": 0.3684210526315789,
+  "single_step_recovery": 0.39473684210526316,
   "multi_step_recovery": 0.5205479452054794,
   "baseline": {
     "auroc": 0.7674500422178441,

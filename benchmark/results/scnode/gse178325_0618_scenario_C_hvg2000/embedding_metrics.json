@@ -1,6 +1,6 @@
 {
-  "adjusted_rand_index": 0.27119441700355273,
-  "avg_normalized_classifier_entropy": 0.2113823572518098,
+  "adjusted_rand_index": 0.2817130025485871,
+  "avg_normalized_classifier_entropy": 0.3054160658061535,
   "projected_latent_dim": 50,
   "n_eval_timepoints": 8,
   "eval_timepoints": [
@@ -15,9 +15,5 @@
   ],
   "status": "completed",
   "ari_reference": "nearest observed cell at the same evaluation timepoint in scNODE VAE latent space",
-  "entropy_reference": "balanced logistic regression trained on observed scNODE VAE latent embeddings and provider state labels",
-  "ground_truth_provider": "scgpt_v1_gse178325_0618",
-  "cell_state_key": "scgpt_pseudostate_provisional",
-  "provider_state_key": "scgpt_pseudostate_provisional",
-  "embedding_label_source": "scGPT-derived pseudostates from scgpt_v1_gse178325_0618"
+  "entropy_reference": "balanced logistic regression trained on observed scNODE VAE latent embeddings and provider state labels"
 }

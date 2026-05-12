@@ -3,7 +3,7 @@
   "script": "benchmark/scgpt/build_gse178325_0618_provider.py",
   "provider_id": "scgpt_v1_gse178325_0618",
   "version": "v1",
-  "status": "silver_standard_working",
+  "status": "deprecated_legacy_pseudostate_provider",
   "input_h5ad": "data/processed/gse178325_human/GSE178325_0618_raw_full_gene_benchmark_input.h5ad",
   "output_h5ad": "benchmark/results/scgpt/gse178325_0618/full/adata_scgpt_full.h5ad",
   "annotated_h5ad": "benchmark/results/scgpt/gse178325_0618/full/adata_scgpt_annotated.h5ad",
@@ -32,5 +32,10 @@
     "graph_json": "benchmark/ground_truth/providers/scgpt_v1_gse178325_0618/reference_graph.json",
     "graph_csv": "benchmark/ground_truth/providers/scgpt_v1_gse178325_0618/reference_graph_edges.csv",
     "pseudostate_timepoint_matrix": "benchmark/results/scgpt/gse178325_0618/full/pseudostate_timepoint_matrix.csv"
-  }
+  },
+  "label_mode": "legacy_scgpt_pseudostate",
+  "analysis_role": "legacy_reference_only",
+  "deprecated": true,
+  "legacy": true,
+  "compatibility_note": "Retained for backward compatibility only. Must not be used as a primary benchmark reference. Primary results should use milestone consensus providers."
 }

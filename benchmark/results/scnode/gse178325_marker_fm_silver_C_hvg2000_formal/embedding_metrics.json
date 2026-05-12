@@ -1,0 +1,31 @@
+{
+  "adjusted_rand_index": 0.0011196233478470066,
+  "avg_normalized_classifier_entropy": 0.20724168166518994,
+  "projected_latent_dim": 50,
+  "n_eval_timepoints": 8,
+  "eval_timepoints": [
+    1.0,
+    12.0,
+    20.0,
+    25.0,
+    26.0,
+    28.0,
+    34.0,
+    36.0
+  ],
+  "status": "completed",
+  "ari_reference": "nearest observed cell at the same evaluation timepoint in scNODE VAE latent space",
+  "entropy_reference": "balanced logistic regression trained on observed scNODE VAE latent embeddings and provider state labels",
+  "result_class": "marker_fm_transition_silver_formal",
+  "formal_benchmark": true,
+  "method_config": "benchmark/configs/runtime/scnode_gse178325_marker_fm_silver_C_hvg2000_formal.yaml",
+  "label_mode": "official_silver",
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "cell_state_key": "final_milestone_label_coarse",
+  "ground_truth": {
+    "provider_id": "gse178325_marker_fm_transition_silver_v1",
+    "label_mode": "official_silver",
+    "state_key": "final_milestone_label_coarse",
+    "source_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad"
+  }
+}

@@ -13,7 +13,7 @@
     "embedding_coherence",
     "lineage_fidelity"
   ],
-  "runtime_seconds": 72.5,
+  "runtime_seconds": 77.09,
   "status": "completed",
   "time_key": "abs_day",
   "cell_state_key": "scgpt_pseudostate_provisional",
@@ -49,5 +49,7 @@
     "source_h5ad": "benchmark/results/scgpt/gse178325_0618/full/adata_scgpt_annotated.h5ad",
     "annotation_method": "scGPT",
     "notes": "Working v1 silver-standard state system derived from scGPT embeddings and consecutive-timepoint kNN transition counting for the GSE178325 0618-only dataset. This entry is aligned to the GSE230659 scGPT-v1 provider schema and supersedes gse178325_0618_scgpt_v1 for future fully aligned GSE178325 benchmark runs.\n"
-  }
+  },
+  "dataset_role": "external_validation",
+  "benchmark_dataset": "gse178325_0618_hvg2000"
 }

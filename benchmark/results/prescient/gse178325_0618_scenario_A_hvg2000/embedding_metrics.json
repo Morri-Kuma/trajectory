@@ -21,9 +21,5 @@
     36.0
   ],
   "status": "completed",
-  "embedding_space": "PRESCIENT PCA space",
-  "ground_truth_provider": "scgpt_v1_gse178325_0618",
-  "cell_state_key": "scgpt_pseudostate_provisional",
-  "provider_state_key": "scgpt_pseudostate_provisional",
-  "embedding_label_source": "scGPT-derived pseudostates from scgpt_v1_gse178325_0618"
+  "embedding_space": "PRESCIENT PCA space"
 }

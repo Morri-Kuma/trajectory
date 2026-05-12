@@ -1,0 +1,55 @@
+{
+  "wasserstein_distance": 177.17440776407776,
+  "gaussian_mmd": 5.000127860859817e-07,
+  "energy_distance_mmd": 0.11413441761940309,
+  "hausdorff_loss": 2991.487848020917,
+  "n_eval_timepoints": 9,
+  "eval_timepoints": [
+    16.33,
+    16.67,
+    17.0,
+    18.0,
+    20.0,
+    22.0,
+    24.0,
+    28.0,
+    30.0
+  ],
+  "scenario_type": "forecast",
+  "max_cells_per_timepoint": 1000,
+  "metric_backend": "scTimeBench_geomloss",
+  "metric_definitions": {
+    "wasserstein_distance": {
+      "loss": "sinkhorn",
+      "p": 2,
+      "blur": 0.05,
+      "scaling": 0.5,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "gaussian_mmd": {
+      "loss": "gaussian",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "energy_distance_mmd": {
+      "loss": "energy",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "hausdorff_loss": {
+      "implementation": "torch.cdist_bidirectional_hausdorff",
+      "normalize_by_n_genes": false
+    }
+  },
+  "aggregation": "mean_over_eval_timepoints",
+  "status": "completed",
+  "result_class": "milestone_formal",
+  "formal_benchmark": true,
+  "method_config": "benchmark/configs/runtime/scnode_gse230659_B_milestone_consensus_v1_hvg2000_formal.yaml"
+}

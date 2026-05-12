@@ -31,5 +31,7 @@
     "notes": "Working v1 silver-standard state system derived from scGPT embeddings (GSE230659, 75,194 cells). Not final biology. Acceptable for benchmark integration at current stage. See v1_export_metadata.json for full provenance.\n"
   },
   "result_class": "official",
-  "formal_benchmark": true
+  "formal_benchmark": true,
+  "dataset_role": "primary_benchmark",
+  "benchmark_dataset": "gse230659_scgpt_v1_hvg2000"
 }

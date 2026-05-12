@@ -22,7 +22,12 @@
       "All weights are row-normalised transition probabilities per source state.",
       "Self-loops are excluded. Edges below MIN_EDGE_WEIGHT are pruned.",
       "To produce v2: revise cluster_map_provisional.json, rerun annotate_provisional.py then export_v1.py with VERSION='v2'."
-    ]
+    ],
+    "label_mode": "legacy_scgpt_pseudostate",
+    "analysis_role": "legacy_reference_only",
+    "deprecated": true,
+    "legacy": true,
+    "compatibility_note": "Retained for backward compatibility only. Must not be used as a primary benchmark reference. Primary results should use milestone consensus providers."
   },
   "nodes": [
     {

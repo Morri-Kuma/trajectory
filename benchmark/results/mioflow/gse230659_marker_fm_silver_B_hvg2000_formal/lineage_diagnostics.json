@@ -1,0 +1,8 @@
+{
+  "source_transition_counts": {
+    "epithelial_like": 20763,
+    "hCiPS": 69,
+    "intermediate_plastic": 1445
+  },
+  "latent_space": "PCA"
+}

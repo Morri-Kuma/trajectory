@@ -1,0 +1,112 @@
+{
+  "dataset_id": null,
+  "projected_labels_csv": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/projected_milestone_labels.csv",
+  "output_dir": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus",
+  "label_mode": "consensus",
+  "provider_id": "gse230659_milestone_consensus_v1",
+  "cell_state_key": "consensus_milestone_label",
+  "excluded_labels": [
+    "ambiguous"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "transition_policy": "aggregate_frequency_consecutive_timepoints",
+  "transition_policy_note": "For each consecutive timepoint pair (t1, t2), the transition probability from source state s1 to target state s2 equals the frequency of s2 at t2, weighted by the frequency of s1 at t1. Row-normalized. This is a smoke bridge without single-cell tracking.",
+  "smoke_test": true,
+  "formal_benchmark": false,
+  "all_timepoint_pairs": false,
+  "timestamp": "2026-05-08T12:31:16.841126+00:00",
+  "mode_specific_outputs": {
+    "state_transition_matrix_consensus.csv": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus/state_transition_matrix_consensus.csv",
+    "lineage_graph_edges_consensus.csv": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus/lineage_graph_edges_consensus.csv",
+    "lineage_metrics_consensus.json": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus/lineage_metrics_consensus.json"
+  },
+  "generic_compatibility_outputs": {
+    "state_transition_matrix.csv": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus/state_transition_matrix.csv",
+    "lineage_graph_edges.csv": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus/lineage_graph_edges.csv",
+    "projected_transition_metadata.json": "benchmark/results/scnode/scenario_A_scgpt_v1_hvg2000_formal/lineage_consensus/projected_transition_metadata.json"
+  },
+  "compatibility_note": "generic_compatibility_outputs are kept for backward compatibility. mode_specific_outputs are the preferred files for Step 11+ summary scripts.",
+  "n_timepoints": 15,
+  "unique_timepoints": [
+    "0.5",
+    "2.0",
+    "4.0",
+    "8.0",
+    "12.0",
+    "16.0",
+    "16.33",
+    "16.67",
+    "17.0",
+    "18.0",
+    "20.0",
+    "22.0",
+    "24.0",
+    "28.0",
+    "30.0"
+  ],
+  "n_pairs_used": 14,
+  "n_cells_total": 30000,
+  "n_cells_valid": 30000,
+  "states": [
+    "epithelial_like",
+    "hCiPS"
+  ],
+  "n_states": 2,
+  "tp_label_counts": {
+    "0.5": {
+      "epithelial_like": 2000
+    },
+    "2.0": {
+      "epithelial_like": 2000
+    },
+    "4.0": {
+      "epithelial_like": 2000
+    },
+    "8.0": {
+      "epithelial_like": 2000
+    },
+    "12.0": {
+      "epithelial_like": 2000
+    },
+    "16.0": {
+      "epithelial_like": 1960,
+      "hCiPS": 40
+    },
+    "16.33": {
+      "epithelial_like": 1943,
+      "hCiPS": 57
+    },
+    "16.67": {
+      "epithelial_like": 1926,
+      "hCiPS": 74
+    },
+    "17.0": {
+      "epithelial_like": 1914,
+      "hCiPS": 86
+    },
+    "18.0": {
+      "epithelial_like": 1838,
+      "hCiPS": 162
+    },
+    "20.0": {
+      "epithelial_like": 1667,
+      "hCiPS": 333
+    },
+    "22.0": {
+      "epithelial_like": 1473,
+      "hCiPS": 527
+    },
+    "24.0": {
+      "epithelial_like": 1353,
+      "hCiPS": 647
+    },
+    "28.0": {
+      "epithelial_like": 1217,
+      "hCiPS": 783
+    },
+    "30.0": {
+      "epithelial_like": 1172,
+      "hCiPS": 828
+    }
+  }
+}

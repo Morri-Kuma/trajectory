@@ -1,0 +1,148 @@
+{
+  "input_h5ad": "benchmark\\inputs\\gse230659_scgpt_hvg2000\\GSE230659_scGPT_annotated_HVG2000_benchmark_input.h5ad",
+  "output_h5ad": "benchmark\\inputs\\gse230659_scgpt_hvg2000\\GSE230659_scGPT_annotated_HVG2000_DPT_pseudotime_bins.h5ad",
+  "shape": [
+    75194,
+    2000
+  ],
+  "observed_time_key": "abs_day",
+  "pseudotime_key": "dpt_pseudotime",
+  "bin_key": "dpt_pseudotime_bin",
+  "bin_numeric_key": "dpt_pseudotime_bin_numeric",
+  "num_bins": 15,
+  "representation": "obsm",
+  "obsm_key": "X_scGPT",
+  "n_neighbors": 15,
+  "root_observed_time": 0.5,
+  "root_obs_name": "GSM7229998_StageI_Day0.5-0618_AAACCCAAGAAGAGCA-1",
+  "bin_counts": [
+    {
+      "bin": 0.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 1.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 2.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 3.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 4.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 5.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 6.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 7.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 8.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 9.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 10.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 11.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 12.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 13.0,
+      "n_cells": 5013
+    },
+    {
+      "bin": 14.0,
+      "n_cells": 5012
+    }
+  ],
+  "scenario_splits": {
+    "D": {
+      "name": "Pseudotime interpolation",
+      "train_times": [
+        0.0,
+        1.0,
+        2.0,
+        4.0,
+        5.0,
+        6.0,
+        8.0,
+        9.0,
+        10.0,
+        12.0,
+        13.0,
+        14.0
+      ],
+      "heldout_times": [
+        3.0,
+        7.0,
+        11.0
+      ]
+    },
+    "E": {
+      "name": "Pseudotime extrapolation",
+      "train_times": [
+        0.0,
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0,
+        7.0,
+        8.0,
+        9.0
+      ],
+      "heldout_times": [
+        10.0,
+        11.0,
+        12.0,
+        13.0,
+        14.0
+      ]
+    },
+    "F": {
+      "name": "Pseudotime interpolation + extrapolation",
+      "train_times": [
+        0.0,
+        1.0,
+        2.0,
+        4.0,
+        5.0,
+        6.0,
+        8.0,
+        9.0
+      ],
+      "heldout_times": [
+        3.0,
+        7.0,
+        10.0,
+        11.0,
+        12.0,
+        13.0,
+        14.0
+      ]
+    }
+  }
+}

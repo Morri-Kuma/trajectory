@@ -11,7 +11,7 @@
   ],
   "runtime_seconds": 294.78134846687317,
   "status": "completed",
-  "notes": "CellRank2 RealTimeKernel.from_wot() with WOT transport maps. time_key='abs_day', cell_state_key='scgpt_pseudostate_provisional', wot_params={'epsilon': 0.05, 'lambda1': 1.0, 'lambda2': 50.0, 'local_pca': 30, 'growth_iters': 3}. State matrix: 14 \u00d7 14, 170 nonzero edges.",
+  "notes": "CellRank2 RealTimeKernel.from_wot() with WOT transport maps. time_key='abs_day', cell_state_key='scgpt_pseudostate_provisional', wot_params={'epsilon': 0.05, 'lambda1': 1.0, 'lambda2': 50.0, 'local_pca': 30, 'growth_iters': 3}. State matrix: 14 × 14, 170 nonzero edges.",
   "ground_truth": {
     "provider_id": "scgpt_v1",
     "state_key": "scgpt_pseudostate_provisional",
@@ -29,5 +29,7 @@
     "notes": "Working v1 silver-standard state system derived from scGPT embeddings and consecutive-timepoint kNN transition counting. This is not final biological ground truth; it is the current frozen benchmark provider.\n"
   },
   "result_class": "official",
-  "formal_benchmark": true
+  "formal_benchmark": true,
+  "dataset_role": "primary_benchmark",
+  "benchmark_dataset": "gse230659_scgpt_v1_hvg2000"
 }

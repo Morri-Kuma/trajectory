@@ -31,6 +31,8 @@ class GroundTruthSpec:
     source_h5ad: Optional[str] = None
     annotation_method: Optional[str] = None
     notes: Optional[str] = None
+    label_mode: Optional[str] = None
+    analysis_role: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -124,6 +126,10 @@ def load_ground_truth(
     Config-local fields override registry defaults, which lets a run vary
     confidence mode or state key without creating a new provider entry.
     """
+    # Convenience shorthand: load_ground_truth("some_provider_id")
+    if isinstance(method_config, str):
+        provider_id = provider_id or method_config
+        method_config = {}
     method_config = method_config or {}
     root = Path(project_root) if project_root is not None else _project_root()
     gt_cfg = method_config.get("ground_truth") or {}
@@ -179,4 +185,6 @@ def load_ground_truth(
         source_h5ad=cfg.get("source_h5ad"),
         annotation_method=cfg.get("annotation_method"),
         notes=cfg.get("notes") or cfg.get("note"),
+        label_mode=cfg.get("label_mode") or None,
+        analysis_role=cfg.get("analysis_role") or None,
     )
