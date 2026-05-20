@@ -1,5 +1,8 @@
 # downstream analysis
 
+Trajectory benchmark note: these are upstream downstream-analysis examples and
+are not part of the current official silver benchmark reporting workflow.
+
 This directory contains experiments for two downstream analysis tasks. 
 
 

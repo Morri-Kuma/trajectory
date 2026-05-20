@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Build the GSE178325 0618 post-QC raw/full-gene h5ad used by the scGPT path.
+Build the GSE178325 0618 post-QC raw/full-gene h5ad used by the marker FM
+silver annotation path.
 
-This script intentionally mirrors the GSE230659 scGPT source artifact:
+This script intentionally mirrors the GSE230659 raw source artifact:
 post-QC cells, filtered full-gene sparse log-normalized X, GSE230659-style
-obs/var columns, and no benchmark-only framework columns. The downstream
-scGPT step then produces adata_scgpt_full.h5ad and adata_scgpt_annotated.h5ad.
+obs/var columns, and no benchmark-only framework columns.
 """
 
 from __future__ import annotations
@@ -361,7 +361,7 @@ gc.collect()
 adata = ad.AnnData(X=X, obs=obs_adata, var=var)
 adata.uns["preprocessing_summary"] = {
     "script": "scripts/build_gse178325_raw_full_gene_input.py",
-    "reference_dataset_flow": "GSE230659 scGPT full-gene path",
+    "reference_dataset_flow": "GSE230659 marker FM silver full-gene path",
     "dataset": DATASET_ID,
     "batch_id": BATCH_ID,
     "timestamp": TIMESTAMP,

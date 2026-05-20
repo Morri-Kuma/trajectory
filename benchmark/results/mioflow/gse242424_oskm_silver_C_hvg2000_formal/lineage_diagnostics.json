@@ -1,0 +1,14 @@
+{
+  "source_transition_counts": {
+    "fibroblast": 10945,
+    "fibroblast_like_stalled": 8513,
+    "hOSK": 280,
+    "keratinocyte_like": 370,
+    "partial_intermediate": 464,
+    "partially_reprogrammed": 689,
+    "pre_iPSC": 210,
+    "primary_intermediate": 8173,
+    "xOSK": 914
+  },
+  "latent_space": "PCA"
+}

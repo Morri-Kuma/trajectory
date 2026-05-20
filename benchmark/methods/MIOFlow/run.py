@@ -454,7 +454,7 @@ def run_pipeline(adata, scenario_id: str, scenario_config: dict, output_dir) -> 
     output_dir.mkdir(parents=True, exist_ok=True)
 
     time_key = scenario_config.get("time_key", "abs_day")
-    cell_state_key = scenario_config.get("cell_state_key", "scgpt_pseudostate_provisional")
+    cell_state_key = scenario_config.get("cell_state_key", "final_milestone_label_coarse")
     dataset_id = scenario_config.get("dataset_id", "GSE230659")
     cfg = scenario_config.get("mioflow_params", {}) or {}
     scenario_params = scenario_config.get("scenario_params", {}) or {}
@@ -560,7 +560,7 @@ def main() -> None:
         "dataset_id": dataset_cfg.get("id", "GSE230659"),
         "time_key": dataset_cfg.get("time_key", "abs_day"),
         "cell_state_key": (cfg.get("lineage") or {}).get(
-            "cell_state_key", "scgpt_pseudostate_provisional"
+            "cell_state_key", "final_milestone_label_coarse"
         ),
     })
     run_pipeline(

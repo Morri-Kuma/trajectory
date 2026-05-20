@@ -24,7 +24,7 @@ Reference requirement (per v2 §9.3):
   and a frozen reference lineage graph. These are benchmark prerequisites
   that must be explicitly frozen before this evaluator is fully activated.
 
-Reference graph format (scGPT v1):
+Reference graph format:
   JSON with top-level keys: _meta, nodes, edges.
   Each edge carries: source, target, weight, confidence, source_status,
   target_status. edge_confidence_mode controls which edges are used as
@@ -116,16 +116,16 @@ def load_reference_graph(
     exclude_uncertain_states: bool = False,
 ) -> Tuple[pd.DataFrame, set, List[str]]:
     """
-    Load and parse a reference lineage graph JSON (scGPT v1 format).
+    Load and parse a reference lineage graph JSON.
 
-    The scGPT v1 JSON has top-level keys: _meta, nodes, edges.
+    The provider JSON has top-level keys: _meta, nodes, edges.
     Each edge carries: source, target, weight, confidence,
     source_status, target_status.
 
     Parameters
     ----------
     reference_graph_path : str
-        Path to the reference graph JSON (e.g. scgpt_reference_graph_v1.json).
+        Path to the reference graph JSON.
     edge_confidence_mode : str
         Controls which edges are included as ground-truth positives:
 
@@ -782,6 +782,39 @@ def _topk_predicted_edges(predicted_matrix: pd.DataFrame, k: int) -> set:
     return edges
 
 
+def _enrich_lineage_metrics_compat(
+    metrics: dict,
+    ground_truth: dict,
+    reference_graph_path: Optional[str],
+) -> dict:
+    """Promote Step 10 compatibility fields to top-level of lineage_metrics.json.
+
+    The fields label_mode, provider_id, reference_graph_path, and
+    compatibility_note are required at the top level so that summary scripts
+    and the output naming validator can distinguish consensus / embedding_based /
+    classifier_based results without inspecting the nested ground_truth block.
+
+    This helper is intentionally non-destructive: it only adds keys that are
+    not already present at the top level.
+    """
+    gt = ground_truth or {}
+    if "label_mode" not in metrics and gt.get("label_mode"):
+        metrics["label_mode"] = gt["label_mode"]
+    if "provider_id" not in metrics and gt.get("provider_id"):
+        metrics["provider_id"] = gt["provider_id"]
+    if "reference_graph_path" not in metrics:
+        graph_path = gt.get("reference_graph_path") or reference_graph_path
+        if graph_path:
+            metrics["reference_graph_path"] = str(graph_path)
+    if "compatibility_note" not in metrics:
+        metrics["compatibility_note"] = (
+            "label_mode and provider_id are promoted from ground_truth for "
+            "Step 10 output naming compatibility. "
+            "See smoke_metadata.json for full evaluation context."
+        )
+    return metrics
+
+
 def run_lineage_evaluation(
     state_transition_matrix_path: str,
     lineage_graph_edges_path: str,
@@ -806,7 +839,7 @@ def run_lineage_evaluation(
     output_dir : str
         Directory where lineage_metrics.json will be written.
     reference_graph_path : str, optional
-        Path to the reference lineage graph JSON (scGPT v1 format: _meta,
+        Path to the reference lineage graph JSON (_meta,
         nodes, edges with confidence field). If None, metric computation is
         deferred and a status note is recorded (backward-compatible default).
     adata : AnnData, optional
@@ -815,14 +848,13 @@ def run_lineage_evaluation(
         Controls which reference graph edges count as ground-truth positives.
         Options: "all", "medium_and_above" (recommended), "high_only".
         See load_reference_graph() for full documentation.
-        Defaults to "all" for backward compatibility with configs that do not
-        set this field.
+        Defaults to "all" when configs do not set this field.
     exclude_uncertain_states : bool
         If True, exclude edges involving uncertain-status nodes from the
         reference. See load_reference_graph() for details. Default False.
     cell_state_key : str, optional
         Name of the obs column that holds the cell-state label used by the
-        method (e.g. ``"scgpt_pseudostate_provisional"``). Required by the
+        method (e.g. ``"final_milestone_label_coarse"``). Required by the
         correlation baseline; if absent the baseline reports a clear "skipped"
         status instead of returning silently empty values.
     time_key : str, optional
@@ -883,13 +915,14 @@ def run_lineage_evaluation(
             "time_key": time_key,
             "ground_truth": ground_truth,
         }
+        _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
         metrics_path = out_dir / "lineage_metrics.json"
         with open(metrics_path, "w") as f:
             json.dump(metrics, f, indent=2)
         print(f"[eval_lineage] {status}")
         return metrics
 
-    # Load and parse reference graph (scGPT v1 JSON format).
+    # Load and parse reference graph.
     # load_reference_graph() handles confidence filtering and returns a
     # binary adjacency DataFrame indexed by state IDs.
     reference_matrix, reference_edges, ref_node_ids = load_reference_graph(
@@ -944,6 +977,7 @@ def run_lineage_evaluation(
                 "time_key": time_key,
                 "ground_truth": ground_truth,
             })
+            _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
             metrics_path = out_dir / "lineage_metrics.json"
             with open(metrics_path, "w", encoding="utf-8") as f:
                 json.dump(metrics, f, indent=2)
@@ -1020,6 +1054,7 @@ def run_lineage_evaluation(
     metrics["cell_state_key"] = cell_state_key
     metrics["time_key"] = time_key
     metrics["ground_truth"] = ground_truth
+    _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
 
     metrics_path = out_dir / "lineage_metrics.json"
     with open(metrics_path, "w") as f:

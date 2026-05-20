@@ -1,0 +1,156 @@
+# benchmark/annotation/milestone_markers.yaml
+# ---------------------------------------------------------------------------
+# Dataset-specific milestone marker sets for scTimeBench framework v2.
+#
+# Structure per dataset
+# ---------------------
+#   primary_milestones    : ordered list of main trajectory nodes
+#   marker_sets           : one entry per primary milestone
+#     genes               : list of marker gene symbols (UPPERCASE)
+#     role                : "primary"
+#     notes               : short annotation note (ASCII)
+#   reference_graph_edges : directed edges [from, to] defining the trajectory
+#   expanded_trajectory_order : fine-grained stage labels incl. transition
+#                               stages; supplementary only, not used for
+#                               official scTimeBench-style coarse metrics
+#   excluded_from_official_metrics : labels excluded from official evaluation
+#   notes                 : free-text dataset-level notes
+#
+# Gene symbols: uppercase, ASCII, no whitespace.
+#
+# Provenance
+# ----------
+# Primary source papers:
+#   Liuyang et al. 2023, Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008
+#   Guan et al. 2022, Nature, DOI: 10.1038/s41586-022-04593-5
+# Companion code: https://github.com/sajuukLyu/CSC_2023
+#
+# Note on hADSCs: In Liuyang et al. 2023, hADSCs (human adult adipose-derived
+# mesenchymal stromal cells) are treated as the ADSC starting sample/timepoint
+# (time == 0), not as a universally marker-defined MSC class. Assignment of
+# the hADSCs milestone therefore relies primarily on source sample identity /
+# time == 0 rather than generic MSC surface marker expression.
+# ---------------------------------------------------------------------------
+
+GSE178325:
+  primary_milestones:
+    - hADSCs
+    - epithelial_like
+    - intermediate_plastic
+    - xen_like
+    - hCiPS
+  marker_sets:
+    hADSCs:
+      genes: [COL1A1, COL1A2, COL5A1, COL6A2, PRRX1, VIM, ZEB1, MMP3]
+      role: primary
+      notes: >
+        hADSCs (human adult adipose-derived mesenchymal stromal cells) are the
+        trajectory starting point. PRIMARY ASSIGNMENT: source sample identity /
+        time == 0 (ADSC starting sample), following the treatment in Liuyang
+        et al. 2023 (Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008).
+        This gene set is an AUXILIARY somatic/fibroblast-like support score
+        only; do not use it as the primary classifier. Generic MSC surface
+        markers (THY1, NT5E, ENG) are intentionally excluded from this set.
+    epithelial_like:
+      genes: [KRT8, KRT18, KRT19, EPCAM, LIN28A]
+      role: primary
+      notes: "Stage-I epithelial-like milestone; LIN28A is also shared with reprogramming/pluripotency programs."
+    intermediate_plastic:
+      genes: [LIN28A, SALL4, MSX1, MSX2, HOXB9]
+      role: primary
+      notes: "Intermediate plastic / IPC-like milestone."
+    xen_like:
+      genes: [SOX17, HNF1B, FOXA2, EPCAM]
+      role: primary
+      notes: "XEN-like milestone in the original four-stage process."
+    hCiPS:
+      genes: [POU5F1, SOX2, NANOG, KLF4, DPPA4, LIN28A]
+      role: primary
+      notes: "Naive pluripotency / hCiPS endpoint."
+  reference_graph_edges:
+    - [hADSCs, epithelial_like]
+    - [epithelial_like, intermediate_plastic]
+    - [intermediate_plastic, xen_like]
+    - [xen_like, hCiPS]
+  expanded_trajectory_order:
+    # Fine-grained stage labels including explicit transition stages.
+    # Supplementary only; official scTimeBench-style metrics use the coarse
+    # primary_milestones above.
+    - stage_00_hADSCs
+    - stage_01_hADSCs_to_epithelial_like
+    - stage_02_epithelial_like
+    - stage_03_epithelial_like_to_intermediate_plastic
+    - stage_04_intermediate_plastic
+    - stage_05_intermediate_plastic_to_xen_like
+    - stage_06_xen_like
+    - stage_07_xen_like_to_hCiPS
+    - stage_08_hCiPS
+  excluded_from_official_metrics:
+    - ambiguous
+    - unknown_or_ood
+  notes: >
+    Four-stage chemical reprogramming trajectory (Liuyang et al. 2023, Cell
+    Stem Cell, DOI: 10.1016/j.stem.2023.02.008; Guan et al. 2022, Nature,
+    DOI: 10.1038/s41586-022-04593-5; companion code:
+    https://github.com/sajuukLyu/CSC_2023).
+    hADSCs are the ADSC starting sample (time == 0) and form the trajectory
+    root.
+    expanded_trajectory_order provides transition-stage labels for
+    supplementary analyses; coarse primary_milestones drive official metrics.
+
+GSE230659:
+  primary_milestones:
+    - hADSCs
+    - epithelial_like
+    - intermediate_plastic
+    - hCiPS
+  marker_sets:
+    hADSCs:
+      genes: [COL1A1, COL1A2, COL5A1, COL6A2, PRRX1, VIM, ZEB1, MMP3]
+      role: primary
+      notes: >
+        hADSCs (human adult adipose-derived mesenchymal stromal cells) are the
+        trajectory starting point. PRIMARY ASSIGNMENT: source sample identity /
+        time == 0 (ADSC starting sample), following the treatment in Liuyang
+        et al. 2023 (Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008).
+        This gene set is an AUXILIARY somatic/fibroblast-like support score
+        only; do not use it as the primary classifier. Generic MSC surface
+        markers (THY1, NT5E, ENG) are intentionally excluded from this set.
+    epithelial_like:
+      genes: [KRT8, KRT18, KRT19, EPCAM, LIN28A]
+      role: primary
+      notes: "Stage-I epithelial-like milestone."
+    intermediate_plastic:
+      genes: [LIN28A, SALL4, MSX1, MSX2, HOXB9]
+      role: primary
+      notes: "Intermediate plastic / IPC-like milestone retained in the optimized protocol."
+    hCiPS:
+      genes: [POU5F1, SOX2, NANOG, KLF4, DPPA4, LIN28A]
+      role: primary
+      notes: "hCiPS / pluripotency endpoint."
+  reference_graph_edges:
+    - [hADSCs, epithelial_like]
+    - [epithelial_like, intermediate_plastic]
+    - [intermediate_plastic, hCiPS]
+  expanded_trajectory_order:
+    # Fine-grained stage labels including explicit transition stages.
+    # Supplementary only; official scTimeBench-style metrics use the coarse
+    # primary_milestones above.
+    - stage_00_hADSCs
+    - stage_01_hADSCs_to_epithelial_like
+    - stage_02_epithelial_like
+    - stage_03_epithelial_like_to_intermediate_plastic
+    - stage_04_intermediate_plastic
+    - stage_05_intermediate_plastic_to_hCiPS
+    - stage_06_hCiPS
+  excluded_from_official_metrics:
+    - ambiguous
+    - unknown_or_ood
+  notes: >
+    Optimised three-stage chemical reprogramming trajectory (Liuyang et al.
+    2023, Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008; Guan et al. 2022,
+    Nature, DOI: 10.1038/s41586-022-04593-5; companion code:
+    https://github.com/sajuukLyu/CSC_2023).
+    hADSCs are the ADSC starting sample (time == 0) and form the trajectory
+    root. expanded_trajectory_order provides transition-stage labels for
+    supplementary analyses; coarse primary_milestones drive official metrics.

@@ -1,154 +1,187 @@
-# scTimeBench-Aligned Benchmark for Human Chemical iPSC Reprogramming
+# scTimeBench-Aligned iPSC Trajectory Benchmark
 
-**Author**: Kuma — Graduate School of Frontier Sciences, The University of Tokyo
-**Dataset**: GSE230659 (Liuyang et al. 2023 *Cell Stem Cell*, 75,194 cells, 15 timepoints)
-**Framework**: Experimental Framework v2 (see `experimental framework v2.md`)
-
----
-
-## Project overview
-
-This repository benchmarks trajectory inference methods for human chemical iPSC reprogramming using a framework aligned with **scTimeBench**. The benchmark evaluates methods across three core dimensions: Forecast Accuracy, Embedding Coherence, and Lineage Fidelity.
-
-The current first-stage comparison focuses on **WOT** and **CellRank2**. Because these methods do not generate projected cells at unseen future time points, they are evaluated on **Lineage Fidelity only**, consistent with the scTimeBench treatment of OT-based methods.
+**Author**: Kuma, Graduate School of Frontier Sciences, The University of Tokyo  
+**Primary domain**: human iPSC reprogramming trajectories  
+**Framework**: official silver trajectory benchmark
 
 ---
 
-## Three core benchmark dimensions
+## Project Overview
+
+This repository implements a benchmark for trajectory inference and forecasting
+methods in human iPSC reprogramming. It is aligned with the evaluation
+philosophy of scTimeBench, while adapting the datasets, state systems,
+reference graphs, and reporting workflow to iPSC reprogramming.
+
+The project is not a direct copy of scTimeBench. It uses scTimeBench's core
+evaluation dimensions as the base and adds domain-specific benchmark assets:
+
+- frozen silver-standard milestone providers for GSE178325 and GSE230659;
+- an OSKM-specific GSE242424 silver provider built from author-cluster-matched
+  annotations;
+- method capability gating, so each method is evaluated only on supported
+  tasks;
+- per-method, per-scenario outputs for forecast accuracy, embedding coherence,
+  and lineage fidelity;
+- explicit separation of current reportable results from pilot, smoke, and
+  archived/debug outputs.
+
+## Current Status
+
+The benchmark uses only the current official silver label providers for
+reportable runs.
+
+| Component | Status |
+|---|---|
+| GSE178325 marker-FM transition silver benchmark | Formal A/B/C result sets available for MIOFlow, PRESCIENT, and scNODE |
+| GSE230659 marker-FM transition silver benchmark | Formal A/B/C result sets available for MIOFlow, PRESCIENT, and scNODE; WOT and CellRank2 have lineage-only scenario A checks |
+| GSE242424 OSKM silver benchmark | Formal A/B/C result sets available for MIOFlow, PRESCIENT, and scNODE on the 59,187-cell author-cluster-matched subset |
+| Forecast Accuracy | Active for generative/projected-cell methods |
+| Embedding Coherence | Active for methods with projected embeddings or projected cells |
+| Lineage Fidelity | Active for methods with state-level transition output |
+Current report entry points:
+
+- `benchmark/reports/official_silver/official_silver_model_rankings.md`
+- `benchmark/reports/official_silver/official_silver_combined_method_summary_scnode_mioflow_prescient.csv`
+- `benchmark/reports/official_silver/official_silver_embedding_method_summary.csv`
+- `benchmark/reports/official_silver/official_silver_lineage_method_summary.csv`
+- `benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md`
+- `benchmark/results/result_manifest.yaml`
+
+## Evaluation Dimensions
 
 | Dimension | Status | Eligible methods |
 |---|---|---|
-| Forecast Accuracy | Inactive (current stage) | Future generative models only |
-| Embedding Coherence | Inactive (current stage) | Future generative models only |
-| Lineage Fidelity | **Active** | WOT, CellRank2 |
+| Forecast Accuracy | Active | Methods that generate projected expression at held-out or future time points, such as MIOFlow, PRESCIENT, and scNODE |
+| Embedding Coherence | Active | Methods that provide projected embeddings or projected cells that can be embedded |
+| Lineage Fidelity | Active | Methods that provide or can be converted to state-level transition predictions |
 
-No OT-projection workaround is used to force WOT or CellRank2 into unsupported dimensions.
+Capability gating is intentional. WOT and CellRank2 are not forced into
+forecast or embedding metrics because they do not natively generate
+unseen-timepoint projected cells in the same sense as generative trajectory
+models.
 
----
-
-## Benchmark scenarios
+## Benchmark Scenarios
 
 | ID | Time axis | Type |
 |---|---|---|
-| A | Observed time | Interpolation |
-| B | Observed time | Extrapolation |
-| C | Observed time | Interpolation + extrapolation |
+| A | Observed time | Interpolation / observed-time evaluation |
+| B | Observed time | Extrapolation / held-out future-time evaluation |
+| C | Observed time | Mixed interpolation and extrapolation |
 | D | Pseudotime | Interpolation |
 | E | Pseudotime | Extrapolation |
-| F | Pseudotime | Interpolation + extrapolation |
+| F | Pseudotime | Mixed interpolation and extrapolation |
 
-For WOT and CellRank2, scenarios are entered for Lineage Fidelity only.
+Current formal reports focus on observed-time scenarios A/B/C. Pseudotime
+scenarios remain part of the framework design and can be activated when the
+corresponding inputs and reference state systems are frozen.
 
----
+## Repository Structure
 
-## Repository structure
-
-```
+```text
 trajectory/
-├── experimental framework v2.md     ← source of truth for all benchmark logic
-├── README.md                        ← this file
-├── data/                            ← all dataset assets (do not modify)
-│   ├── gse230659(human/             ← primary dataset (raw scRNA-seq, 15 samples)
-│   ├── gse178325_human/             ← external validation dataset
-│   ├── gse280956(human/             ← additional dataset
-│   ├── GSE298212(human/             ← additional dataset
-│   ├── FCR_iPSC(mouse/              ← mouse dataset
-│   └── processed/                   ← processed h5ad files
-└── benchmark/                       ← benchmark framework
-    ├── README.md                    ← benchmark-specific documentation
-    ├── configs/
-    │   ├── benchmark_master.yaml    ← master config (dimensions, methods, outputs)
-    │   ├── method_capabilities.yaml ← per-method capability flags
-    │   ├── scenario_observed.yaml   ← scenarios A, B, C
-    │   └── scenario_pseudotime.yaml ← scenarios D, E, F
-    ├── adapters/
-    │   ├── base_adapter.py          ← abstract base class with capability gating
-    │   ├── wot_adapter.py           ← WOT (Lineage Fidelity only)
-    │   ├── cellrank2_adapter.py     ← CellRank2 (Lineage Fidelity only)
-    │   └── future_model_adapter.py  ← template for future generative models
-    ├── evaluation/
-    │   ├── eval_dispatch.py         ← capability-gated benchmark dispatcher
-    │   ├── eval_lineage.py          ← Lineage Fidelity evaluator (ACTIVE)
-    │   ├── eval_forecast.py         ← Forecast Accuracy evaluator (inactive stub)
-    │   └── eval_embedding.py        ← Embedding Coherence evaluator (inactive stub)
-    ├── docs/
-    │   └── framework_summary.md     ← framework design notes
-    ├── reports/                     ← aggregated benchmark reports (generated)
-    └── results/                     ← per-method per-scenario outputs (generated)
+|-- README.md                         # project-level overview
+|-- data/                             # raw and processed dataset assets
+|-- benchmark/
+|   |-- README.md                     # benchmark-specific usage notes
+|   |-- annotation/                   # milestone/provider annotation utilities
+|   |-- configs/                      # method, scenario, runtime, and run configs
+|   |-- adapters/                     # method adapters and capability gates
+|   |-- evaluation/                   # forecast, embedding, and lineage evaluators
+|   |-- ground_truth/                 # frozen state labels and reference graphs
+|   |-- inputs/                       # benchmark-ready h5ad inputs
+|   |-- methods/                      # vendored or wrapped method implementations
+|   |-- reports/                      # aggregated reports
+|   |-- results/                      # per-method per-scenario outputs
+|   `-- shared/                       # dataset and utility code
+|-- scripts/                          # data preparation and reporting scripts
+|-- logs/                             # run logs
+`-- reference/                        # paper and external-reference notes
 ```
 
----
+## Methods
 
-## Running the benchmark
+The current benchmark includes:
+
+| Method | Forecast Accuracy | Embedding Coherence | Lineage Fidelity |
+|---|---:|---:|---:|
+| MIOFlow | yes | yes | yes |
+| PRESCIENT | yes | yes | yes |
+| scNODE | yes | yes | yes |
+| WOT | no | no | yes |
+| CellRank2 | no | no | yes |
+
+Method capability flags are configured in
+`benchmark/configs/method_capabilities.yaml`.
+
+## Running the Benchmark
+
+Representative observed-time configs are stored in `benchmark/configs/` and
+`benchmark/configs/runtime/`.
+
+Example GSE242424 OSKM silver run:
 
 ```bash
-# Run WOT through the dispatcher (Lineage Fidelity only)
-python benchmark/evaluation/eval_dispatch.py \
-    --method wot \
-    --scenario A \
-    --adata data/processed/adata_benchmark.h5ad \
-    --output-dir benchmark/results/wot/A
-
-# Run CellRank2 through the dispatcher (Lineage Fidelity only)
-python benchmark/evaluation/eval_dispatch.py \
-    --method cellrank2 \
-    --scenario A \
-    --adata data/processed/adata_benchmark.h5ad \
-    --output-dir benchmark/results/cellrank2/A
+python benchmark/methods/scNODE/run.py \
+    --config benchmark/configs/scnode_gse242424_oskm_silver_A_hvg2000_formal.yaml
 ```
 
-The dispatcher reads capability flags from each adapter and routes the method
-only to its eligible evaluators. For WOT and CellRank2, only `eval_lineage.py`
-is called. Forecast Accuracy and Embedding Coherence are skipped with an
-explanatory log message.
+Example marker-FM transition silver runtime config:
 
----
+```bash
+python benchmark/methods/scNODE/run.py \
+    --config benchmark/configs/runtime/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
+```
 
-## Prerequisites before Lineage Fidelity runs
+For method-specific batch runs, use the root-level helper scripts such as:
 
-Per the framework (v2 §9.3), the following must be explicitly frozen before
-Lineage Fidelity metrics can be computed:
+```bash
+bash run_marker_fm_transition_silver_primary_array.sh
+bash run_gse242424_oskm_silver_formal_array.sh
+```
 
-1. A defined cell-state system (cell-state annotations for `adata_benchmark.h5ad`)
-2. A frozen benchmark reference lineage graph
-3. A fixed rule for aggregating method predictions to the state level
+The dispatcher and method runners read method capabilities and skip unsupported
+metrics with explicit metadata rather than producing forced or invalid outputs.
 
-Until these are provided, `eval_lineage.py` records a `deferred` status
-in `lineage_metrics.json` rather than producing invalid results.
+## Ground Truth and Lineage Fidelity
 
----
+Lineage Fidelity depends on three frozen assets:
 
-## Dataset summary
+1. a benchmark cell-state system;
+2. a reference state-level lineage graph;
+3. a fixed rule for aggregating method predictions to state-level transitions.
 
-| Property | Value |
-|---|---|
-| Primary GEO accession | GSE230659 |
-| Reference | Liuyang et al. 2023 *Cell Stem Cell* |
-| Cells (post-QC) | 75,194 |
-| Genes (HVG) | 2,000 |
-| Timepoints | 15 (day 0.5 – 30) |
-| Terminal state | hCiPSC (day 30) |
+Current primary providers are registered in `benchmark/ground_truth/registry.yaml`:
 
----
+- `gse178325_marker_fm_transition_silver_v1`
+- `gse230659_marker_fm_transition_silver_v1`
+- `gse242424_oskm_reprogramming_silver_v1`
 
-## Adding a future generative model
+The legacy `scgpt_v1` providers are retained for backward compatibility and
+historical comparison only. New annotation systems should be added as new
+versioned providers instead of changing existing frozen provider directories.
 
-When a model that can generate projected cells at unseen time points is added:
+Per-run lineage outputs include `state_transition_matrix.csv`,
+`lineage_graph_edges.csv`, `lineage_metrics.json`, and diagnostic metadata where
+available.
 
-1. Copy `benchmark/adapters/future_model_adapter.py` and rename it.
-2. Set `supports_unseen_timepoint_projection = True`.
-3. Implement `_run_forecast_accuracy_impl()`, `_run_embedding_coherence_impl()`,
-   and `_run_lineage_fidelity_impl()`.
-4. Add the new adapter to `METHOD_REGISTRY` in `eval_dispatch.py`.
-5. Add the method to `benchmark/configs/method_capabilities.yaml`.
+## Relationship to scTimeBench
 
-At that point, `eval_dispatch.py` will automatically activate Forecast Accuracy
-and Embedding Coherence for the new model.
+This project is best understood as a domain-specific extension of scTimeBench
+ideas:
 
----
+- scTimeBench provides the general benchmark vocabulary and metric families.
+- trajectory specializes the benchmark to iPSC reprogramming.
+- trajectory uses frozen silver-standard state systems and iPSC-specific
+  reference graphs.
+- trajectory keeps method capability gating explicit so transition-only methods
+  and generative methods are compared on appropriate evaluation surfaces.
 
-## Framework reference
+The goal is therefore not strict code-structure parity with scTimeBench, but a
+scTimeBench-aligned benchmark that answers a narrower biological question.
 
-All benchmark logic is governed by `experimental framework v2.md` in the
-repository root. That file is the authoritative design document and takes
-precedence over all other documentation.
+## Framework Reference
+
+`experimental framework v2.md` is the main design document for benchmark logic.
+If implementation notes and README text diverge, treat the framework document
+and current configs/results as the more specific source of truth.

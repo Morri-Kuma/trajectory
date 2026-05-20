@@ -32,19 +32,25 @@ models/
 *.mtx
 *.npy
 *.npz
+*.pkl
 *.pth
 *.pt
 
 # Benchmark-heavy intermediates. Keep lightweight metrics/reports trackable.
 benchmark/results/**/tmaps/
 benchmark/results/**/tmaps_cr2/
+benchmark/results/**/prescient_internal/
 benchmark/results/mioflow/*_cpu/
+benchmark/results/**/*_smoke/
 benchmark/results/**/*.h5ad
 benchmark/results/**/*.h5
 benchmark/results/**/*.npy
 benchmark/results/**/*.npz
 benchmark/results/**/*.pth
 benchmark/results/**/*.pt
+
+# Annotation module verification scratch outputs
+benchmark/tmp_annotation_step*/
 
 # OS files
 .DS_Store
@@ -62,3 +68,11 @@ benchmark/methods/MIOFlow/CLAUDE.md
 benchmark/methods/MIOFlow/mkdocs.yml
 benchmark/methods/MIOFlow/Makefile
 benchmark/methods/MIOFlow/.python-version
+
+# Vendored method extras copied from upstream repositories.
+benchmark/methods/PRESCIENT/prescient_module/
+benchmark/methods/scNODE/scNODE_module/baseline/prescient_model/prescient/
+benchmark/methods/scNODE/scNODE_module/model_illustration.jpg
+benchmark/methods/scNODE/scNODE_module/model_validation/
+benchmark/methods/scNODE/scNODE_module/optim/
+benchmark/methods/scNODE/scNODE_module/plotting/

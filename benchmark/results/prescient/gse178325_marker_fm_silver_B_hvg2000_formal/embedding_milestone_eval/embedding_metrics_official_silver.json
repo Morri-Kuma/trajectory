@@ -1,0 +1,65 @@
+{
+  "dataset_id": "GSE178325",
+  "label_mode": "official_silver",
+  "state_key": "final_milestone_label_coarse",
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "input_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+  "embedding_key": "X_scGPT",
+  "cluster_source": "leiden_from_projected_embedding:projected_embedding.npy:n_neighbors=15:resolution=1.0",
+  "label_source": "projected_milestone_labels_csv",
+  "n_cells_total": 14000,
+  "n_cells_evaluated": 14000,
+  "excluded_labels": [
+    "ambiguous",
+    "unknown_or_ood"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "n_labels": 2,
+  "labels_used": [
+    "epithelial_like",
+    "xen_like"
+  ],
+  "label_counts": {
+    "xen_like": 8447,
+    "epithelial_like": 5553
+  },
+  "cluster_counts": {
+    "0": 2321,
+    "2": 761,
+    "1": 1815,
+    "5": 1873,
+    "4": 2467,
+    "6": 1669,
+    "7": 1262,
+    "3": 1832
+  },
+  "n_clusters": 8,
+  "ambiguous_count": 0,
+  "ambiguous_fraction": 0.0,
+  "missing_label_count": 0,
+  "adjusted_rand_index": 0.192491,
+  "ari_status": "ok",
+  "mean_prediction_entropy": null,
+  "weighted_prediction_entropy": null,
+  "per_cluster_prediction_entropy": {},
+  "prediction_entropy_note": "probability vector unavailable",
+  "entropy_basis": "unavailable",
+  "n_probability_classes": 0,
+  "mean_normalized_entropy": 0.375153,
+  "weighted_mean_normalized_entropy": 0.317849,
+  "per_cluster_entropy": {
+    "0": 0.005439,
+    "1": 0.674379,
+    "2": 0.947002,
+    "3": 0.090342,
+    "4": 0.407357,
+    "5": 0.006574,
+    "6": 0.520198,
+    "7": 0.349931
+  },
+  "entropy_note": "",
+  "note": "",
+  "status": "completed",
+  "timestamp": "2026-05-12T00:21:29.836211+00:00",
+  "compatibility_note": "Mode-specific embedding coherence metrics for label_mode='official_silver'. See provider_agreement_metrics.json for cross-provider comparison. Step 10 output naming policy: these files are the preferred outputs for summary scripts; embedding_metrics.json (legacy) is not written."
+}

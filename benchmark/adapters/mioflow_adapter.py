@@ -9,6 +9,9 @@ to HVG expression space, matching the scTimeBench treatment of MIOFlow.
 from __future__ import annotations
 
 from .base_adapter import BaseAdapter
+from benchmark.shared.dataset.preprocessors.scenario_timepoint_split import (
+    split_adata_by_timepoints,
+)
 
 
 class MIOFlowAdapter(BaseAdapter):
@@ -59,13 +62,12 @@ class MIOFlowAdapter(BaseAdapter):
         train_times = scenario_params.get("train_times")
         time_key = self.scenario_config.get("time_key", "abs_day")
         if train_times:
-            train_set = set(float(t) for t in train_times)
-            mask = self.adata.obs[time_key].astype(float).isin(train_set).values
-            subset = self.adata[mask]
-            self.adata = (
-                subset.to_memory()
-                if hasattr(subset, "to_memory") and getattr(subset, "isbacked", False)
-                else subset.copy()
+            self.adata, _ = split_adata_by_timepoints(
+                self.adata,
+                time_key=time_key,
+                train_times=train_times,
+                heldout_times=None,
+                test_includes_start=False,
             )
         else:
             self.adata = (

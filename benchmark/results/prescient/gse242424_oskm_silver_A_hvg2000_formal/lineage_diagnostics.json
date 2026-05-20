@@ -1,0 +1,16 @@
+{
+  "cell_state_key": "final_milestone_label_coarse",
+  "assignment_temperature": 1.0,
+  "source_transition_counts": {
+    "fibroblast": 10983,
+    "fibroblast_like_stalled": 16903,
+    "hOSK": 498,
+    "iPSC": 0,
+    "keratinocyte_like": 922,
+    "partial_intermediate": 585,
+    "partially_reprogrammed": 4445,
+    "pre_iPSC": 8411,
+    "primary_intermediate": 11637,
+    "xOSK": 1678
+  }
+}

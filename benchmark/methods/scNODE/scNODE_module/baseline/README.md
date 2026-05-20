@@ -1,5 +1,9 @@
 # baseline
 
+Trajectory benchmark note: these are upstream scNODE baseline wrappers. Current
+trajectory benchmark runs use the project-level method wrappers/configs and
+write reportable outputs under `benchmark/results/`.
+
 Codes for all baseline models: PRESCIENT and MIOFlow.
 We use source codes available on GitHub to run baseline models.
 

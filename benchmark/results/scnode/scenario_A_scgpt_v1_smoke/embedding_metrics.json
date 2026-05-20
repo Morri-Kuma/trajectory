@@ -1,7 +1,0 @@
-{
-  "adjusted_rand_index": null,
-  "avg_normalized_classifier_entropy": null,
-  "projected_latent_dim": 10,
-  "n_eval_timepoints": 15,
-  "status": "embedding_produced_metrics_deferred"
-}

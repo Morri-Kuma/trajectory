@@ -172,8 +172,24 @@ class BaseAdapter(ABC):
         """
         Write run_metadata.json for this method/scenario run.
         Required fields per framework v2 §12.4.
+
+        Automatically records cell_state_key, provider_id, label_mode, and
+        analysis_role from self.scenario_config when available, so that
+        milestone-based runs are traceable without each adapter having to
+        duplicate this logic.
         """
         elapsed = time.time() - self._start_time if self._start_time else None
+
+        # Extract dynamic cell-state / ground-truth provenance fields.
+        # These are injected by eval_dispatch.py from the method config when
+        # --method-config is provided. Absent = None so the field is present
+        # but clearly null rather than silently missing.
+        cell_state_key = self.scenario_config.get("cell_state_key")
+        gt = self.scenario_config.get("ground_truth") or {}
+        provider_id = gt.get("provider_id") or None
+        label_mode = gt.get("label_mode") or None
+        analysis_role = gt.get("analysis_role") or None
+
         metadata = {
             "method": self.method_id,
             "dataset": self.adata.uns.get("dataset_id", "unknown"),
@@ -185,6 +201,10 @@ class BaseAdapter(ABC):
             "dimensions_executed": self.eligible_dimensions,
             "runtime_seconds": elapsed,
             "status": status,
+            "cell_state_key": cell_state_key,
+            "provider_id": provider_id,
+            "label_mode": label_mode,
+            "analysis_role": analysis_role,
             "notes": notes,
         }
         out_path = self.output_dir / "run_metadata.json"

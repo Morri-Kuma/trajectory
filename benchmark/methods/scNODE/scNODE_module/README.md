@@ -1,5 +1,11 @@
 # scNODE: Generative Model for Temporal Single Cell Transcriptomic Data Prediction
 
+Trajectory benchmark note: this is the upstream scNODE module documentation.
+Current trajectory formal runs use the wrapper at `benchmark/methods/scNODE/run.py`
+with configs under `benchmark/configs/` and `benchmark/configs/runtime/`.
+Benchmark outputs are written under `benchmark/results/scnode/`, not inside this
+vendored module.
+
 scNODE is a generative model that simulates and predicts realistic *in silico* single-cell gene expressions at any timepoint. scNODE integrates the idea of variational autoencoder (VAE) and neural ordinary differential equation (ODE) to model cell developmental landscapes on the non-linear manifold. scNODE is scalable to large-scale datasets.
 [(bioRxiv preprint)](https://www.biorxiv.org/content/10.1101/2023.11.22.568346v2)
 

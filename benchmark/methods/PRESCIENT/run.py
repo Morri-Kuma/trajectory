@@ -737,7 +737,7 @@ def run_pipeline(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     time_key = scenario_config.get("time_key", "abs_day")
-    cell_state_key = scenario_config.get("cell_state_key", "scgpt_pseudostate_provisional")
+    cell_state_key = scenario_config.get("cell_state_key", "final_milestone_label_coarse")
     dataset_id = scenario_config.get("dataset_id", "GSE230659")
     prescient_cfg = scenario_config.get("prescient_params", {}) or {}
     scenario_params = scenario_config.get("scenario_params", {}) or {}
@@ -892,7 +892,7 @@ def main() -> None:
         "cell_state_key": (cfg.get("ground_truth") or {}).get(
             "state_key",
             (cfg.get("lineage") or {}).get(
-                "cell_state_key", "scgpt_pseudostate_provisional"
+                "cell_state_key", "final_milestone_label_coarse"
             ),
         ),
         "scenario_params": scenario_params,

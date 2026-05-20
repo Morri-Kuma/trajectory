@@ -30,7 +30,7 @@ Aggregation:
 Configuration (injected into scenario_config by eval_dispatch.py):
   time_key         : obs column for experimental time (default "abs_day")
   cell_state_key   : obs column for cell-state labels
-                     (default "scgpt_pseudostate_provisional")
+                     (default "final_milestone_label_coarse")
   cellrank2_params : dict — kernel and WOT sub-parameters from the method config
                      (optional; defaults are used if absent)
 """
@@ -43,6 +43,9 @@ import scipy.sparse as sp
 from pathlib import Path
 
 from .base_adapter import BaseAdapter
+from benchmark.shared.dataset.preprocessors.scenario_timepoint_split import (
+    split_adata_by_timepoints,
+)
 
 
 # ------------------------------------------------------------------
@@ -179,7 +182,7 @@ class CellRank2Adapter(BaseAdapter):
         # --- Read configuration (injected by eval_dispatch.py) ---
         time_key = self.scenario_config.get("time_key", "abs_day")
         cell_state_key = self.scenario_config.get(
-            "cell_state_key", "scgpt_pseudostate_provisional"
+            "cell_state_key", "final_milestone_label_coarse"
         )
         cr2_params = self.scenario_config.get("cellrank2_params", {})
         wot_params = cr2_params.get("wot_params", {})
@@ -208,10 +211,13 @@ class CellRank2Adapter(BaseAdapter):
                     f"but adata.obs[{time_key!r}] is missing."
                 )
             before = adata.n_obs
-            mask = adata.obs[time_key].astype(float).isin(train_times_f).values
-            subset = adata[mask]
-            # .to_memory() handles backed AnnData; .copy() handles in-memory AnnData.
-            adata = subset.to_memory() if hasattr(subset, "to_memory") and subset.isbacked else subset.copy()
+            adata, _ = split_adata_by_timepoints(
+                adata,
+                time_key=time_key,
+                train_times=train_times_f,
+                heldout_times=None,
+                test_includes_start=False,
+            )
             self.adata = adata  # keep downstream consistent
             print(
                 f"[CellRank2Adapter] scenario_params.train_times applied: "

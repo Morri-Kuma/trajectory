@@ -23,6 +23,9 @@ from pathlib import Path
 import numpy as np
 
 from .base_adapter import BaseAdapter
+from benchmark.shared.dataset.preprocessors.scenario_timepoint_split import (
+    split_adata_by_timepoints,
+)
 
 DEFAULT_N_SIM_CELLS_CAP = 2000
 
@@ -83,7 +86,7 @@ class ScNODEAdapter(BaseAdapter):
         time_key = self.scenario_config.get("time_key", "abs_day")
         dataset_id = self.scenario_config.get("dataset_id", "GSE230659")
         cell_state_key = self.scenario_config.get(
-            "cell_state_key", "scgpt_pseudostate_provisional"
+            "cell_state_key", "final_milestone_label_coarse"
         )
         scnode_cfg = self.scenario_config.get("scnode_params", {}) or {}
         scenario_params = self.scenario_config.get("scenario_params", {}) or {}
@@ -130,8 +133,11 @@ class ScNODEAdapter(BaseAdapter):
                     int(train_data[0].shape[0]),
                     int(scnode_cfg.get("n_sim_cells_cap", DEFAULT_N_SIM_CELLS_CAP)),
                 )
+            metric_sample_cells = int(scnode_cfg.get("metric_sample_cells", 1000))
+            seed = int(scnode_cfg.get("seed", 42))
             print(
                 f"[ScNODEAdapter] n_genes={n_genes}, n_sim_cells={n_sim_cells}, "
+                f"metric_sample_cells={metric_sample_cells}, "
                 f"train_times={train_times if train_times else 'all'}, "
                 f"heldout_times={heldout_times}"
             )
@@ -157,6 +163,8 @@ class ScNODEAdapter(BaseAdapter):
                 heldout_tps=heldout_times,
                 n_sim_cells=n_sim_cells,
                 output_dir=self.output_dir,
+                metric_sample_cells=metric_sample_cells,
+                seed=seed,
             )
             run_embedding_coherence(
                 model=model,
@@ -187,6 +195,7 @@ class ScNODEAdapter(BaseAdapter):
 
         finally:
             elapsed = time.time() - t0
+            _gt = self.scenario_config.get("ground_truth") or {}
             metadata = {
                 "method": "scnode",
                 "dataset": dataset_id,
@@ -204,9 +213,13 @@ class ScNODEAdapter(BaseAdapter):
                 "status": status,
                 "time_key": time_key,
                 "cell_state_key": cell_state_key,
+                "provider_id": _gt.get("provider_id") or None,
+                "label_mode": _gt.get("label_mode") or None,
+                "analysis_role": _gt.get("analysis_role") or None,
                 "train_times": train_times if train_times else "all",
                 "heldout_times": heldout_times,
                 "n_sim_cells": locals().get("n_sim_cells"),
+                "metric_sample_cells": locals().get("metric_sample_cells"),
                 "notes": err_notes,
             }
             with open(self.output_dir / "run_metadata.json", "w", encoding="utf-8") as f:
@@ -230,13 +243,12 @@ class ScNODEAdapter(BaseAdapter):
             return adata.to_memory() if getattr(adata, "isbacked", False) else adata
 
         before = adata.n_obs
-        train_set = set(float(t) for t in train_times)
-        mask = adata.obs[time_key].astype(float).isin(train_set).values
-        subset = adata[mask]
-        train_adata = (
-            subset.to_memory()
-            if hasattr(subset, "to_memory") and getattr(subset, "isbacked", False)
-            else subset.copy()
+        train_adata, _ = split_adata_by_timepoints(
+            adata,
+            time_key=time_key,
+            train_times=train_times,
+            heldout_times=None,
+            test_includes_start=False,
         )
         print(
             f"[ScNODEAdapter] scenario_params.train_times applied: "

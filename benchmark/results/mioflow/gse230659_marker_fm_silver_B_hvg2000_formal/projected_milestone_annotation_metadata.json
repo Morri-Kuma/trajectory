@@ -1,0 +1,18 @@
+{
+  "dataset_id": "GSE230659",
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "label_mode": "official_silver",
+  "state_key": "final_milestone_label_coarse",
+  "source": "projected_cluster_labels.csv copied to official_silver projected labels",
+  "n_projected_cells": 18000,
+  "primary_labels": [
+    "epithelial_like",
+    "hCiPS",
+    "intermediate_plastic"
+  ],
+  "coarse_to_expanded": {
+    "epithelial_like": "stage_02_epithelial_like",
+    "intermediate_plastic": "stage_04_intermediate_plastic",
+    "hCiPS": "stage_06_hCiPS"
+  }
+}

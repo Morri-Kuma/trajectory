@@ -18,6 +18,9 @@ import numpy as np
 import pandas as pd
 
 from .base_adapter import BaseAdapter
+from benchmark.shared.dataset.preprocessors.scenario_timepoint_split import (
+    split_adata_by_timepoints,
+)
 from benchmark.methods.WOT.run import (
     _aggregate_to_state_level,
     _check_wot,
@@ -66,7 +69,7 @@ class WOTAdapter(BaseAdapter):
 
         time_key = self.scenario_config.get("time_key", "time_label")
         cell_state_key = self.scenario_config.get(
-            "cell_state_key", "scTimeBench_cell_type"
+            "cell_state_key", "final_milestone_label_coarse"
         )
         wot_params = self.scenario_config.get("wot_params", {}) or {}
         dataset_id = self.scenario_config.get("dataset_id", "unknown")
@@ -127,6 +130,7 @@ class WOTAdapter(BaseAdapter):
         )
 
         elapsed = time.time() - self._start_time if self._start_time else None
+        _gt = self.scenario_config.get("ground_truth") or {}
         run_meta = {
             "method": "wot",
             "dataset": dataset_id,
@@ -140,6 +144,9 @@ class WOTAdapter(BaseAdapter):
             "status": "completed",
             "time_key": time_key,
             "cell_state_key": cell_state_key,
+            "provider_id": _gt.get("provider_id") or None,
+            "label_mode": _gt.get("label_mode") or None,
+            "analysis_role": _gt.get("analysis_role") or None,
             "scenario_params": scenario_cfg,
             "wot_params": wot_params,
             "notes": (
@@ -175,12 +182,12 @@ class WOTAdapter(BaseAdapter):
     def _filter_to_train_times(adata, time_key: str, train_times: list):
         train_times_f = [float(t) for t in train_times]
         before = adata.n_obs
-        mask = adata.obs[time_key].astype(float).isin(train_times_f).values
-        subset = adata[mask]
-        filtered = (
-            subset.to_memory()
-            if hasattr(subset, "to_memory") and getattr(subset, "isbacked", False)
-            else subset.copy()
+        filtered, _ = split_adata_by_timepoints(
+            adata,
+            time_key=time_key,
+            train_times=train_times_f,
+            heldout_times=None,
+            test_includes_start=False,
         )
         print(
             f"[WOTAdapter] scenario_params.train_times applied: "
@@ -210,6 +217,7 @@ class WOTAdapter(BaseAdapter):
         stm.to_csv(stm_path)
         edges.to_csv(edges_path, index=False)
 
+        _gt = self.scenario_config.get("ground_truth") or {}
         metadata = {
             "method": "wot",
             "dataset": self.scenario_config.get("dataset_id", "unknown"),
@@ -224,6 +232,10 @@ class WOTAdapter(BaseAdapter):
                 if self._start_time else None
             ),
             "status": f"scaffold_only ({reason})",
+            "cell_state_key": self.scenario_config.get("cell_state_key"),
+            "provider_id": _gt.get("provider_id") or None,
+            "label_mode": _gt.get("label_mode") or None,
+            "analysis_role": _gt.get("analysis_role") or None,
             "notes": (
                 "WOT package is unavailable, so the adapter wrote empty outputs. "
                 "Install WOT in the active environment to produce real predictions."
