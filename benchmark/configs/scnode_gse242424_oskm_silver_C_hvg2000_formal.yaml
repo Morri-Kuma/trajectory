@@ -1,0 +1,81 @@
+run_id: scnode_gse242424_oskm_silver_C_hvg2000_formal
+method: scnode
+scenario: C
+scenario_name: GSE242424 OSKM silver Scenario C formal scNODE run (HVG2000, author-cluster-matched)
+framework_version: v2
+result_class: gse242424_oskm_silver_formal
+formal_benchmark: true
+label_mode: official_silver
+provider_id: gse242424_oskm_reprogramming_silver_v1
+state_system:
+  version: gse242424_oskm_reprogramming_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 10
+  n_graph_edges: 9
+  source_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  note: Frozen author-cluster OSKM reprogramming silver labels; official metrics use final_milestone_label_coarse.
+ground_truth:
+  provider_id: gse242424_oskm_reprogramming_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE242424
+  h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times:
+  - 0.0
+  - 2.0
+  - 6.0
+  - 10.0
+  - 14.0
+  heldout_interpolation:
+  - 4.0
+  - 8.0
+  - 12.0
+  heldout_extrapolation:
+  - 16.0
+  heldout_times:
+  - 4.0
+  - 8.0
+  - 12.0
+  - 16.0
+output:
+  base_dir: benchmark/results/scnode/gse242424_oskm_silver_C_hvg2000_formal
+scnode_params:
+  latent_dim: 50
+  drift_latent_size:
+  - 50
+  - 50
+  enc_latent_list:
+  - 64
+  - 64
+  dec_latent_list:
+  - 64
+  - 64
+  pretrain_iters: 200
+  epochs: 10
+  iters: 100
+  batch_size: 32
+  lr: 0.001
+  latent_coeff: 1.0
+  kl_coeff: 0.0
+  seed: 42
+  n_sim_cells: 2000
+  n_sim_cells_cap: 2000
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse242424_oskm_reprogramming_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: active
+  primary_dimensions:
+  - forecast_accuracy
+  - embedding_coherence
+  - lineage_fidelity

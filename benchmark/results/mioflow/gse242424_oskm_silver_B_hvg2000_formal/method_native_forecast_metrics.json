@@ -1,0 +1,14 @@
+{
+  "wasserstein_distance": 0.06275633404907756,
+  "gaussian_mmd": 0.24969503912529403,
+  "energy_distance_mmd": 6.088558832804362,
+  "hausdorff_loss": 19.793282826741535,
+  "n_eval_timepoints": 3,
+  "eval_timepoints": [
+    12.0,
+    14.0,
+    16.0
+  ],
+  "scenario_type": "forecast",
+  "status": "completed"
+}

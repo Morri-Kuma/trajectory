@@ -22,6 +22,8 @@ def _dataset_class_name(dataset_dict):
         return "GSE230659Dataset"
     if dataset_id == "GSE178325":
         return "GSE178325Dataset"
+    if dataset_id == "GSE242424":
+        return "GSE242424Dataset"
     raise ValueError(f"Cannot infer dataset registry class from: {dataset_dict}")
 
 

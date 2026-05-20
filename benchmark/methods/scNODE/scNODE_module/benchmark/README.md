@@ -1,5 +1,9 @@
 # benchmark
 
+Trajectory benchmark note: this subdirectory contains upstream scNODE example
+scripts. Current trajectory formal runs use repository-level configs and the
+wrapper at `benchmark/methods/scNODE/run.py`.
+
 Compare our scNODE model with baselines on three scRNA-seq datasets.
 
 The preprocessed data can be downloaded from [here](https://doi.org/10.6084/m9.figshare.25601610.v1).

@@ -1,0 +1,48 @@
+run_id: scnode_gse242424_C_hvg2000
+method: scnode
+scenario: C
+scenario_name: GSE242424 observed-time Scenario C scNODE run (HVG2000)
+framework_version: v2
+result_class: external_validation
+formal_benchmark: true
+dataset:
+  id: GSE242424
+  h5ad_path: benchmark/inputs/gse242424_hvg2000/GSE242424_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times: [0.0, 2.0, 6.0, 10.0, 14.0]
+  heldout_interpolation: [4.0, 8.0, 12.0]
+  heldout_extrapolation: [16.0]
+  heldout_times: [4.0, 8.0, 12.0, 16.0]
+output:
+  base_dir: benchmark/results/scnode/gse242424_scenario_C_hvg2000
+scnode_params:
+  latent_dim: 50
+  drift_latent_size: [50, 50]
+  enc_latent_list: [64, 64]
+  dec_latent_list: [64, 64]
+  pretrain_iters: 200
+  epochs: 10
+  iters: 100
+  batch_size: 32
+  lr: 0.001
+  latent_coeff: 1.0
+  kl_coeff: 0.0
+  seed: 42
+  n_sim_cells: 2000
+  n_sim_cells_cap: 2000
+lineage:
+  cell_state_key: scTimeBench_cell_type
+  cell_state_annotation_is_proxy: true
+  state_system_version: gse242424_time_proxy_v1
+  reference_graph_path:
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  primary_dimensions: [forecast_accuracy, embedding_coherence]
+  lineage_fidelity_status: deferred_no_reference_graph
+notes:
+  scenario: Mixed interpolation + extrapolation. Train D0/D2/D6/D10/D14;
+    heldout_interpolation D4/D8/D12, heldout_extrapolation iPSC(D16).
+  ipsc_abs_day: iPSC abs_day=16 is PROVISIONAL. Review before formal benchmark use.
+  cell_state_key: scTimeBench_cell_type is a time/stage proxy. Not biologically annotated.

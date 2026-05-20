@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iPSC Trajectory Benchmark | Mentor Meeting</title>
+  <style>
+    :root {
+      --ink: #172026;
+      --muted: #60717c;
+      --line: #d7e0e3;
+      --paper: #f7faf9;
+      --panel: #ffffff;
+      --teal: #0c7c7a;
+      --teal-soft: #dff3ef;
+      --coral: #cf5c46;
+      --gold: #b98b12;
+      --green: #4f8a52;
+      --blue: #4269a6;
+      --shadow: 0 18px 45px rgba(23, 32, 38, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .deck {
+      width: 100%;
+    }
+
+    .slide {
+      min-height: 100vh;
+      padding: 52px 68px 44px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fbfdfc 0%, #f3f8f7 100%);
+      position: relative;
+    }
+
+    .slide:nth-child(even) {
+      background: #ffffff;
+    }
+
+    .slide-number {
+      position: absolute;
+      top: 24px;
+      right: 34px;
+      color: var(--muted);
+      font-size: 14px;
+      letter-spacing: 0.03em;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      max-width: 1050px;
+      font-size: 58px;
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: 42px;
+      font-weight: 800;
+      max-width: 1120px;
+    }
+
+    h3 {
+      font-size: 22px;
+      font-weight: 750;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 22px;
+      color: var(--ink);
+    }
+
+    .lead {
+      max-width: 1080px;
+      margin-top: 22px;
+      color: #31424b;
+      font-size: 25px;
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .section-label::before {
+      content: "";
+      width: 28px;
+      height: 3px;
+      background: var(--teal);
+      display: inline-block;
+    }
+
+    .grid {
+      display: grid;
+      gap: 22px;
+      margin-top: 30px;
+    }
+
+    .grid.two {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .grid.side {
+      grid-template-columns: 0.94fr 1.06fr;
+      align-items: stretch;
+    }
+
+    .panel,
+    .metric,
+    .question-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .panel.plain {
+      box-shadow: none;
+    }
+
+    .callout {
+      border-left: 5px solid var(--teal);
+      background: var(--teal-soft);
+      padding: 22px 24px;
+      margin-top: 28px;
+      border-radius: 6px;
+      font-size: 22px;
+      color: #173a3b;
+    }
+
+    .warning {
+      border-left-color: var(--coral);
+      background: #fff0ec;
+      color: #4b241c;
+    }
+
+    .takeaway {
+      border-left-color: var(--gold);
+      background: #fff7df;
+      color: #422f08;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 18px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #edf5f3;
+      color: #163335;
+      font-weight: 750;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .compact-table {
+      font-size: 16px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .metric {
+      box-shadow: none;
+      padding: 20px;
+      min-height: 136px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 34px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+      color: var(--teal);
+    }
+
+    .metric span {
+      font-size: 16px;
+      color: var(--muted);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-top: 34px;
+      align-items: stretch;
+    }
+
+    .flow-step {
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--teal);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 152px;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .flow-step b {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 9px;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .image-grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 26px;
+    }
+
+    .image-grid.two {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+    }
+
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 54vh;
+      object-fit: contain;
+      background: #ffffff;
+    }
+
+    figcaption {
+      padding: 10px 13px;
+      color: var(--muted);
+      font-size: 14px;
+      border-top: 1px solid var(--line);
+      background: #fbfdfc;
+    }
+
+    .small-figure img {
+      max-height: 34vh;
+    }
+
+    .graph-lines {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .edge {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      font-size: 18px;
+    }
+
+    .node {
+      border: 1px solid var(--line);
+      background: #f9fbfb;
+      border-radius: 6px;
+      padding: 9px 12px;
+      text-align: center;
+      font-weight: 650;
+    }
+
+    .arrow {
+      color: var(--teal);
+      font-weight: 800;
+    }
+
+    .bars {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 112px 1fr 80px;
+      align-items: center;
+      gap: 12px;
+      font-size: 17px;
+    }
+
+    .bar-track {
+      height: 18px;
+      background: #e8eeee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--teal);
+    }
+
+    .bar-fill.coral {
+      background: var(--coral);
+    }
+
+    .bar-fill.blue {
+      background: var(--blue);
+    }
+
+    .rank-card {
+      border-left: 5px solid var(--teal);
+    }
+
+    .rank-card:nth-child(2) {
+      border-left-color: var(--coral);
+    }
+
+    .rank-card:nth-child(3) {
+      border-left-color: var(--blue);
+    }
+
+    .rank-card .rank {
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .rank-card .method {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .rank-card .score {
+      color: var(--teal);
+      font-size: 21px;
+      font-weight: 750;
+    }
+
+    ul {
+      margin: 20px 0 0;
+      padding-left: 24px;
+      font-size: 22px;
+    }
+
+    li {
+      margin: 9px 0;
+    }
+
+    code {
+      background: #eef4f3;
+      border: 1px solid #dce8e5;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.88em;
+    }
+
+    .footer-note {
+      position: absolute;
+      left: 68px;
+      bottom: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav-hint {
+      position: fixed;
+      right: 22px;
+      bottom: 18px;
+      z-index: 20;
+      color: var(--muted);
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .source {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .slide {
+        padding: 42px 24px 38px;
+      }
+
+      h1 {
+        font-size: 40px;
+      }
+
+      h2 {
+        font-size: 32px;
+      }
+
+      p,
+      ul {
+        font-size: 18px;
+      }
+
+      .grid.two,
+      .grid.three,
+      .grid.side,
+      .image-grid.two,
+      .flow,
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-step:not(:last-child)::after {
+        display: none;
+      }
+
+      .footer-note {
+        position: static;
+        margin-top: 18px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .slide {
+        min-height: 100vh;
+        page-break-after: always;
+        border-bottom: 0;
+        box-shadow: none;
+      }
+
+      .nav-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="nav-hint">展示提示：按 PageDown / PageUp 或方向键翻页</div>
+  <main class="deck">
+    <section class="slide" id="slide-1">
+      <div class="slide-number">01 / 13</div>
+      <div class="eyebrow">Mentor Meeting | Parts 1-4</div>
+      <h1>面向 iPSC 重编程轨迹建模的 scTimeBench-aligned benchmark</h1>
+      <p class="lead">当前工作的核心不是“跑几个模型”，而是建立一个可复现、可质疑、可扩展的 trajectory evaluation system：固定数据、固定 silver-state labels、固定 reference lineage graph，以及 method-aware metrics。</p>
+      <div class="kpis">
+        <div class="metric"><strong>2</strong><span>核心 official-silver 数据集：GSE230659 / GSE178325</span></div>
+        <div class="metric"><strong>5</strong><span>已纳入方法：MIOFlow、PRESCIENT、scNODE、WOT、CellRank2</span></div>
+        <div class="metric"><strong>3</strong><span>观察时间场景：A / B / C</span></div>
+        <div class="metric"><strong>3</strong><span>评价维度：forecast、embedding、lineage</span></div>
+      </div>
+      <div class="footer-note">Source: README.md; experimental framework v2.md; benchmark/results/result_manifest.yaml</div>
+    </section>
+
+    <section class="slide" id="slide-2">
+      <div class="slide-number">02 / 13</div>
+      <div class="section-label">Part 1 | Benchmark Framework</div>
+      <h2>从单细胞时间序列到可比较的轨迹输出</h2>
+      <div class="flow">
+        <div class="flow-step"><b>Raw / processed scRNA-seq</b><span>人源 iPSC / reprogramming time-series 数据</span></div>
+        <div class="flow-step"><b>QC + HVG2000 input</b><span>固定输入矩阵和时间点信息</span></div>
+        <div class="flow-step"><b>Frozen silver labels</b><span>milestone states + reference lineage graph</span></div>
+        <div class="flow-step"><b>Scenario A/B/C runs</b><span>插值、外推、混合场景</span></div>
+        <div class="flow-step"><b>Metric families</b><span>Forecast / Embedding / Lineage</span></div>
+      </div>
+      <div class="grid two">
+        <div class="panel plain">
+          <h3>Scenario 定义</h3>
+          <table>
+            <thead><tr><th>Scenario</th><th>含义</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>A</td><td>observed-time interpolation / 所有观察时间点</td><td>formal</td></tr>
+              <tr><td>B</td><td>future-time extrapolation / held-out later timepoints</td><td>formal</td></tr>
+              <tr><td>C</td><td>mixed interpolation + extrapolation</td><td>formal</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel plain">
+          <h3>Method capability gating</h3>
+          <table>
+            <thead><tr><th>Method</th><th>Forecast</th><th>Embedding</th><th>Lineage</th></tr></thead>
+            <tbody>
+              <tr><td>MIOFlow</td><td>yes</td><td>yes</td><td>yes</td></tr>
+              <tr><td>PRESCIENT</td><td>yes</td><td>yes</td><td>yes</td></tr>
+              <tr><td>scNODE</td><td>yes</td><td>yes</td><td>yes</td></tr>
+              <tr><td>WOT</td><td>no</td><td>no</td><td>yes</td></tr>
+              <tr><td>CellRank2</td><td>no</td><td>no</td><td>yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">汇报重点：WOT 和 CellRank2 不被强行放进 projected-cell forecast/embedding 指标，只作为 Lineage Fidelity baseline。这样比较更公平。</div>
+    </section>
+
+    <section class="slide" id="slide-3">
+      <div class="slide-number">03 / 13</div>
+      <div class="section-label">Part 2 | Data and QC</div>
+      <h2>Benchmark input datasets 已固定并保留 QC 记录</h2>
+      <div class="grid side">
+        <div class="panel">
+          <h3>核心 official-silver 数据集</h3>
+          <table>
+            <thead><tr><th>Dataset</th><th>Role</th><th>Cells</th><th>Time/stage labels</th></tr></thead>
+            <tbody>
+              <tr><td>GSE230659</td><td>primary benchmark</td><td>75,194</td><td>15</td></tr>
+              <tr><td>GSE178325</td><td>external validation</td><td>80,475</td><td>15</td></tr>
+            </tbody>
+          </table>
+          <div class="callout takeaway">要传达给导师：模型不是跑在未检查的 expression matrix 上；输入经过 QC、timepoint accounting 和 HVG2000 harmonization。</div>
+        </div>
+        <div class="panel">
+          <h3>可作为后续扩展的 GSE242424</h3>
+          <table>
+            <thead><tr><th>Item</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Local QC-pass cells</td><td>156,969</td></tr>
+              <tr><td>Author-cluster matched cells</td><td>59,187</td></tr>
+              <tr><td>Matched subset states</td><td>10 coarse milestones</td></tr>
+              <tr><td>Reference edges</td><td>9</td></tr>
+            </tbody>
+          </table>
+          <p class="source">用于说明框架可扩展；当前 1-4 部分主线仍聚焦 GSE230659 / GSE178325。</p>
+        </div>
+      </div>
+      <div class="footer-note">Source: benchmark/reports/qc/*.csv; benchmark/inputs/gse242424_author_cluster_matched/gse242424_author_cluster_match_summary.json</div>
+    </section>
+
+    <section class="slide" id="slide-4">
+      <div class="slide-number">04 / 13</div>
+      <div class="section-label">Part 2 | QC Figures</div>
+      <h2>QC 图用于讨论时间点质量和样本不均衡</h2>
+      <div class="image-grid two">
+        <figure>
+          <img src="benchmark/reports/qc/20260417_1903_pca_time.png" alt="GSE230659 PCA colored by time">
+          <figcaption>GSE230659: PCA by time / stage</figcaption>
+        </figure>
+        <figure>
+          <img src="benchmark/reports/qc/gse178325_human/20260502_1345_pca_time.png" alt="GSE178325 PCA colored by time">
+          <figcaption>GSE178325: PCA by time / stage</figcaption>
+        </figure>
+        <figure class="small-figure">
+          <img src="benchmark/reports/qc/20260417_1903_cell_counts_per_time.png" alt="GSE230659 cell counts per time">
+          <figcaption>GSE230659: cells per timepoint</figcaption>
+        </figure>
+        <figure class="small-figure">
+          <img src="benchmark/reports/qc/gse178325_human/20260502_1345_cell_counts_per_time.png" alt="GSE178325 cell counts per time">
+          <figcaption>GSE178325: cells per timepoint</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-5">
+      <div class="slide-number">05 / 13</div>
+      <div class="section-label">Part 3 | Silver Labels</div>
+      <h2>Benchmark 使用 frozen official-silver milestone system</h2>
+      <div class="grid side">
+        <div>
+          <table>
+            <thead>
+              <tr><th>Dataset</th><th>Provider</th><th>Cells</th><th>States</th><th>Edges</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>GSE178325</td>
+                <td><code>gse178325_marker_fm_transition_silver_v1</code></td>
+                <td>80,475</td>
+                <td>5</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td>GSE230659</td>
+                <td><code>gse230659_marker_fm_transition_silver_v1</code></td>
+                <td>75,194</td>
+                <td>4</td>
+                <td>3</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="callout">这些 labels 是 versioned silver standard，用于可复现比较；不要把它们表述成最终 biological ground truth。</div>
+        </div>
+        <figure>
+          <img src="benchmark/reports/figures/gse230659_scgpt_process_overview.png" alt="GSE230659 scGPT process overview">
+          <figcaption>Existing overview figure: annotation/process context for GSE230659</figcaption>
+        </figure>
+      </div>
+      <div class="footer-note">Source: benchmark/ground_truth/registry.yaml; benchmark/ground_truth/providers/*/state_labels.tsv</div>
+    </section>
+
+    <section class="slide" id="slide-6">
+      <div class="slide-number">06 / 13</div>
+      <div class="section-label">Part 3 | Reference Graph</div>
+      <h2>Reference graph 是 Lineage Fidelity 的评价目标</h2>
+      <div class="grid two">
+        <div class="panel">
+          <h3>GSE178325 reference edges</h3>
+          <div class="graph-lines">
+            <div class="edge"><span class="node">hADSCs</span><span class="arrow">→</span><span class="node">epithelial_like</span></div>
+            <div class="edge"><span class="node">epithelial_like</span><span class="arrow">→</span><span class="node">intermediate_plastic</span></div>
+            <div class="edge"><span class="node">intermediate_plastic</span><span class="arrow">→</span><span class="node">xen_like</span></div>
+            <div class="edge"><span class="node">xen_like</span><span class="arrow">→</span><span class="node">hCiPS</span></div>
+          </div>
+          <table class="compact-table" style="margin-top:18px">
+            <thead><tr><th>State</th><th>Cells</th></tr></thead>
+            <tbody>
+              <tr><td>epithelial_like</td><td>67,817</td></tr>
+              <tr><td>hADSCs</td><td>5,706</td></tr>
+              <tr><td>intermediate_plastic</td><td>4,654</td></tr>
+              <tr><td>hCiPS</td><td>2,144</td></tr>
+              <tr><td>xen_like</td><td>154</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3>GSE230659 reference edges</h3>
+          <div class="graph-lines">
+            <div class="edge"><span class="node">hADSCs</span><span class="arrow">→</span><span class="node">epithelial_like</span></div>
+            <div class="edge"><span class="node">epithelial_like</span><span class="arrow">→</span><span class="node">intermediate_plastic</span></div>
+            <div class="edge"><span class="node">intermediate_plastic</span><span class="arrow">→</span><span class="node">hCiPS</span></div>
+          </div>
+          <table class="compact-table" style="margin-top:18px">
+            <thead><tr><th>Observed state in label file</th><th>Cells</th></tr></thead>
+            <tbody>
+              <tr><td>epithelial_like</td><td>67,112</td></tr>
+              <tr><td>hCiPS</td><td>5,370</td></tr>
+              <tr><td>intermediate_plastic</td><td>2,712</td></tr>
+            </tbody>
+          </table>
+          <div class="callout warning">需主动请教：GSE230659 graph 中包含 hADSCs，但当前 state label 文件实际出现 3 个 observed classes。需要判断这是可接受的 reference source，还是 provider 需要进一步修订。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-7">
+      <div class="slide-number">07 / 13</div>
+      <div class="section-label">Part 3 | Projected-cell Annotation Audit</div>
+      <h2>Projected-cell labels 用 two-provider agreement 审计</h2>
+      <div class="grid side">
+        <div class="panel">
+          <table>
+            <thead><tr><th>Scenario</th><th>Projected cells</th><th>Provider match</th><th>Ambiguous</th></tr></thead>
+            <tbody>
+              <tr><td>A</td><td>30,000</td><td>0.814</td><td>0.186</td></tr>
+              <tr><td>B</td><td>18,000</td><td>0.658</td><td>0.342</td></tr>
+              <tr><td>C</td><td>10,000</td><td>0.962</td><td>0.038</td></tr>
+            </tbody>
+          </table>
+          <div class="callout">Formal route: HVG2000 PCA logistic-regression embedding provider + CellTypist classifier provider。一致则作为 consensus；不一致则标记为 ambiguous。</div>
+          <p class="source">Scenario B 显示最高 ambiguity，是后续讨论外推困难和标签不确定性的关键证据。</p>
+        </div>
+        <figure>
+          <img src="benchmark/reports/figures/gse230659_scgpt_annotation_workflow.png" alt="GSE230659 annotation workflow">
+          <figcaption>Annotation workflow figure for projected-cell / state-label context</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="slide" id="slide-gse242424-1">
+      <div class="slide-number">08 / 13</div>
+      <div class="section-label">GSE242424 | OSKM Extension</div>
+      <h2>GSE242424 是目前最适合展示“框架可扩展性”的新增数据集</h2>
+      <div class="grid side">
+        <div class="panel">
+          <h3>Dataset and matched subset</h3>
+          <table>
+            <thead><tr><th>Item</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Biological system</td><td>OSKM fibroblast reprogramming</td></tr>
+              <tr><td>Local QC-pass cells</td><td>156,969</td></tr>
+              <tr><td>Author-cluster matched cells</td><td>59,187</td></tr>
+              <tr><td>Timepoints</td><td>D0, D2, D4, D6, D8, D10, D12, D14, iPSC/D16</td></tr>
+              <tr><td>Input features</td><td>HVG2000</td></tr>
+              <tr><td>Provider</td><td><code>gse242424_oskm_reprogramming_silver_v1</code></td></tr>
+            </tbody>
+          </table>
+          <div class="callout">这组数据可以作为导师汇报里的“外部扩展验证”：说明 benchmark 框架已经从 GSE230659/GSE178325 扩展到 OSKM reprogramming。</div>
+        </div>
+        <figure>
+          <img src="benchmark/reports/gse242424_oskm_silver/figures/gse242424_qc_cells_by_timepoint.png" alt="GSE242424 QC-pass cells by timepoint">
+          <figcaption>GSE242424: QC-pass cells by timepoint</figcaption>
+        </figure>
+      </div>
+      <div class="footer-note">Source: benchmark/reports/qc/20260514_1649_gse242424_qc_summary.csv; benchmark/inputs/gse242424_author_cluster_matched/gse242424_author_cluster_match_summary.json</div>
+    </section>
+
+    <section class="slide" id="slide-gse242424-2">
+      <div class="slide-number">09 / 13</div>
+      <div class="section-label">GSE242424 | Silver Labels</div>
+      <h2>OSKM silver provider: 10 个 coarse milestones 和 9 条 reference edges</h2>
+      <div class="grid side">
+        <div class="panel">
+          <h3>Reference graph edges</h3>
+          <table class="compact-table">
+            <thead><tr><th>Source</th><th>Target</th></tr></thead>
+            <tbody>
+              <tr><td>fibroblast</td><td>fibroblast_like_stalled</td></tr>
+              <tr><td>fibroblast</td><td>keratinocyte_like</td></tr>
+              <tr><td>fibroblast</td><td>hOSK</td></tr>
+              <tr><td>hOSK</td><td>partial_intermediate</td></tr>
+              <tr><td>partial_intermediate</td><td>partially_reprogrammed</td></tr>
+              <tr><td>fibroblast</td><td>xOSK</td></tr>
+              <tr><td>xOSK</td><td>primary_intermediate</td></tr>
+              <tr><td>primary_intermediate</td><td>pre_iPSC</td></tr>
+              <tr><td>pre_iPSC</td><td>iPSC</td></tr>
+            </tbody>
+          </table>
+          <div class="callout warning">这张图很适合请导师判断：hOSK / xOSK 两条 arms，加上 stalled/off-target branches，是否符合该数据集的生物学叙述。</div>
+        </div>
+        <figure>
+          <img src="benchmark/reports/gse242424_oskm_silver/figures/gse242424_label_distribution.png" alt="GSE242424 OSKM silver label distribution">
+          <figcaption>GSE242424: OSKM silver milestone label distribution</figcaption>
+        </figure>
+      </div>
+      <div class="footer-note">Source: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/reference_graph_edges.csv; state_labels.tsv</div>
+    </section>
+
+    <section class="slide" id="slide-gse242424-3">
+      <div class="slide-number">10 / 13</div>
+      <div class="section-label">GSE242424 | Formal Results</div>
+      <h2>GSE242424 formal benchmark: MIOFlow overall 第一，但各维度仍有 tradeoff</h2>
+      <div class="grid side">
+        <div class="panel">
+          <h3>Method summary</h3>
+          <table>
+            <thead><tr><th>Rank</th><th>Method</th><th>AUROC</th><th>AUPRC</th><th>Jaccard</th><th>ARI</th><th>Wasserstein</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>MIOFlow</td><td>0.7798</td><td>0.2460</td><td>0.3516</td><td>0.1559</td><td>0.0287</td></tr>
+              <tr><td>2</td><td>PRESCIENT</td><td>0.7053</td><td>0.1908</td><td>0.2286</td><td>0.1989</td><td>0.0276</td></tr>
+              <tr><td>3</td><td>scNODE</td><td>0.7595</td><td>0.2566</td><td>0.1674</td><td>0.1469</td><td>0.0357</td></tr>
+            </tbody>
+          </table>
+          <ul>
+            <li>MIOFlow overall rank 第一，主要由 AUROC 和 Jaccard 推动。</li>
+            <li>scNODE mean AUPRC 最高，但 B extrapolation 明显较弱。</li>
+            <li>PRESCIENT mean ARI 和 Wasserstein 较好，说明 projected state structure/分布保持有优势。</li>
+          </ul>
+        </div>
+        <div class="image-grid">
+          <figure class="small-figure">
+            <img src="benchmark/reports/gse242424_oskm_silver/figures/gse242424_method_summary_metrics.png" alt="GSE242424 method summary metrics">
+            <figcaption>Mean AUROC/AUPRC/Jaccard/ARI across scenarios A/B/C</figcaption>
+          </figure>
+          <figure class="small-figure">
+            <img src="benchmark/reports/gse242424_oskm_silver/figures/gse242424_combined_rank_score.png" alt="GSE242424 combined rank score">
+            <figcaption>Combined rank score; lower is better</figcaption>
+          </figure>
+        </div>
+      </div>
+      <div class="footer-note">Source: benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md; gse242424_oskm_silver_method_summary.csv</div>
+    </section>
+
+    <section class="slide" id="slide-8">
+      <div class="slide-number">11 / 13</div>
+      <div class="section-label">Part 4 | Main Results</div>
+      <h2>Official-silver combined ranking: 三个 generative/projective 方法非常接近</h2>
+      <div class="grid three">
+        <div class="panel rank-card">
+          <div class="rank">Overall rank 1</div>
+          <div class="method">PRESCIENT</div>
+          <div class="score">combined rank score = 1.7333</div>
+          <p class="source">mean ARI 0.1150; mean AUROC 0.4332</p>
+        </div>
+        <div class="panel rank-card">
+          <div class="rank">Overall rank 2</div>
+          <div class="method">MIOFlow</div>
+          <div class="score">combined rank score = 1.7389</div>
+          <p class="source">lineage rank 1; mean Jaccard 0.1000</p>
+        </div>
+        <div class="panel rank-card">
+          <div class="rank">Overall rank 3</div>
+          <div class="method">scNODE</div>
+          <div class="score">combined rank score = 1.7611</div>
+          <p class="source">embedding rank 1; mean entropy 0.1740</p>
+        </div>
+      </div>
+      <table style="margin-top:28px">
+        <thead><tr><th>Method</th><th>Mean ARI</th><th>Mean weighted entropy</th><th>Mean AUPRC</th><th>Mean AUROC</th><th>Mean Jaccard</th></tr></thead>
+        <tbody>
+          <tr><td>PRESCIENT</td><td>0.1150</td><td>0.2430</td><td>0.1819</td><td>0.4332</td><td>0.0667</td></tr>
+          <tr><td>MIOFlow</td><td>0.0712</td><td>0.2928</td><td>0.1855</td><td>0.4129</td><td>0.1000</td></tr>
+          <tr><td>scNODE</td><td>0.0767</td><td>0.1740</td><td>0.1785</td><td>0.3898</td><td>0.0667</td></tr>
+        </tbody>
+      </table>
+      <div class="callout takeaway">解释方式：不要说某个模型绝对胜出；应该说不同方法在不同评价维度上有 tradeoff。</div>
+    </section>
+
+    <section class="slide" id="slide-9">
+      <div class="slide-number">12 / 13</div>
+      <div class="section-label">Part 4 | Dimension-specific Results</div>
+      <h2>分维度看，模型强项并不一致</h2>
+      <div class="grid side">
+        <div>
+          <div class="panel">
+            <h3>Embedding Coherence</h3>
+            <table class="compact-table">
+              <thead><tr><th>Rank</th><th>Method</th><th>Runs</th><th>Mean ARI</th><th>Weighted entropy</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>scNODE</td><td>6</td><td>0.0767</td><td>0.1740</td></tr>
+                <tr><td>2</td><td>PRESCIENT</td><td>6</td><td>0.1150</td><td>0.2430</td></tr>
+                <tr><td>3</td><td>MIOFlow</td><td>6</td><td>0.0712</td><td>0.2928</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel" style="margin-top:18px">
+            <h3>Lineage Fidelity</h3>
+            <table class="compact-table">
+              <thead><tr><th>Rank</th><th>Method</th><th>Runs</th><th>AUPRC</th><th>AUROC</th><th>Jaccard</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>MIOFlow</td><td>6</td><td>0.1855</td><td>0.4129</td><td>0.1000</td></tr>
+                <tr><td>2</td><td>PRESCIENT</td><td>6</td><td>0.1819</td><td>0.4332</td><td>0.0667</td></tr>
+                <tr><td>3</td><td>scNODE</td><td>6</td><td>0.1785</td><td>0.3898</td><td>0.0667</td></tr>
+                <tr><td>4</td><td>CellRank2</td><td>1</td><td>0.1935</td><td>0.4359</td><td>0.0000</td></tr>
+                <tr><td>5</td><td>WOT</td><td>1</td><td>0.1842</td><td>0.4103</td><td>0.0000</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <figure>
+          <img src="benchmark/reports/figures/lineage_auroc_by_model_scenario.png" alt="Lineage AUROC by model and scenario">
+          <figcaption>Lineage AUROC by model and scenario</figcaption>
+        </figure>
+      </div>
+      <div class="callout">WOT / CellRank2 是 lineage-only baseline；不要和 MIOFlow / PRESCIENT / scNODE 做 combined score 比较。</div>
+    </section>
+
+    <section class="slide" id="slide-10">
+      <div class="slide-number">13 / 13</div>
+      <div class="section-label">Part 4 | Interpretation and Questions</div>
+      <h2>需要导师指导的判断点</h2>
+      <div class="grid two">
+        <div class="panel">
+          <h3>当前结果说明什么</h3>
+          <ul>
+            <li>Benchmark 框架已经能跨数据集、scenario 和 method family 运行。</li>
+            <li>不同指标给出的模型强项不同，支持分维度报告，而不是只给一个总分。</li>
+            <li>Silver reference system 是可复现比较的基础，也是最需要生物学验证的部分。</li>
+            <li>Scenario B 是关键压力测试：外推未来状态时 ambiguity 和模型弱点更明显。</li>
+          </ul>
+        </div>
+        <div class="question-box">
+          <h3>现场可直接问导师</h3>
+          <ul>
+            <li>这个 milestone / reference graph 设计在 iPSC reprogramming 生物学上是否合理？</li>
+            <li>文章主线应强调 benchmark construction，还是强调某个模型的改进？</li>
+            <li>在强 ranking claim 前，是否必须加入 repeated seeds 和 variance estimate？</li>
+            <li>ambiguous projected cells 应该排除、降权，还是作为单独的不确定性/旁路状态分析？</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout takeaway">Opening line: “我已经建立了一个可复现的 iPSC/reprogramming trajectory benchmark；今天主要想请老师判断 silver-state system 和 reference graph 是否足够生物学可信，以及下一步应该往 benchmark paper 还是 method improvement 推进。”</div>
+    </section>
+  </main>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+
+    function currentSlideIndex() {
+      const scrollY = window.scrollY;
+      let index = 0;
+      slides.forEach((slide, i) => {
+        if (slide.offsetTop <= scrollY + window.innerHeight * 0.35) {
+          index = i;
+        }
+      });
+      return index;
+    }
+
+    function go(delta) {
+      const next = Math.max(0, Math.min(slides.length - 1, currentSlideIndex() + delta));
+      slides[next].scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    window.addEventListener("keydown", (event) => {
+      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(event.key)) {
+        event.preventDefault();
+        go(1);
+      }
+      if (["ArrowLeft", "ArrowUp", "PageUp"].includes(event.key)) {
+        event.preventDefault();
+        go(-1);
+      }
+      if (event.key === "Home") {
+        event.preventDefault();
+        slides[0].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (event.key === "End") {
+        event.preventDefault();
+        slides[slides.length - 1].scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  </script>
+</body>
+</html>

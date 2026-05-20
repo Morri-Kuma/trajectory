@@ -1,0 +1,18 @@
+{
+  "unsupported_source_states": [],
+  "n_unsupported_source_states": 0,
+  "source_transition_counts": {
+    "fibroblast": 10945,
+    "fibroblast_like_stalled": 8513,
+    "hOSK": 280,
+    "keratinocyte_like": 370,
+    "partial_intermediate": 464,
+    "partially_reprogrammed": 689,
+    "pre_iPSC": 210,
+    "primary_intermediate": 8173,
+    "xOSK": 914
+  },
+  "soft_assignment_nearest_fallback_count": 0,
+  "soft_assignment_skipped_count": 0,
+  "note": "States with zero source_transition_counts are written as all-zero STM rows because no valid source-cell transitions were available for those states in the training timepoint pairs."
+}

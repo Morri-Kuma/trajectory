@@ -56,6 +56,7 @@ PRIMARY_LABEL_MODES: Set[str] = {"consensus", "official_silver"}
 PRIMARY_PROVIDER_MARKERS: Set[str] = {
     "_milestone_consensus_",
     "_marker_fm_transition_silver_",
+    "_oskm_reprogramming_silver_",
 }
 
 

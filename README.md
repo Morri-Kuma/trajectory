@@ -1,45 +1,58 @@
 # scTimeBench-Aligned iPSC Trajectory Benchmark
 
 **Author**: Kuma, Graduate School of Frontier Sciences, The University of Tokyo  
-**Primary domain**: human chemical iPSC reprogramming  
+**Primary domain**: human iPSC reprogramming trajectories  
 **Framework**: Experimental Framework v2 (see `experimental framework v2.md`)
 
 ---
 
 ## Project Overview
 
-This repository implements a benchmark for trajectory inference and forecasting methods in human chemical iPSC reprogramming. It is aligned with the evaluation philosophy of **scTimeBench**, but adapts the benchmark target, state system, reference graph, and reporting workflow to iPSC reprogramming.
+This repository implements a benchmark for trajectory inference and forecasting
+methods in human iPSC reprogramming. It is aligned with the evaluation
+philosophy of scTimeBench, while adapting the datasets, state systems,
+reference graphs, and reporting workflow to iPSC reprogramming.
 
-The project is not a direct copy of scTimeBench. Instead, it uses scTimeBench's core evaluation dimensions as the base and adds iPSC-specific benchmark assets:
+The project is not a direct copy of scTimeBench. It uses scTimeBench's core
+evaluation dimensions as the base and adds domain-specific benchmark assets:
 
-- human chemical reprogramming datasets, including GSE230659 and GSE178325-derived validation inputs;
-- scGPT-derived pseudo-state annotations as the benchmark state abstraction;
-- frozen state-level reference lineage graphs;
-- method capability gating, so each method is evaluated only on supported tasks;
-- per-method, per-scenario outputs for forecast accuracy, embedding coherence, and lineage fidelity.
-
----
+- frozen silver-standard milestone providers for GSE178325 and GSE230659;
+- an OSKM-specific GSE242424 silver provider built from author-cluster-matched
+  annotations;
+- method capability gating, so each method is evaluated only on supported
+  tasks;
+- per-method, per-scenario outputs for forecast accuracy, embedding coherence,
+  and lineage fidelity;
+- explicit separation of current reportable results from legacy scGPT
+  pseudostate results, pilot runs, smoke tests, and archived/debug outputs.
 
 ## Current Status
 
-The current benchmark has moved beyond the initial WOT/CellRank2 lineage-only stage.
+The benchmark has moved beyond the initial WOT/CellRank2 lineage-only stage and
+beyond the legacy scGPT pseudostate reference system.
 
 | Component | Status |
 |---|---|
-| GSE230659 scGPT-v1 benchmark | Completed for formal A/B/C result sets where available |
-| GSE178325_0618 HVG2000 benchmark | Completed for MIOFlow, PRESCIENT, and scNODE across scenarios A/B/C |
-| Forecast Accuracy | Active for generative / projected-cell methods |
-| Embedding Coherence | Active for methods with projected embeddings |
-| Lineage Fidelity | Active for all methods with state-level transition output |
-| WOT and CellRank2 | Evaluated on Lineage Fidelity only |
+| GSE178325 marker-FM transition silver benchmark | Formal A/B/C result sets available for MIOFlow, PRESCIENT, and scNODE |
+| GSE230659 marker-FM transition silver benchmark | Formal A/B/C result sets available for MIOFlow, PRESCIENT, and scNODE; WOT and CellRank2 have lineage-only scenario A checks |
+| GSE242424 OSKM silver benchmark | Formal A/B/C result sets available for MIOFlow, PRESCIENT, and scNODE on the 59,187-cell author-cluster-matched subset |
+| Forecast Accuracy | Active for generative/projected-cell methods |
+| Embedding Coherence | Active for methods with projected embeddings or projected cells |
+| Lineage Fidelity | Active for methods with state-level transition output |
+| Legacy scGPT pseudostate providers | Retained for backward compatibility and provenance, not primary report ground truth |
 
-Recent summarized outputs are available under:
+Current report entry points:
 
-- `benchmark/results/summary_gse178325_0618_forecast_embedding.csv`
-- `benchmark/results/summary_lineage_metrics_preferred.csv`
-- `benchmark/reports/formal_benchmark_summary.csv`
+- `benchmark/reports/official_silver/official_silver_model_rankings.md`
+- `benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md`
+- `benchmark/reports/core_summary.csv`
+- `benchmark/reports/embedding_summary.csv`
+- `benchmark/reports/lineage_summary.csv`
+- `benchmark/results/result_manifest.yaml`
 
----
+Legacy scGPT-v1 summaries are retained under `benchmark/reports/official/` and
+older paths, but should be interpreted as historical or sensitivity outputs
+unless a manifest entry explicitly selects them.
 
 ## Evaluation Dimensions
 
@@ -49,9 +62,10 @@ Recent summarized outputs are available under:
 | Embedding Coherence | Active | Methods that provide projected embeddings or projected cells that can be embedded |
 | Lineage Fidelity | Active | Methods that provide or can be converted to state-level transition predictions |
 
-Capability gating is intentional. WOT and CellRank2 are not forced into forecast or embedding metrics because they do not natively generate unseen-timepoint projected cells in the same sense as generative trajectory models.
-
----
+Capability gating is intentional. WOT and CellRank2 are not forced into
+forecast or embedding metrics because they do not natively generate
+unseen-timepoint projected cells in the same sense as generative trajectory
+models.
 
 ## Benchmark Scenarios
 
@@ -64,9 +78,9 @@ Capability gating is intentional. WOT and CellRank2 are not forced into forecast
 | E | Pseudotime | Extrapolation |
 | F | Pseudotime | Mixed interpolation and extrapolation |
 
-The currently reported iPSC formal results focus on observed-time scenarios A/B/C. Pseudotime scenarios remain part of the framework design and can be activated when the corresponding inputs and reference state system are frozen.
-
----
+Current formal reports focus on observed-time scenarios A/B/C. Pseudotime
+scenarios remain part of the framework design and can be activated when the
+corresponding inputs and reference state systems are frozen.
 
 ## Repository Structure
 
@@ -77,10 +91,11 @@ trajectory/
 |-- data/                             # raw and processed dataset assets
 |-- benchmark/
 |   |-- README.md                     # benchmark-specific usage notes
-|   |-- configs/                      # method, scenario, and run configs
+|   |-- annotation/                   # milestone/provider annotation utilities
+|   |-- configs/                      # method, scenario, runtime, and run configs
 |   |-- adapters/                     # method adapters and capability gates
 |   |-- evaluation/                   # forecast, embedding, and lineage evaluators
-|   |-- ground_truth/                 # reference state labels and lineage graphs
+|   |-- ground_truth/                 # frozen state labels and reference graphs
 |   |-- inputs/                       # benchmark-ready h5ad inputs
 |   |-- methods/                      # vendored or wrapped method implementations
 |   |-- reports/                      # aggregated reports
@@ -88,10 +103,8 @@ trajectory/
 |   `-- shared/                       # dataset and utility code
 |-- scripts/                          # data preparation and reporting scripts
 |-- logs/                             # run logs
-`-- results/                          # auxiliary analysis outputs
+`-- reference/                        # paper and external-reference notes
 ```
-
----
 
 ## Methods
 
@@ -105,56 +118,77 @@ The current benchmark includes:
 | WOT | no | no | yes |
 | CellRank2 | no | no | yes |
 
-Method capability flags are configured in `benchmark/configs/method_capabilities.yaml`.
-
----
+Method capability flags are configured in
+`benchmark/configs/method_capabilities.yaml`.
 
 ## Running the Benchmark
 
-Representative observed-time configs are stored in `benchmark/configs/`. For example:
+Representative observed-time configs are stored in `benchmark/configs/` and
+`benchmark/configs/runtime/`.
+
+Example GSE242424 OSKM silver run:
 
 ```bash
-python benchmark/evaluation/eval_dispatch.py \
-    --config benchmark/configs/scnode_gse178325_observed_0618_hvg2000_A.yaml
+python benchmark/methods/scNODE/run.py \
+    --config benchmark/configs/scnode_gse242424_oskm_silver_A_hvg2000_formal.yaml
+```
+
+Example marker-FM transition silver runtime config:
+
+```bash
+python benchmark/methods/scNODE/run.py \
+    --config benchmark/configs/runtime/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 ```
 
 For method-specific batch runs, use the root-level helper scripts such as:
 
 ```bash
-bash run_scnode_gse178325_0618_hvg_array.sh
-bash run_mioflow_gse178325_0618_hvg_array.sh
-bash run_prescient_gse178325_0618_hvg_array.sh
+bash run_marker_fm_transition_silver_primary_array.sh
+bash run_gse242424_oskm_silver_formal_array.sh
 ```
 
-The dispatcher reads method capabilities and skips unsupported metrics with explicit metadata rather than producing forced or invalid outputs.
-
----
+The dispatcher and method runners read method capabilities and skip unsupported
+metrics with explicit metadata rather than producing forced or invalid outputs.
 
 ## Ground Truth and Lineage Fidelity
 
 Lineage Fidelity depends on three frozen assets:
 
-1. a benchmark cell-state system, currently based on scGPT pseudo-state annotations;
+1. a benchmark cell-state system;
 2. a reference state-level lineage graph;
 3. a fixed rule for aggregating method predictions to state-level transitions.
 
-These assets are stored under `benchmark/ground_truth/` and referenced from the benchmark configs. Per-run lineage outputs include `state_transition_matrix.csv`, `lineage_graph_edges.csv`, `lineage_metrics.json`, and diagnostic metadata where available.
+Current primary providers are registered in `benchmark/ground_truth/registry.yaml`:
 
----
+- `gse178325_marker_fm_transition_silver_v1`
+- `gse230659_marker_fm_transition_silver_v1`
+- `gse242424_oskm_reprogramming_silver_v1`
+
+The legacy `scgpt_v1` providers are retained for backward compatibility and
+historical comparison only. New annotation systems should be added as new
+versioned providers instead of changing existing frozen provider directories.
+
+Per-run lineage outputs include `state_transition_matrix.csv`,
+`lineage_graph_edges.csv`, `lineage_metrics.json`, and diagnostic metadata where
+available.
 
 ## Relationship to scTimeBench
 
-This project is best understood as a domain-specific extension of scTimeBench ideas:
+This project is best understood as a domain-specific extension of scTimeBench
+ideas:
 
 - scTimeBench provides the general benchmark vocabulary and metric families.
 - trajectory specializes the benchmark to iPSC reprogramming.
-- trajectory uses scGPT-derived pseudo-states and iPSC-specific reference graphs.
-- trajectory keeps method capability gating explicit so transition-only methods and generative methods are compared on appropriate evaluation surfaces.
+- trajectory uses frozen silver-standard state systems and iPSC-specific
+  reference graphs.
+- trajectory keeps method capability gating explicit so transition-only methods
+  and generative methods are compared on appropriate evaluation surfaces.
 
-The goal is therefore not strict code-structure parity with scTimeBench, but a scTimeBench-aligned benchmark that answers a narrower biological question.
-
----
+The goal is therefore not strict code-structure parity with scTimeBench, but a
+scTimeBench-aligned benchmark that answers a narrower biological question.
 
 ## Framework Reference
 
-`experimental framework v2.md` is the main design document for benchmark logic. If implementation notes and README text diverge, treat the framework document and current configs/results as the more specific source of truth.
+`experimental framework v2.md` is the main design document for benchmark logic.
+If implementation notes and README text diverge, treat the framework document
+and current configs/results as the more specific source of truth.

@@ -1,0 +1,178 @@
+{
+  "dataset_id": "GSE242424",
+  "timestamp": "20260516_1057",
+  "input_h5ad": "C:\\Users\\37620\\trajectory\\benchmark\\inputs\\gse242424_hvg2000\\GSE242424_HVG2000_benchmark_input.h5ad",
+  "output_dir": "C:\\Users\\37620\\trajectory\\benchmark\\inputs\\gse242424_author_cluster_matched",
+  "output_h5ad": "C:\\Users\\37620\\trajectory\\benchmark\\inputs\\gse242424_author_cluster_matched\\GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad",
+  "matched_cells_tsv": "C:\\Users\\37620\\trajectory\\benchmark\\inputs\\gse242424_author_cluster_matched\\gse242424_author_cluster_matched_cells.tsv",
+  "local_cells": 156969,
+  "author_transfer_rows": 59378,
+  "matched_local_cells": 59187,
+  "excluded_unmatched_local_cells": 97782,
+  "match_rate_local": 0.377061712822277,
+  "transfer_rows_not_in_local": 191,
+  "barcode_matching_rule": "local_join_key=time_label + '_' + barcode_core; author_join_key=sample + '_' + barcode_core; barcode_core removes trailing -N suffix",
+  "source_urls": {
+    "transfer_table": "https://raw.githubusercontent.com/kundajelab/scATAC-reprog/master/src/analysis/20200828_RNA_Seurat/sessions/20210725_n59378/atac.20210717_n62599.cluster.transfer.tsv",
+    "cluster_conversion": "https://raw.githubusercontent.com/kundajelab/scATAC-reprog/master/src/figures_factory/configs/cluster.tsv",
+    "clusters": "https://zenodo.org/record/8313962/files/clusters.tsv?download=1"
+  },
+  "by_time": [
+    {
+      "time_label": "D0",
+      "matched_cells": 9759,
+      "local_cells": 16842,
+      "excluded_unmatched_cells": 7083,
+      "match_rate": 0.5794442465265408
+    },
+    {
+      "time_label": "D2",
+      "matched_cells": 2523,
+      "local_cells": 3804,
+      "excluded_unmatched_cells": 1281,
+      "match_rate": 0.6632492113564669
+    },
+    {
+      "time_label": "D4",
+      "matched_cells": 5284,
+      "local_cells": 7358,
+      "excluded_unmatched_cells": 2074,
+      "match_rate": 0.718129926610492
+    },
+    {
+      "time_label": "D6",
+      "matched_cells": 7833,
+      "local_cells": 11005,
+      "excluded_unmatched_cells": 3172,
+      "match_rate": 0.7117673784643344
+    },
+    {
+      "time_label": "D8",
+      "matched_cells": 5497,
+      "local_cells": 6921,
+      "excluded_unmatched_cells": 1424,
+      "match_rate": 0.7942493859268892
+    },
+    {
+      "time_label": "D10",
+      "matched_cells": 10443,
+      "local_cells": 13716,
+      "excluded_unmatched_cells": 3273,
+      "match_rate": 0.7613735783027121
+    },
+    {
+      "time_label": "D12",
+      "matched_cells": 7189,
+      "local_cells": 9994,
+      "excluded_unmatched_cells": 2805,
+      "match_rate": 0.7193315989593756
+    },
+    {
+      "time_label": "D14",
+      "matched_cells": 7534,
+      "local_cells": 10315,
+      "excluded_unmatched_cells": 2781,
+      "match_rate": 0.7303926320891905
+    },
+    {
+      "time_label": "iPSC",
+      "matched_cells": 3125,
+      "local_cells": 77014,
+      "excluded_unmatched_cells": 73889,
+      "match_rate": 0.040577037941153554
+    }
+  ],
+  "cluster_counts": [
+    {
+      "author_cluster_id": 1,
+      "author_cluster_label": "Fibroblast",
+      "final_milestone_label_coarse": "fibroblast",
+      "n_matched_cells": 10983
+    },
+    {
+      "author_cluster_id": 2,
+      "author_cluster_label": "Fibroblast-like",
+      "final_milestone_label_coarse": "fibroblast_like_stalled",
+      "n_matched_cells": 140
+    },
+    {
+      "author_cluster_id": 3,
+      "author_cluster_label": "Fibroblast-like",
+      "final_milestone_label_coarse": "fibroblast_like_stalled",
+      "n_matched_cells": 10296
+    },
+    {
+      "author_cluster_id": 4,
+      "author_cluster_label": "Fibroblast-like",
+      "final_milestone_label_coarse": "fibroblast_like_stalled",
+      "n_matched_cells": 3284
+    },
+    {
+      "author_cluster_id": 5,
+      "author_cluster_label": "Fibroblast-like",
+      "final_milestone_label_coarse": "fibroblast_like_stalled",
+      "n_matched_cells": 3183
+    },
+    {
+      "author_cluster_id": 6,
+      "author_cluster_label": "Keratinocyte-like",
+      "final_milestone_label_coarse": "keratinocyte_like",
+      "n_matched_cells": 922
+    },
+    {
+      "author_cluster_id": 7,
+      "author_cluster_label": "hOSK",
+      "final_milestone_label_coarse": "hOSK",
+      "n_matched_cells": 498
+    },
+    {
+      "author_cluster_id": 8,
+      "author_cluster_label": "xOSK",
+      "final_milestone_label_coarse": "xOSK",
+      "n_matched_cells": 1678
+    },
+    {
+      "author_cluster_id": 9,
+      "author_cluster_label": "Intermediate",
+      "final_milestone_label_coarse": "partial_intermediate",
+      "n_matched_cells": 585
+    },
+    {
+      "author_cluster_id": 10,
+      "author_cluster_label": "Partially-reprogrammed",
+      "final_milestone_label_coarse": "partially_reprogrammed",
+      "n_matched_cells": 4445
+    },
+    {
+      "author_cluster_id": 11,
+      "author_cluster_label": "Intermediate",
+      "final_milestone_label_coarse": "primary_intermediate",
+      "n_matched_cells": 4424
+    },
+    {
+      "author_cluster_id": 12,
+      "author_cluster_label": "Intermediate",
+      "final_milestone_label_coarse": "primary_intermediate",
+      "n_matched_cells": 7213
+    },
+    {
+      "author_cluster_id": 13,
+      "author_cluster_label": "Pre-iPSC",
+      "final_milestone_label_coarse": "pre_iPSC",
+      "n_matched_cells": 1863
+    },
+    {
+      "author_cluster_id": 14,
+      "author_cluster_label": "Pre-iPSC",
+      "final_milestone_label_coarse": "pre_iPSC",
+      "n_matched_cells": 6548
+    },
+    {
+      "author_cluster_id": 15,
+      "author_cluster_label": "iPSC",
+      "final_milestone_label_coarse": "iPSC",
+      "n_matched_cells": 3125
+    }
+  ],
+  "runtime_s": 12.47
+}

@@ -135,7 +135,7 @@ The benchmark keeps the same scenario logic as a temporal benchmarking framework
 - Time axis: observed sampling time
 - Goal: benchmark performance under the hardest observed-time setting
 
-### 4.2 Pseudotime scenarios
+### 4.2 Pseudotime scenarios（on hold）
 
 Pseudotime scenarios are specified for framework completeness, but they are **out of scope for the current GSE230659 manuscript-stage report**. The primary dataset has no biological or technical replicates across time points, so pseudotime derived from the same time-confounded expression matrix would be difficult to interpret as an independent temporal axis. Scenarios D-F should therefore be reported as planned supplementary work unless an alternative dataset or independent pseudotime provider is introduced.
 
@@ -1191,3 +1191,10 @@ The final official silver reports were regenerated under `benchmark/reports/`. C
 Official silver ranking tables were generated in `benchmark/reports/official_silver/`. The combined embedding-plus-lineage ranking over the three projection-capable methods is very close: PRESCIENT ranks first with combined rank score 1.7333, MIOFlow second with 1.7389, and scNODE third with 1.7611. This difference is small and should be interpreted cautiously. By metric family, scNODE ranks best for Embedding Coherence because it has the lowest average rank after combining ARI and entropy, while MIOFlow ranks best for Lineage Fidelity. PRESCIENT has the highest mean ARI among the three projection-capable methods and the best combined rank by a narrow margin. WOT and CellRank2 are reported only in the lineage summary because they lack projected expression/embedding outputs.
 
 At this point the official silver benchmark loop is closed: annotation providers, formal model runs, corrected Embedding Coherence, lineage metrics, forecast metrics, validation scripts, summary tables, and model rankings have all been generated and synchronized locally. The next scientific step is interpretation and manuscript/report writing rather than another pipeline rebuild, unless additional seed replicates, bootstrap uncertainty, or alternative annotation-provider sensitivity analyses are requested.
+
+---
+
+**2026.5.14 - GSE242424 input integration**
+GSE242424 raw scRNA matrices were audited with `GSE242423_scRNA_genes.tsv`; all 9 samples matched the 36,601-gene feature table and yielded 156,969 QC-passing cells.
+Reusable MTX streaming utilities and `build_gse242424_raw_full_gene_input.py` produced the full-gene h5ad, followed by `build_gse242424_hvg2000_input.py` producing the 156,969 x 2,000 HVG2000 benchmark input with 50D PCA.
+GSE242424 was registered in the dataset factory with Scenario A/B/C configs; `scTimeBench_cell_type` is currently a time/stage proxy and `iPSC abs_day=16` remains provisional.

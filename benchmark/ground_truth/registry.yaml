@@ -261,3 +261,30 @@ providers:
     notes: 'Official frozen silver-standard milestone provider for GSE230659. state_key=final_milestone_label_coarse.
       Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
       official metrics: ambiguous, unknown_or_ood.'
+  gse242424_oskm_reprogramming_silver_v1:
+    provider_id: gse242424_oskm_reprogramming_silver_v1
+    annotation_method: author_cluster_oskm_reprogramming_silver_provider
+    status: frozen_silver_standard_milestone_provider
+    state_key: final_milestone_label_coarse
+    label_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: false
+    excluded_labels: []
+    n_states: 10
+    n_graph_edges: 9
+    n_cell_labels: 59187
+    source_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+    label_mode: official_silver
+    label_type: frozen_silver_standard
+    analysis_role: primary_report
+    coarse_label_key: final_milestone_label_coarse
+    official_embedding_label_key: final_milestone_label_coarse
+    notes: 'Official frozen silver-standard milestone provider for GSE242424 OSKM
+      reprogramming (author-cluster-matched subset, 59187 cells). state_key=final_milestone_label_coarse.
+      Ten coarse ATAC/RNA cluster milestones covering two reprogramming arms (hOSK
+      and xOSK) plus stalled/off-target branches. Labels transferred from author
+      ATAC cluster annotations via author_atac_to_rna_cluster_transfer. No cells
+      excluded from official metrics (no ambiguous/unknown labels in this provider).'

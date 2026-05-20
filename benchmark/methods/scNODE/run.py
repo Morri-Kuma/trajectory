@@ -108,6 +108,7 @@ _DEFAULTS = dict(
     seed=42,
     n_sim_cells=None,          # None 鈫?use actual cell count at t0 (capped at 2000)
     n_sim_cells_cap=2000,      # safety cap for memory-limited machines
+    metric_sample_cells=1000,  # cap observed/predicted cells for OT metrics
 )
 
 # ---------------------------------------------------------------------------
@@ -229,6 +230,14 @@ def train_or_load(train_data, train_tps, n_genes: int,
 # Forecast Accuracy
 # ---------------------------------------------------------------------------
 
+def _sample_rows_for_metrics(X: np.ndarray, max_cells: int | None, seed: int) -> np.ndarray:
+    """Deterministically cap rows before pairwise OT-style metric computation."""
+    if max_cells is None or int(max_cells) <= 0 or X.shape[0] <= int(max_cells):
+        return X
+    rng = np.random.default_rng(seed)
+    idx = rng.choice(X.shape[0], size=int(max_cells), replace=False)
+    return X[idx]
+
 def run_forecast_accuracy(
     model,
     adata_full,           # FULL adata (all tps) for observed-cell access
@@ -237,6 +246,8 @@ def run_forecast_accuracy(
     heldout_tps: list,
     n_sim_cells: int,
     output_dir: Path,
+    metric_sample_cells: int = 1000,
+    seed: int = 42,
 ):
     """
     Predict GEX at held-out (or all) timepoints and compute forecast metrics.
@@ -277,7 +288,7 @@ def run_forecast_accuracy(
 
     print(f"[Forecast] Predicting from t0={t0} across {len(all_eval_tps)} tps "
           f"(train={len(all_unique_tps)}, heldout={len(heldout_tps)}, "
-          f"n_sim_cells={n_sim_cells}) ...")
+          f"n_sim_cells={n_sim_cells}, metric_sample_cells={metric_sample_cells}) ...")
     with torch.no_grad():
         _, _, recon_obs = model.predict(first_tp_data, all_eval_tps_tensor, n_cells=n_sim_cells)
     recon_np = recon_obs.detach().numpy()   # (n_sim_cells, len(all_eval_tps), n_genes)
@@ -297,7 +308,14 @@ def run_forecast_accuracy(
             print(f"  [Forecast] t={t_h}: no observed cells, skipping")
             continue
 
-        metrics_raw = globalEvaluation(X_obs, X_pred)
+        X_obs_metric = _sample_rows_for_metrics(
+            X_obs, metric_sample_cells, seed=seed + 10_000 + len(per_tp_rows)
+        )
+        X_pred_metric = _sample_rows_for_metrics(
+            X_pred, metric_sample_cells, seed=seed + 20_000 + len(per_tp_rows)
+        )
+
+        metrics_raw = globalEvaluation(X_obs_metric, X_pred_metric)
         per_tp_rows.append({
             "timepoint": t_h,
             "wasserstein_ot": metrics_raw["ot"],
@@ -306,10 +324,13 @@ def run_forecast_accuracy(
             "correlation_dist": metrics_raw["corr"],
             "n_obs_cells":    int(X_obs.shape[0]),
             "n_pred_cells":   int(X_pred.shape[0]),
+            "metric_sample_obs_cells": int(X_obs_metric.shape[0]),
+            "metric_sample_pred_cells": int(X_pred_metric.shape[0]),
         })
         all_pred.append(X_pred)
         print(f"  [Forecast] t={t_h:.2f}: Wasserstein={metrics_raw['ot']:.4f} "
-              f"L2={metrics_raw['l2']:.4f}")
+              f"L2={metrics_raw['l2']:.4f} "
+              f"(metric_obs={X_obs_metric.shape[0]}, metric_pred={X_pred_metric.shape[0]})")
 
     # Save projected_expression.npy
     proj_arr = np.stack(all_pred, axis=0) if all_pred else np.array([])
@@ -331,6 +352,7 @@ def run_forecast_accuracy(
         "n_eval_timepoints":   len(per_tp_rows),
         "eval_timepoints":     eval_tps,
         "scenario_type":       "forecast" if heldout_tps else "reconstruction",
+        "metric_sample_cells":  int(metric_sample_cells),
         "status":              "completed",
     }
     metrics_path = output_dir / "forecast_metrics.json"
@@ -773,6 +795,8 @@ def main():
     heldout_times   = [float(t) for t in scenario_params.get("heldout_times", [])]
 
     n_sim_cells_cfg = scnode_cfg.get("n_sim_cells")   # None means auto
+    metric_sample_cells = int(scnode_cfg.get("metric_sample_cells", _DEFAULTS["metric_sample_cells"]))
+    seed = int(scnode_cfg.get("seed", _DEFAULTS["seed"]))
 
     h5ad_raw = dataset_cfg.get("h5ad_path", "")
     h5ad_path = (Path(h5ad_raw) if Path(h5ad_raw).is_absolute()
@@ -853,6 +877,8 @@ def main():
         run_forecast_accuracy(
             model, adata_full, time_key,
             all_unique_tps, heldout_times, n_sim_cells, output_dir,
+            metric_sample_cells=metric_sample_cells,
+            seed=seed,
         )
 
         # 鈹€鈹€ Embedding Coherence 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€

@@ -23,6 +23,9 @@ Writes four CSVs to benchmark/reports/ (or --output-dir):
 
   embedding_summary.csv
       One row per (result_dir x label_mode) from embedding_milestone_eval/.
+      If sidecar embedding_milestone_eval files are absent, a run-level
+      embedding_metrics.json is accepted only when it carries milestone
+      provider/label/state provenance.
       Columns: dataset_id, method, scenario, run_id, result_dir,
                provider_id, label_mode, state_key, embedding_key, cluster_source,
                adjusted_rand_index, mean_normalized_entropy,
@@ -80,8 +83,13 @@ VALID_RESULT_CLASSES = {
     "reduced_validation", "smoke", "hpc_validation",
     "diagnostic", "external_validation", "archive",
     "marker_fm_transition_silver_formal",
+    "gse242424_oskm_silver_formal",
 }
-FORMAL_RESULT_CLASSES = {"official", "formal", "marker_fm_transition_silver_formal"}
+FORMAL_RESULT_CLASSES = {
+    "official", "formal",
+    "marker_fm_transition_silver_formal",
+    "gse242424_oskm_silver_formal",
+}
 
 LINEAGE_METRIC_NAMES_MAP = {
     "auroc": "auroc",
@@ -93,6 +101,7 @@ LINEAGE_METRIC_NAMES_MAP = {
 
 EMBEDDING_METRIC_NAMES_MAP = {
     "adjusted_rand_index": "adjusted_rand_index",
+    "avg_normalized_classifier_entropy": "mean_normalized_entropy",
     "mean_prediction_entropy": "mean_prediction_entropy",
     "weighted_prediction_entropy": "weighted_prediction_entropy",
     "mean_normalized_entropy": "mean_normalized_entropy",
@@ -289,6 +298,8 @@ def _infer_dataset_id(run_meta: Optional[Dict], metric_doc: Optional[Dict], run_
         provider_id = d.get("provider_id") or (d.get("ground_truth") or {}).get("provider_id")
         if provider_id:
             pid = str(provider_id).lower()
+            if "gse242424" in pid:
+                return "GSE242424"
             if "gse230659" in pid:
                 return "GSE230659"
             if "gse178325" in pid:
@@ -296,12 +307,16 @@ def _infer_dataset_id(run_meta: Optional[Dict], metric_doc: Optional[Dict], run_
         source_h5ad = (d.get("ground_truth") or {}).get("source_h5ad") or d.get("input_h5ad")
         if source_h5ad:
             source = str(source_h5ad).lower()
+            if "gse242424" in source:
+                return "GSE242424"
             if "gse230659" in source:
                 return "GSE230659"
             if "gse178325" in source:
                 return "GSE178325"
     if run_dir:
         name = str(run_dir).lower()
+        if "gse242424" in name:
+            return "GSE242424"
         if "gse230659" in name:
             return "GSE230659"
         if "gse178325" in name:
@@ -476,6 +491,22 @@ def _collect_core_rows(method: str, run_dir: Path, run_meta: Optional[Dict]) -> 
             emb = _load_json_safe(emb_path)
             if emb is not None and _embedding_matches_run_source(emb, run_meta):
                 rows.extend(_embedding_core_rows(_base_row(method, run_dir, run_meta, emb), emb, mode, str(emb_path)))
+    elif not _run_is_legacy_scgpt(run_meta):
+        emb_path = run_dir / "embedding_metrics.json"
+        emb = _load_json_safe(emb_path)
+        if emb is not None and _embedding_matches_run_source(emb, run_meta):
+            label_mode = emb.get("label_mode")
+            provider_id = emb.get("provider_id")
+            state_key = emb.get("state_key") or emb.get("cell_state_key")
+            if label_mode and provider_id and state_key:
+                emb_for_core = dict(emb)
+                emb_for_core["state_key"] = state_key
+                rows.extend(_embedding_core_rows(
+                    _base_row(method, run_dir, run_meta, emb_for_core),
+                    emb_for_core,
+                    str(label_mode),
+                    str(emb_path),
+                ))
 
     return rows
 
@@ -530,21 +561,39 @@ def _collect_embedding_rows(method: str, run_dir: Path, run_meta: Optional[Dict]
     if _run_is_legacy_scgpt(run_meta):
         return []
     emb_dir = run_dir / "embedding_milestone_eval"
-    if not emb_dir.is_dir():
-        return []
     rows: List[Dict] = []
-    for mode in EMBEDDING_MODES:
-        emb_path = emb_dir / f"embedding_metrics_{mode}.json"
+    embedding_docs: List[Tuple[Path, Dict, str]] = []
+
+    if emb_dir.is_dir():
+        for mode in EMBEDDING_MODES:
+            emb_path = emb_dir / f"embedding_metrics_{mode}.json"
+            emb = _load_json_safe(emb_path)
+            if emb is None:
+                continue
+            if not _embedding_matches_run_source(emb, run_meta):
+                continue
+            embedding_docs.append((emb_path, emb, mode))
+    else:
+        emb_path = run_dir / "embedding_metrics.json"
         emb = _load_json_safe(emb_path)
-        if emb is None:
-            continue
-        if not _embedding_matches_run_source(emb, run_meta):
-            continue
+        if emb and _embedding_matches_run_source(emb, run_meta):
+            label_mode = emb.get("label_mode")
+            provider_id = emb.get("provider_id")
+            state_key = emb.get("state_key") or emb.get("cell_state_key")
+            if label_mode and provider_id and state_key:
+                embedding_docs.append((emb_path, emb, str(label_mode)))
+
+    for emb_path, emb, mode in embedding_docs:
         label_mode = str(emb.get("label_mode") or mode)
         provider_id = str(emb.get("provider_id") or "")
-        state_key = str(emb.get("state_key") or "")
-        embedding_key = str(emb.get("embedding_key") or "")
-        cluster_source = str(emb.get("cluster_source") or "")
+        state_key = str(emb.get("state_key") or emb.get("cell_state_key") or "")
+        embedding_key = str(
+            emb.get("embedding_key")
+            or emb.get("latent_space")
+            or emb.get("embedding_space")
+            or ""
+        )
+        cluster_source = str(emb.get("cluster_source") or "provider_state_labels")
         flags = _make_analysis_flags(label_mode, provider_id, state_key)
         base = _base_row(method, run_dir, run_meta, emb)
         row = dict(base)
@@ -560,12 +609,16 @@ def _collect_embedding_rows(method: str, run_dir: Path, run_meta: Optional[Dict]
             "entropy_basis": _safe(emb.get("entropy_basis")),
             "n_probability_classes": _safe(emb.get("n_probability_classes")),
             "prediction_entropy_note": _safe(emb.get("prediction_entropy_note")),
-            "mean_normalized_entropy": _safe(emb.get("mean_normalized_entropy")),
+            "mean_normalized_entropy": _safe(
+                emb.get("mean_normalized_entropy")
+                if emb.get("mean_normalized_entropy") is not None
+                else emb.get("avg_normalized_classifier_entropy")
+            ),
             "weighted_mean_normalized_entropy": _safe(
                 emb.get("weighted_mean_normalized_entropy")),
             "hard_label_entropy_note": _safe(emb.get("entropy_note") or emb.get("note")),
             "n_cells_evaluated": _safe(emb.get("n_cells_evaluated")),
-            "status": _safe(emb.get("ari_status")),
+            "status": _safe(emb.get("ari_status") or emb.get("status")),
             "source_json": str(emb_path),
         })
         row.update(flags)

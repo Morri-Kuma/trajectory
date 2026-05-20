@@ -133,8 +133,11 @@ class ScNODEAdapter(BaseAdapter):
                     int(train_data[0].shape[0]),
                     int(scnode_cfg.get("n_sim_cells_cap", DEFAULT_N_SIM_CELLS_CAP)),
                 )
+            metric_sample_cells = int(scnode_cfg.get("metric_sample_cells", 1000))
+            seed = int(scnode_cfg.get("seed", 42))
             print(
                 f"[ScNODEAdapter] n_genes={n_genes}, n_sim_cells={n_sim_cells}, "
+                f"metric_sample_cells={metric_sample_cells}, "
                 f"train_times={train_times if train_times else 'all'}, "
                 f"heldout_times={heldout_times}"
             )
@@ -160,6 +163,8 @@ class ScNODEAdapter(BaseAdapter):
                 heldout_tps=heldout_times,
                 n_sim_cells=n_sim_cells,
                 output_dir=self.output_dir,
+                metric_sample_cells=metric_sample_cells,
+                seed=seed,
             )
             run_embedding_coherence(
                 model=model,
@@ -214,6 +219,7 @@ class ScNODEAdapter(BaseAdapter):
                 "train_times": train_times if train_times else "all",
                 "heldout_times": heldout_times,
                 "n_sim_cells": locals().get("n_sim_cells"),
+                "metric_sample_cells": locals().get("metric_sample_cells"),
                 "notes": err_notes,
             }
             with open(self.output_dir / "run_metadata.json", "w", encoding="utf-8") as f:

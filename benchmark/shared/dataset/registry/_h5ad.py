@@ -86,3 +86,16 @@ class GSE178325Dataset(TrajectoryH5ADDataset):
     dataset_id = "GSE178325"
     default_time_key = "abs_day"
     default_cell_state_key = "scgpt_pseudostate_provisional"
+
+
+class GSE242424Dataset(TrajectoryH5ADDataset):
+    """GSE242424 iPSC reprogramming time-course (D0-D14 + iPSC).
+
+    cell_state_key is a time/stage proxy (scTimeBench_cell_type), not a
+    biologically annotated milestone system.  lineage_fidelity evaluation
+    is deferred until a reference graph is available.
+    """
+
+    dataset_id = "GSE242424"
+    default_time_key = "abs_day"
+    default_cell_state_key = "scTimeBench_cell_type"
