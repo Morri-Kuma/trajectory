@@ -69,7 +69,7 @@ class WOTAdapter(BaseAdapter):
 
         time_key = self.scenario_config.get("time_key", "time_label")
         cell_state_key = self.scenario_config.get(
-            "cell_state_key", "scTimeBench_cell_type"
+            "cell_state_key", "final_milestone_label_coarse"
         )
         wot_params = self.scenario_config.get("wot_params", {}) or {}
         dataset_id = self.scenario_config.get("dataset_id", "unknown")

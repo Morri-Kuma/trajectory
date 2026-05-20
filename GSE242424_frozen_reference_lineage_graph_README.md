@@ -24,14 +24,14 @@ samples plus an iPSC endpoint. The biological states center on fibroblast
 silencing, OSK-associated states, intermediate/pre-iPSC states, iPSC, and
 off-target or stalled branches.
 
-The earlier local GSE242424 input only had time/stage proxy labels:
+The earlier local GSE242424 input only had temporary time/stage proxy labels
+and has been removed from the active benchmark tree.
 
 ```text
-benchmark/inputs/gse242424_hvg2000/GSE242424_HVG2000_benchmark_input.h5ad
+benchmark/inputs/gse242424_hvg2000/
 ```
 
-That file's `scTimeBench_cell_type` is a time proxy and is not the official
-lineage state system. Formal silver runs use the author-cluster-matched subset:
+Formal silver runs use the author-cluster-matched subset:
 
 ```text
 benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad

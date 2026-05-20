@@ -8,7 +8,6 @@
   "state_key": "final_milestone_label_coarse",
   "confidence_key": "final_milestone_confidence",
   "source_key": "final_milestone_source",
-  "official_embedding_label_key": "final_milestone_label_coarse",
   "analysis_role": "primary_report",
   "version": "v1",
   "graph_type": "author_cluster_defined_oskm_reprogramming_milestone_graph",

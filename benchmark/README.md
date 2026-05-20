@@ -28,7 +28,6 @@ benchmark/
 |-- adapters/                       # method wrappers and capability gates
 |-- annotation/                     # annotation/provider-building utilities
 |-- configs/                        # scenario, method, runtime, and run configs
-|-- datasets/                       # legacy dataset construction helpers
 |-- docs/                           # framework notes and diagnostics
 |-- evaluation/                     # metric dispatch and evaluators
 |-- ground_truth/                   # frozen state labels and reference graphs
@@ -36,7 +35,6 @@ benchmark/
 |-- methods/                        # vendored or wrapped method implementations
 |-- reports/                        # aggregated summaries and figures
 |-- results/                        # per-method per-scenario outputs
-|-- scgpt/                          # legacy scGPT annotation/provider utilities
 `-- shared/                         # shared dataset and utility code
 ```
 
@@ -63,17 +61,10 @@ sets is:
 Current reportable summaries:
 
 - `reports/official_silver/official_silver_model_rankings.md`
+- `reports/official_silver/official_silver_combined_method_summary_scnode_mioflow_prescient.csv`
+- `reports/official_silver/official_silver_embedding_method_summary.csv`
+- `reports/official_silver/official_silver_lineage_method_summary.csv`
 - `reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md`
-- `reports/core_summary.csv`
-- `reports/embedding_summary.csv`
-- `reports/lineage_summary.csv`
-- `reports/official/gse230659_projected_hvg_annotation_audit.md`
-
-Legacy summaries retained for comparison:
-
-- `results/summary_gse178325_0618_forecast_embedding.csv`
-- `results/summary_lineage_metrics_preferred.csv`
-- `reports/formal_benchmark_summary.csv`
 
 Per-run outputs usually include:
 
@@ -102,9 +93,8 @@ Current reportable runs use frozen silver-standard providers under
 | `gse242424_oskm_reprogramming_silver_v1` | GSE242424 | `gse242424_oskm_silver_formal` |
 
 The GSE242424 provider is built from the 59,187-cell author-cluster-matched
-subset, not the full local 156,969-cell GSE242424 input. The legacy scGPT
-pseudostate providers remain available for backward compatibility and historical
-reports, but they are not the current primary benchmark reference.
+subset, not the full local 156,969-cell GSE242424 input. The active benchmark
+registry contains only these official silver providers.
 
 ## Running a Config
 
@@ -120,12 +110,11 @@ python benchmark/methods/scNODE/run.py \
     --config benchmark/configs/runtime/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 ```
 
-Root-level helper scripts are available for array-style runs, for example:
+Root-level helper scripts are available for current official-silver checks, for example:
 
 ```bash
-bash run_marker_fm_transition_silver_primary_array.sh
-bash run_marker_fm_transition_silver_summarize_and_validate.sh
-bash run_gse242424_oskm_silver_formal_array.sh
+bash run_marker_fm_transition_silver_validate_configs_array.sh
+bash run_marker_fm_transition_silver_embedding_coherence_array.sh
 ```
 
 ## Capability Gating

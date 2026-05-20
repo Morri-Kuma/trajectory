@@ -13,7 +13,7 @@ state_system:
     use final_milestone_label_coarse.
 dataset:
   id: GSE230659
-  pkl_path: benchmark/datasets/scgpt_v1_no_pkl_placeholder.pkl
+  pkl_path: null
   h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
   time_key: abs_day
 output:

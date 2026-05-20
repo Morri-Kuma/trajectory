@@ -1,654 +1,558 @@
-# 导师汇报材料：iPSC / OSKM reprogramming trajectory benchmark
+# 导师汇报材料：scTimeBench-aligned iPSC / OSKM trajectory benchmark
 
-这份材料的目标不是简单展示“我跑了哪些模型、哪个模型第一”，而是向导师解释这个项目的设计逻辑：
+这份材料用于向导师介绍当前项目的设计逻辑，而不是单纯展示模型排名。建议汇报主线分三部分：
 
-> 在真实 lineage ground truth 不可直接获得的 reprogramming 单细胞时间序列中，如何构造一个可复现、可质疑、可扩展、且对不同方法公平的 trajectory benchmark？
-
-建议汇报时间：15-20 分钟。  
-建议主线：**科学问题 -> 数据和 QC -> silver reference -> scenario 设计 -> 方法能力 gating -> 三类指标 -> ranking 规则 -> 当前结果 -> 需要导师判断的问题**。
-
----
-
-## 0. 汇报开场：我希望导师帮我判断什么
-
-**建议开场白：**
-
-> 我目前完成的主要工作是搭建一个面向 iPSC / reprogramming trajectory 的 benchmark 框架。这个框架参考 scTimeBench 的评价思想，但针对我们的数据重新设计了 state system、reference graph、method capability gating 和结果汇总方式。今天我想重点请老师判断三件事：第一，silver milestone reference 是否生物学合理；第二，三类指标是否能公平反映不同方法的能力；第三，下一步应该把工作推进成 benchmark 论文，还是基于 benchmark 结果做方法改进。
-
-**导师需要听懂的核心贡献：**
-
-1. 我不是只复现单个 trajectory 方法，而是在构造一个评测体系。
-2. 这个体系把“表达分布预测”“状态结构保持”“谱系边恢复”拆成三个问题。
-3. 不同方法输出能力不同，所以不能强行用同一套指标评价所有方法。
-4. 由于没有真实 lineage ground truth，reference 是 frozen silver standard，必须主动讨论其生物学合理性和局限。
+1. **项目背景介绍**：说明本项目主要参考了 *scTimeBench: A streamlined benchmarking platform for single-cell time-series analysis* 的框架，并在 iPSC / OSKM reprogramming 场景下做了哪些修改。
+2. **实际使用的数据类型与可视化**：说明当前 benchmark 用了哪些单细胞时间序列数据、哪些 benchmark 输入文件、哪些 QC / 分布图可以展示。
+3. **Silver standard 的设计逻辑和 metrics 使用方式**：说明为什么需要 frozen silver standard、各数据集如何构建 silver standard，以及 Forecast / Embedding / Lineage metrics 如何利用这些 silver standard。
 
 ---
 
-## 1. 项目为什么需要这样设计
+## 1. 项目背景介绍
 
-### 1.1 生物学和计算问题
+### 1.1 研究问题
 
-**问题背景：**
+单细胞 reprogramming 数据通常是时间序列数据：细胞在不同时间点被采样，表达状态随着重编程过程变化。但是这类数据通常没有真实可观测的 cell lineage ground truth。也就是说，我们很难直接知道每个细胞真实来自哪个前体细胞、最终走向哪个命运分支。
 
-reprogramming 单细胞数据有时间顺序，但通常缺少直接观测到的真实 cell lineage。很多 trajectory 方法可以给出动态预测、细胞状态转移或未来时间点的 projected cells，但它们的输出形式不同，不能直接用一个简单 accuracy 评价。
+因此，本项目要解决的问题不是简单地“复现某个 trajectory 方法”，而是：
 
-**因此 benchmark 需要同时回答三个层次的问题：**
+> 如何在没有真实 lineage ground truth 的情况下，为 iPSC / OSKM reprogramming 单细胞时间序列构建一个可复现、可比较、对不同方法公平的 benchmark？
 
-| 问题层次 | 具体问题 | 对应评价维度 |
+这个问题涉及三个层面：
+
+| 层面 | 具体问题 | 对应 benchmark 维度 |
 |---|---|---|
-| 表达分布是否预测对了 | 模型生成的未来/held-out cells 是否接近真实观察到的细胞分布？ | Forecast Accuracy |
-| 状态结构是否保留 | projected cells 在 embedding space 中是否仍能形成合理 biological state structure？ | Embedding Coherence |
-| 谱系方向是否恢复 | 模型预测的 state transitions 是否接近 frozen reference lineage graph？ | Lineage Fidelity |
+| 表达分布预测 | 方法生成的未来或 held-out 时间点细胞，是否接近真实观测细胞？ | Forecast Accuracy |
+| 状态结构保持 | projected cells 在 embedding space 中是否仍然保留合理的细胞状态结构？ | Embedding Coherence |
+| 谱系结构恢复 | 方法预测的 state transition 是否接近一个固定的 reference lineage graph？ | Lineage Fidelity |
 
-**为什么不只看一个指标：**
-
-单一指标会混淆不同能力。例如，一个方法可能很好地拟合表达分布，但无法恢复 reference graph；另一个方法可能不能生成新细胞，但能给出可解释的 transition structure。因此项目必须拆成多个评价面。
+这三个问题不能合并成一个简单 accuracy。一个方法可能很好地生成未来表达分布，但不一定恢复正确的状态转移；另一个方法可能不能生成未来细胞，但能给出有用的 lineage transition structure。
 
 ---
 
-## 2. 整体 benchmark pipeline：每一步为什么这样设计
+### 1.2 与 scTimeBench 的关系
 
-### Slide 建议：一张 pipeline 图
+本项目主要参考的框架是：
 
-```text
-Raw / processed scRNA-seq time series
-        |
-        |  为什么：保证模型输入不是未经检查的矩阵
-        v
-QC + HVG2000 benchmark input
-        |
-        |  为什么：统一特征空间，减少不同方法因输入维度不同产生的不公平
-        v
-Frozen silver milestone labels
-        |
-        |  为什么：没有真实 lineage labels，需要一个可复现的 benchmark state abstraction
-        v
-Reference lineage graph
-        |
-        |  为什么：Lineage Fidelity 需要固定的 state-transition 目标
-        v
-Scenario A/B/C method runs
-        |
-        |  为什么：分别测试 observed-time、future extrapolation、mixed split
-        v
-Capability-gated evaluators
-        |
-        |  为什么：只在方法真正支持的输出上评价，避免人为制造伪任务
-        v
-Forecast / Embedding / Lineage metrics
-        |
-        |  为什么：把表达预测、状态结构、谱系恢复分开解释
-        v
-Within-scenario ranks + summary
-```
+> **scTimeBench: A streamlined benchmarking platform for single-cell time-series analysis**
 
-### 2.1 为什么使用 HVG2000 input
+scTimeBench 提供了一个核心思路：不要只用一个任务评价单细胞时间序列方法，而是从多个维度评估模型是否能处理 temporal single-cell data。本项目保留了 scTimeBench 的三个顶层评价维度：
 
-**设计目的：**
+1. **Forecast Accuracy**
+2. **Embedding Coherence**
+3. **Lineage Fidelity**
 
-- 让 MIOFlow、PRESCIENT、scNODE 等方法在可承受的计算规模下运行；
-- 保持不同方法输入特征空间一致；
-- 让 projected expression 的后续 embedding / annotation 也在相同 gene universe 下执行。
+本项目没有直接复制 scTimeBench，而是在其框架上做了面向 iPSC / OSKM reprogramming 的适配。
 
-**需要说明的限制：**
+### 1.3 本项目在 scTimeBench 基础上的修改
 
-HVG2000 不是 full transcriptome。某些 marker 或 rare-state signal 可能被弱化。因此结果更适合作为 benchmark comparison，而不是直接等价于完整生物学解释。
-
-### 2.2 为什么使用 observed-time scenarios A/B/C
-
-| Scenario | 设计 | 想测试的能力 |
+| 设计层面 | scTimeBench 提供的思想 | 本项目的修改 |
 |---|---|---|
-| A | 使用所有 observed timepoints 做训练/评价 | 方法在完整时间轴上是否能重构动态结构 |
-| B | 训练早期时间点，hold out later timepoints | 方法是否能外推未来 reprogramming states |
-| C | 同时 hold out 中间和最后时间点 | 方法是否兼具插值和外推能力 |
+| 评价维度 | 使用 Forecast / Embedding / Lineage 多维度评价 | 保留三类评价维度，但将 annotation-dependent 部分改为 milestone-based silver standard |
+| 数据对象 | 单细胞时间序列 benchmark 数据 | 换成 GSE230659、GSE178325、GSE242424 等 iPSC / OSKM reprogramming 数据 |
+| 状态系统 | 需要 cell states / labels 支持 embedding 和 lineage 评价 | 构建 frozen official-silver milestone providers |
+| Reference graph | 需要 reference lineage 用于 lineage fidelity | 为每个数据集构建 dataset-specific reference graph |
+| 方法适用性 | 不同方法支持的输出不同 | 显式使用 capability gating，避免把方法强行放入不支持的任务 |
+| 输出汇总 | 多指标、多任务汇总 | 在同一 dataset / scenario / provider / label mode 内排名，避免混合不同 reference scale |
 
-**为什么暂时不主打 pseudotime scenarios D-F：**
-
-当前主要数据集缺少跨时间点 biological/technical replicates。若 pseudotime 从同一套 time-confounded expression matrix 中推断，再拿来评价 trajectory，独立性会比较弱。因此 D-F 更适合作为后续 supplementary work，而不是当前主结果。
+最核心的修改是：**scTimeBench 的 metric framework 被保留，但 biological state system 被替换成适合本项目数据的 frozen silver milestone system。**
 
 ---
 
-## 3. 数据和 QC：为什么这一部分必须先讲
+### 1.4 为什么需要 capability-gated evaluation
 
-导师首先会关心：benchmark 的输入数据是否可靠。如果数据本身有明显 batch/timepoint imbalance 或 QC 问题，后续模型 ranking 就不可信。
+不同 trajectory 方法能输出的结果不同，因此不能强行让所有方法都接受同一套评价。
 
-### 3.1 当前纳入的数据集
+| Method | 能否生成未来时间点 projected cells | 能否做 lineage transition inference | 本项目评价维度 |
+|---|---:|---:|---|
+| MIOFlow | yes | yes | Forecast + Embedding + Lineage |
+| PRESCIENT | yes | yes | Forecast + Embedding + Lineage |
+| scNODE | yes | yes | Forecast + Embedding + Lineage |
+| WOT | no | yes | Lineage only |
+| CellRank2 | no | yes | Lineage only |
 
-| Dataset | Role | Benchmark cells / matched cells | Timepoints | 当前用途 |
-|---|---:|---:|---|---|
-| GSE230659 | primary benchmark | 75,194 official-silver labeled cells | 15 stage/day labels in QC summary | human chemical reprogramming 主 benchmark |
-| GSE178325 | external validation | 80,475 official-silver labeled cells | 15 stage/day labels in QC summary | 独立 validation |
-| GSE242424 | OSKM extension | 59,187 author-cluster-matched cells; 156,969 local QC-pass cells | 9 timepoints | 检验框架能否扩展到 OSKM fibroblast reprogramming |
+这里的逻辑是：
 
-### 3.2 QC 可视化需要保留
+- 如果方法能生成 projected expression / projected cells，就可以评价 Forecast Accuracy 和 Embedding Coherence。
+- 如果方法只能产生 transport map、transition matrix 或 fate / lineage 相关输出，就只评价 Lineage Fidelity。
+- 不为了“表面公平”给 WOT / CellRank2 人为加 projection adapter，因为那样评价的可能是 adapter，而不是原方法。
 
-**GSE230659 QC:**
+汇报时可以这样说：
+
+> 我们不是要求所有方法做同一件事，而是根据方法本身能输出什么来决定评价什么。这样可以避免为了统一比较而制造伪任务。
+
+---
+
+## 2. 实际使用的数据类型与数据可视化
+
+### 2.1 本项目实际使用的数据类型
+
+当前项目中的数据可以分成四类：
+
+| 数据类型 | 文件 / 输出形式 | 用途 |
+|---|---|---|
+| post-QC scRNA-seq time-series input | `.h5ad`，HVG2000 expression matrix，obs 中包含 `abs_day` / stage / time label | 模型训练、projection、forecast evaluation |
+| frozen silver labels | `state_labels.tsv`，`state_metadata.tsv` | 给 observed cells 定义 benchmark state system |
+| frozen reference graph | `reference_graph.json`，`reference_graph_edges.csv` | Lineage Fidelity 的评价目标 |
+| method outputs | `projected_expression.npy`，`projected_embedding.npy`，`state_transition_matrix.csv`，metrics JSON/CSV | 计算 Forecast / Embedding / Lineage metrics |
+
+本项目目前主要使用 **HVG2000** 特征空间。这样做的原因是：
+
+- 保持不同方法输入维度一致；
+- 降低模型训练和评估的计算成本；
+- 让 projected expression、embedding 和 downstream annotation 在同一 gene universe 下进行；
+- 避免不同方法因为输入基因数不同而产生不公平比较。
+
+限制也需要说明：HVG2000 不是 full transcriptome，某些 rare-state marker 可能被弱化。因此这些结果应理解为 benchmark comparison，而不是完整生物学解释。
+
+---
+
+### 2.2 当前纳入的单细胞时间序列数据集
+
+| Dataset | Biological system | Benchmark role | 当前使用的细胞数 | 时间信息 | Provider |
+|---|---|---|---:|---|---|
+| GSE230659 | human chemical iPSC reprogramming | primary benchmark | 75,194 official-silver labeled cells | 15 stage/day labels in QC summary | `gse230659_marker_fm_transition_silver_v1` |
+| GSE178325 | human iPSC reprogramming validation data | external validation | 80,475 official-silver labeled cells | 15 stage/day labels in QC summary | `gse178325_marker_fm_transition_silver_v1` |
+| GSE242424 | OSKM fibroblast reprogramming | OSKM extension | 59,187 author-cluster-matched cells; 156,969 local QC-pass cells | 9 timepoints: D0, D2, D4, D6, D8, D10, D12, D14, iPSC/D16 | `gse242424_oskm_reprogramming_silver_v1` |
+
+GSE242424 需要特别说明：正式 silver benchmark 使用的是 **59,187-cell author-cluster-matched subset**，不是完整 156,969-cell local QC-pass dataset。完整数据用于说明数据规模和 QC，matched subset 用于 formal silver evaluation。
+
+---
+
+### 2.3 GSE230659 数据可视化
+
+**展示目的：**说明 primary benchmark 数据具有时间结构，同时检查不同 stage/timepoint 的细胞数量和潜在不均衡。
 
 ![GSE230659 PCA by time](benchmark/reports/qc/20260417_1903_pca_time.png)
 
 ![GSE230659 cell counts per timepoint](benchmark/reports/qc/20260417_1903_cell_counts_per_time.png)
 
-**GSE178325 QC:**
+可以汇报：
+
+- GSE230659 有 75,194 个 official-silver labeled cells。
+- QC summary 覆盖 15 个 stage/day labels。
+- PCA by time 用于直观看时间轴是否在表达空间中形成连续或分段结构。
+- cell counts per timepoint 用于讨论 timepoint imbalance 是否会影响 forecast / lineage evaluation。
+
+---
+
+### 2.4 GSE178325 数据可视化
+
+**展示目的：**说明 external validation 数据不是同一个数据集上的重复实验，而是用于检查 benchmark 逻辑能否迁移到另一个 iPSC reprogramming 数据。
 
 ![GSE178325 PCA by time](benchmark/reports/qc/gse178325_human/20260502_1345_pca_time.png)
 
 ![GSE178325 cell counts per timepoint](benchmark/reports/qc/gse178325_human/20260502_1345_cell_counts_per_time.png)
 
-**GSE242424 QC / matched subset:**
+可以汇报：
 
-![GSE242424 QC-pass cells by timepoint](benchmark/reports/gse242424_oskm_silver/figures/gse242424_qc_cells_by_timepoint.png)
-
-### 3.3 讲解 QC 时要说什么
-
-**建议表述：**
-
-> 这些 QC 图不是装饰，而是 benchmark 解释的一部分。trajectory benchmark 很容易受到 timepoint cell number、library quality 和 time-stage confounding 的影响。因此我在展示模型结果前，先展示每个数据集的 timepoint coverage、cell count distribution 和 PCA time structure，目的是让老师判断这些数据是否适合承担 trajectory evaluation。
-
-**希望导师帮忙判断：**
-
-- 是否需要对 cell counts 做 downsampling 或 timepoint balancing？
-- 某些时间点是否由于 QC 或细胞数问题不适合纳入主要评价？
-- GSE242424 的 iPSC timepoint cell count 很大，但 matched subset 中 iPSC 数量较少，这是否会影响 OSKM benchmark 的解释？
+- GSE178325 有 80,475 个 official-silver labeled cells。
+- 与 GSE230659 一样，使用 marker-FM transition silver provider。
+- 该数据集包含 `xen_like` milestone，因此 reference graph 与 GSE230659 不完全相同。
 
 ---
 
-## 4. Silver labels 和 reference graph：为什么不直接用 cluster 或 cell type
+### 2.5 GSE242424 数据可视化
 
-### 4.1 设计动机
+**展示目的：**说明本项目不只适用于 chemical iPSC reprogramming，也能扩展到 OSKM fibroblast reprogramming。GSE242424 的 biological state system 更复杂，包含 productive、partial、stalled 和 off-target branches。
 
-真实 lineage ground truth 不存在，原始 cluster label 又不一定等价于 reprogramming milestone。因此项目需要一个中间层：
+![GSE242424 QC-pass cells by timepoint](benchmark/reports/gse242424_oskm_silver/figures/gse242424_qc_cells_by_timepoint.png)
 
-> frozen silver-standard milestone state system
+![GSE242424 OSKM silver label distribution](benchmark/reports/gse242424_oskm_silver/figures/gse242424_label_distribution.png)
 
-它的作用不是宣称“这就是真实生物学谱系”，而是提供一个版本固定、可复现、可替换、可做 sensitivity analysis 的 benchmark reference。
+可以汇报：
 
-### 4.2 为什么要 frozen
+- local GSE242424 h5ad 中有 156,969 个 QC-pass cells。
+- 通过 author ATAC-to-RNA cluster transfer table 匹配得到 59,187 个 cells 用于 formal silver benchmark。
+- 该 provider 有 10 个 coarse milestones 和 9 条 reference edges。
+- iPSC endpoint 在 local QC-pass 数据中很多，但 matched subset 中只有 3,125 个 iPSC cells，这一点需要作为解释 caveat。
 
-如果 labels 或 reference graph 在模型评价过程中不断改变，benchmark ranking 就不可复现。Frozen provider 的作用是：
+---
 
-- 固定 state label 文件；
-- 固定 state metadata；
-- 固定 reference graph edges；
-- 固定 provider ID、label mode、cell state key；
-- 让所有 method 在同一个评价目标上比较。
+## 3. Silver standard 的构建逻辑
 
-### 4.3 当前 official-silver providers
+这一部分要按照 `experimental framework v2.md` 中 **9.3.2 Active official-silver provider strategy** 来讲。核心不是“我们有几个 label 文件”，而是：
 
-| Dataset | Provider | State key | Cells | States | Edges | 设计来源 |
-|---|---|---|---:|---:|---:|---|
-| GSE178325 | `gse178325_marker_fm_transition_silver_v1` | `final_milestone_label_coarse` | 80,475 | 5 | 4 | marker / foundation-model / trajectory-aware milestone |
-| GSE230659 | `gse230659_marker_fm_transition_silver_v1` | `final_milestone_label_coarse` | 75,194 | 4 graph states; 3 observed label classes | 3 | marker / foundation-model / trajectory-aware milestone |
-| GSE242424 | `gse242424_oskm_reprogramming_silver_v1` | `final_milestone_label_coarse` | 59,187 | 10 | 9 | author ATAC-to-RNA cluster transfer |
+> 本项目的 annotation-dependent benchmark 只使用一层冻结的 `official_silver` milestone provider；它取代了早期 scGPT pseudostate graph，也不再把 `consensus`、`embedding_based`、`classifier_based` 三套 provider 作为 primary benchmark。
 
-### 4.4 GSE178325 reference graph
+换句话说，silver standard 是一个**正式注册、版本冻结、由 registry 调用的 benchmark reference layer**。它负责给每个数据集定义统一的 state label 和 reference graph，使 Embedding Coherence 与 Lineage Fidelity 可以在同一个状态系统下比较不同方法。
 
-```text
-hADSCs -> epithelial_like
-epithelial_like -> intermediate_plastic
-intermediate_plastic -> xen_like
-xen_like -> hCiPS
-```
+---
 
-Label distribution:
+### 3.1 一句话说明 silver standard 是什么
 
-| State | Cells |
-|---|---:|
-| epithelial_like | 67,817 |
-| hADSCs | 5,706 |
-| intermediate_plastic | 4,654 |
-| hCiPS | 2,144 |
-| xen_like | 154 |
-
-**设计含义：**
-
-这个 graph 明确保留 `xen_like` intermediate。它适合讨论 GSE178325 是否包含 XEN-like branch / intermediate state。
-
-### 4.5 GSE230659 reference graph
+Silver standard 不是 biological ground truth，也不是模型输出的一部分。它是我们为了让 benchmark 可执行、可复现、可比较而冻结下来的 reference：
 
 ```text
-hADSCs -> epithelial_like
-epithelial_like -> intermediate_plastic
-intermediate_plastic -> hCiPS
+observed cells
+    -> assign / transfer milestone labels
+    -> freeze final_milestone_label_coarse
+    -> register official_silver provider
+    -> metrics read labels + reference graph from registry
 ```
 
-Observed label distribution in current label file:
+汇报时可以这样解释：
 
-| State | Cells |
-|---|---:|
-| epithelial_like | 67,112 |
-| hCiPS | 5,370 |
-| intermediate_plastic | 2,712 |
+> 因为真实 lineage ground truth 不存在，我们不能直接证明模型恢复了真实发育轨迹；所以我们构建一个 frozen official-silver milestone system，作为所有 annotation-dependent metrics 的共同参照。
 
-**重要解释：**
+---
 
-GSE230659 的 active order 中保留 `hADSCs` 作为 conceptual starting milestone，但当前官方 label 文件没有分配出 hADSCs，因为可用最早时间点是 Day 0.5，而不是 Day 0。这不是一个可以忽略的小细节，汇报时应该主动拿出来请导师判断：
+### 3.2 当前 primary benchmark 只承认 active official-silver provider
 
-- 是否保留 hADSCs 作为 reference graph 的 conceptual start？
-- 还是在 GSE230659 主评价中将 graph 改成 `epithelial_like -> intermediate_plastic -> hCiPS`？
-- 如果保留，Lineage Fidelity 中涉及 hADSCs 的边应如何解释？
+目前正式 benchmark 不再使用早期设计中的 scGPT pseudostate silver standard，也不再生成三套候选 provider：
 
-### 4.6 GSE242424 OSKM reference graph
+| 早期/历史设计 | 当前是否用于 primary benchmark | 原因 |
+|---|---|---|
+| scGPT pseudostate graph | 否 | 它属于早期探索路线，不再作为正式 reference |
+| `consensus` provider | 否 | 不再作为当前 active provider-generation 逻辑 |
+| `embedding_based` provider | 否 | 避免用 embedding-derived labels 反过来评价 embedding |
+| `classifier_based` provider | 否 | 不作为当前 primary benchmark 的正式标签来源 |
+| `official_silver` provider | 是 | 当前唯一 active annotation-dependent reference layer |
+
+因此，所有正式报告和 ranking table 必须带上：
+
+```yaml
+ground_truth:
+  label_mode: official_silver
+  state_key: final_milestone_label_coarse
+  exclude_uncertain_states: true
+```
+
+这一步的目的很关键：**任何分数都必须知道自己是在哪个 dataset、scenario、provider、label mode 下算出来的**，否则不同版本的 reference 会被混在一起，ranking 就没有解释力。
+
+---
+
+### 3.3 GSE178325 / GSE230659 的 marker-FM official-silver 构建流程
+
+GSE178325 和 GSE230659 使用同一类 active provider strategy：先用 marker / time / sample provenance 产生 seed labels，再用 trajectory-aware 规则处理不确定细胞，最后冻结 provider。
+
+```mermaid
+flowchart TD
+    A["Observed cells in GSE178325 / GSE230659"] --> B["Stage 1: build_marker_seed_labels.py"]
+    B --> C["High-confidence labels from sample/time provenance, literature-supported marker rules, marker-score evidence"]
+    B --> D["Uncertain cells routed to ambiguous"]
+    C --> E["Seed-labeled cells"]
+    D --> F["Stage 2: build_trajectory_aware_labels.py"]
+    F --> G["Use marker-score strength and score margins"]
+    F --> H["Use adjacent-transition logic"]
+    F --> I["Optional embedding-centroid evidence"]
+    G --> J["Resolved coarse milestone / transition / unknown_or_ood"]
+    H --> J
+    I --> J
+    F --> K["Still unresolved: ambiguous"]
+    E --> L["final_milestone_label_coarse"]
+    J --> L
+    K --> L
+    L --> M["build_milestone_providers.py"]
+    M --> N["Frozen official_silver provider"]
+```
+
+这条流程的逻辑是：
+
+1. **先保守地给高置信细胞打标签。** Stage 1 只给 marker、时间来源、样本信息都比较支持的细胞分配 milestone labels；不能可靠判断的细胞先进入 `ambiguous`。
+2. **再处理灰区细胞。** Stage 2 不直接丢弃所有不确定细胞，而是结合 marker-score 强度、分数 margin、相邻 transition 关系和可选 embedding-centroid evidence，尽量把一部分细胞解析到 coarse milestone 或 transition state。
+3. **最后冻结一个正式 provider。** `build_milestone_providers.py` 使用 `final_milestone_label_coarse` 生成 frozen provider assets。当前实现只生成 `official_silver` provider，不再生成历史的 `consensus`、`embedding_based`、`classifier_based` provider modes。
+
+---
+
+### 3.4 两个 marker-FM provider 的 active reference graph
+
+GSE178325 的 active primary milestone graph 是：
+
+```text
+hADSCs -> epithelial_like -> intermediate_plastic -> xen_like -> hCiPS
+```
+
+GSE230659 的 active primary milestone graph 是：
+
+```text
+hADSCs -> epithelial_like -> intermediate_plastic -> hCiPS
+```
+
+对应的 active registered providers 是：
+
+| Dataset | Active provider | State key | 不确定标签处理 |
+|---|---|---|---|
+| GSE178325 | `gse178325_marker_fm_transition_silver_v1` | `final_milestone_label_coarse` | `ambiguous` / `unknown_or_ood` excluded |
+| GSE230659 | `gse230659_marker_fm_transition_silver_v1` | `final_milestone_label_coarse` | `ambiguous` / `unknown_or_ood` excluded |
+
+这两个 provider 共同使用：
+
+```text
+label_mode: official_silver
+label_type: frozen_silver_standard
+state_key: final_milestone_label_coarse
+```
+
+需要说明的 caveat：
+
+- GSE230659 的 reference graph 保留 `hADSCs` 作为 conceptual starting milestone；但 observed label file 中当前实际出现 3 个 observed label classes，因为可用最早时间点不是 Day 0。
+- `ambiguous` 和 `unknown_or_ood` 不进入 official metrics，避免不确定标签影响正式 ranking。
+
+---
+
+### 3.5 GSE242424 的 OSKM official-silver provider 是单独构建的
+
+GSE242424 不能复用 GSE178325 / GSE230659 的 chemical-reprogramming graph，因为它研究的是 OSKM-induced human fibroblast reprogramming。它的 active provider 是：
+
+```text
+gse242424_oskm_reprogramming_silver_v1
+```
+
+这个 provider 同样注册为：
+
+```text
+label_mode: official_silver
+state_key: final_milestone_label_coarse
+label_type: frozen_silver_standard
+```
+
+但它**不是**由 GSE178325 / GSE230659 的 marker-FM transition workflow 产生的，而是基于作者发布的 cluster annotation 与 ATAC-to-RNA cluster transfer。实际进入 formal silver benchmark 的是 59,187 个 author-cluster-matched cells。
+
+Author cluster 到 coarse milestone 的 frozen mapping 是：
+
+```text
+C1        -> fibroblast
+C2-C5     -> fibroblast_like_stalled
+C6        -> keratinocyte_like
+C7        -> hOSK
+C8        -> xOSK
+C9        -> partial_intermediate
+C10       -> partially_reprogrammed
+C11-C12   -> primary_intermediate
+C13-C14   -> pre_iPSC
+C15       -> iPSC
+```
+
+Reference graph 是：
 
 ```text
 fibroblast -> fibroblast_like_stalled
 fibroblast -> keratinocyte_like
-fibroblast -> hOSK
-hOSK -> partial_intermediate
-partial_intermediate -> partially_reprogrammed
-fibroblast -> xOSK
-xOSK -> primary_intermediate
-primary_intermediate -> pre_iPSC
-pre_iPSC -> iPSC
+fibroblast -> hOSK -> partial_intermediate -> partially_reprogrammed
+fibroblast -> xOSK -> primary_intermediate -> pre_iPSC -> iPSC
 ```
 
-Label distribution:
+这个 graph 的设计目的不是只保留一条 successful reprogramming path，而是同时保留：
 
-![GSE242424 OSKM silver label distribution](benchmark/reports/gse242424_oskm_silver/figures/gse242424_label_distribution.png)
+- productive path：`fibroblast -> xOSK -> primary_intermediate -> pre_iPSC -> iPSC`
+- partial / stalled path：`fibroblast -> hOSK -> partial_intermediate -> partially_reprogrammed`
+- off-target / stalled branches：`fibroblast_like_stalled`、`keratinocyte_like`
 
-**设计含义：**
-
-GSE242424 的 graph 与 GSE178325/GSE230659 不同，因为它来自 OSKM fibroblast reprogramming，包含 productive arms、partial branch、stalled/off-target branches。它适合展示 benchmark 框架不是只能用于一个固定 state system，而是可以根据数据集定义不同 frozen provider。
-
-**需要导师判断：**
-
-- hOSK / xOSK 两条 arms 是否是合理的 coarse milestone abstraction？
-- stalled 和 keratinocyte-like branch 应作为 reference graph 中的正式边，还是只作为 off-trajectory diagnostics？
-- author ATAC-to-RNA cluster transfer label 是否足以作为 silver reference，还是需要 marker validation？
+因此，GSE242424 的 silver standard 更适合评价 OSKM reprogramming 中“模型是否能区分成功重编程、中间停滞和偏离分支”。
 
 ---
 
-## 5. Projected-cell annotation：为什么要做 provider agreement audit
+### 3.6 Provider assets 和 registry 的作用
 
-### 5.1 设计动机
+每个 active provider 最终都被写成一组冻结文件，并在 registry 中登记：
 
-对 MIOFlow、PRESCIENT、scNODE 这类会生成 projected cells 的方法，Embedding Coherence 和部分 lineage aggregation 需要给 projected cells 赋予 milestone labels。
+| 文件 | 作用 |
+|---|---|
+| `state_labels.tsv` | 每个 observed cell 的 `final_milestone_label_coarse` |
+| `state_metadata.tsv` | 每个 milestone state 的 metadata |
+| `reference_graph_edges.csv` | directed state-level reference edges |
+| `reference_graph.json` | reference lineage graph |
+| `ground_truth_metadata.json` | provider ID、label mode、版本和 provenance |
+| `annotation_votes.tsv` | label assignment / transfer / voting 的记录 |
 
-如果只用单一 annotation provider，结果可能被 provider bias 主导。因此项目采用 two-provider / agreement-aware 逻辑：
+Registry 的作用是把 benchmark 的 reference 固定下来：
 
 ```text
-projected_expression.npy
-        |
-        v
-HVG2000 PCA logistic-regression embedding provider
-        +
-CellTypist classifier provider
-        |
-        v
-agreement -> consensus label
-disagreement -> ambiguous
+dataset + provider_id + label_mode + state_key + reference_graph
 ```
 
-### 5.2 为什么 disagreement 设为 ambiguous
+之后所有 metrics 都从 registry 读取同一套 labels 和 graph。这样做的好处是：
 
-这是一个保守策略。它避免在两个 provider 冲突时强行给出确定 label，从而降低“看似高 confidence 但实际不可解释”的风险。
-
-**GSE230659 scNODE projected-cell audit:**
-
-| Scenario | Projected cells | Provider exact match | Ambiguous fraction | Interpretation |
-|---|---:|---:|---:|---|
-| A | 30,000 | 0.814 | 0.186 | annotation relatively stable |
-| B | 18,000 | 0.658 | 0.342 | hardest future extrapolation setting |
-| C | 10,000 | 0.962 | 0.038 | most stable provider agreement |
-
-**汇报时要说：**
-
-> Scenario B 的 ambiguous fraction 最高，说明外推未来细胞时，不只是模型预测难，连 projected-cell annotation 本身也更不稳定。因此 B 的结果应该被解释为 extrapolation + annotation uncertainty 的共同压力测试。
+- 不同方法不会使用不同 label system；
+- 同一个方法在不同 provider version 下的结果不会被混合；
+- ranking 只能在相同 `(dataset, scenario, result_class, ground_truth_provider, label_mode)` 分组内比较；
+- 如果未来要改进 annotation，只新增 provider version，而不是覆盖当前 frozen provider。
 
 ---
 
-## 6. Method capability gating：为什么不能所有方法一起算所有指标
+## 4. 如何利用 silver standard 进行 metrics
 
-### 6.1 设计原则
+### 4.1 Forecast Accuracy：不依赖 silver labels
 
-项目采用 scTimeBench-style method eligibility rule：
+Forecast Accuracy 回答的问题是：
 
-> 方法只有在真正产生某类输出时，才进入对应评价维度。
+> 预测出来的未来时间点表达分布，是否接近真实观测到的目标时间点表达分布？
 
-### 6.2 当前方法能力
+它使用 projected expression 与 observed expression 直接比较，不需要 silver labels。
 
-| Method | Produces projected expression/cells | Produces projected embedding | Can infer lineage/transition | Eligible dimensions |
-|---|---:|---:|---:|---|
-| MIOFlow | yes | yes | yes | Forecast + Embedding + Lineage |
-| PRESCIENT | yes | yes | yes | Forecast + Embedding + Lineage |
-| scNODE | yes | yes | yes | Forecast + Embedding + Lineage |
-| WOT | no | no | yes | Lineage only |
-| CellRank2 | no | no | yes | Lineage only |
+| Metric | 越大/越小越好 | 想说明什么 |
+|---|---|---|
+| Wasserstein Distance | lower better | predicted distribution 到 observed distribution 的 transport-style 距离 |
+| Gaussian MMD | lower better | Gaussian kernel space 下两个表达分布是否相似 |
+| Energy Distance MMD | lower better | 更全局的 distribution discrepancy |
+| Hausdorff Loss | lower better | 最坏情况下 projected cells 与 observed cells 的最近邻距离 |
 
-### 6.3 为什么这样更公平
+使用方式：
 
-如果强行让 WOT 或 CellRank2 生成 projected future cells，就需要人为加一个 synthetic projection adapter。这样评价的可能是 adapter，而不是原方法。相反，把它们限定在 Lineage Fidelity，可以保留它们作为 transition-inference baseline 的价值。
+```text
+method projected_expression.npy
+        vs
+observed cells at target timepoint
+        ->
+Forecast Accuracy metrics
+```
 
-**汇报时的关键句：**
+解释边界：
 
-> 缺少 Forecast/Embedding 结果不是 WOT 和 CellRank2 的运行失败，而是由方法定义决定的 intentional skip。
+- Forecast Accuracy 高，说明 projected expression distribution 更接近 observed distribution。
+- 它不说明模型恢复了正确的 lineage direction。
+- 它对 MIOFlow、PRESCIENT、scNODE 有意义；对 WOT / CellRank2 不适用。
 
 ---
 
-## 7. 三类指标分别想说明什么
+### 4.2 Embedding Coherence：利用 silver labels 评价 projected embedding 的状态结构
 
-这一节是汇报的重点。不要只说指标名字，要解释每个指标回答的问题和不能回答的问题。
+Embedding Coherence 回答的问题是：
 
-### 7.1 Forecast Accuracy：预测的表达分布像不像真实未来细胞
+> 方法生成的 projected cells 在 embedding space 中，是否还能形成与 silver milestone labels 对应的结构？
 
-**评价对象：**
-
-projected expression at held-out or future timepoints vs observed cells at the same target timepoints.
-
-**它想说明：**
-
-模型是否能生成与真实目标时间点表达分布相近的细胞群。
-
-| Metric | 越大/越小越好 | 想说明什么 | 解释时的注意点 |
-|---|---|---|---|
-| Wasserstein Distance | lower better | predicted distribution 到 observed distribution 的 transport-style 距离 | 对整体分布位置和形状敏感，适合描述 generated cells 是否接近真实细胞 |
-| Gaussian MMD | lower better | 用 Gaussian kernel 比较两个分布是否相似 | 关注 kernel space 下的分布差异，数值尺度不宜跨数据集直接比较 |
-| Energy Distance MMD | lower better | 更全局的 distribution discrepancy | 可作为 Wasserstein 的补充 |
-| Hausdorff Loss | lower better | 最坏情况下 projected cells 和 observed cells 的最近邻距离 | 对 outliers 敏感，能暴露少数严重偏离的预测 |
-
-**它不能说明：**
-
-Forecast Accuracy 高，不一定说明模型恢复了正确 lineage graph；它只说明表达分布相似。
-
-### 7.2 Embedding Coherence：预测细胞是否保留生物状态结构
-
-**评价对象：**
-
-projected cells / projected embeddings 中的 unsupervised clusters vs silver milestone labels。
-
-**当前实现逻辑：**
+本项目采用 scTimeBench-style 逻辑，但 label system 换成 official-silver milestone labels：
 
 ```text
 projected_embedding.npy
-        |
-        v
+        ->
 kNN graph + Leiden clustering
-        |
-        v
-compare clusters with final_milestone_label_coarse
+        ->
+unsupervised projected-cell clusters
+        vs
+official_silver final_milestone_label_coarse
+        ->
+ARI / entropy
 ```
 
-**为什么不用 projected_cluster_labels.csv 直接比较：**
+为什么不直接用 projected milestone labels 做比较：
 
-因为那样容易出现 self-comparison artifact。如果 projected_cluster_labels 已经来自 milestone annotation，再用它和 milestone labels 比较，ARI 会虚高。当前设计从 projected embedding 重新做 Leiden clustering，再和 silver labels 比较，更接近 scTimeBench 的逻辑。
+- 如果 projected labels 本身已经由 milestone annotation 得到，再与 milestone labels 比较，会形成 self-comparison artifact。
+- 因此 official evaluator 从 method output 的 `projected_embedding.npy` 重新做 Leiden clustering，再与 frozen silver labels 比较。
 
-| Metric | 越大/越小越好 | 想说明什么 | 解释时的注意点 |
-|---|---|---|---|
-| Adjusted Rand Index (ARI) | higher better | projected embedding 中无监督 cluster 是否对应 silver milestone states | 当前 ARI 绝对值偏低，应作为相对 coherence diagnostic；最好后续加入 permutation/null |
-| Mean normalized entropy | lower better | projected cells 的 state probability 是否更确定 | 低 entropy 表示 annotation/confidence 更集中，但可能也反映过度塌缩 |
-| Weighted entropy | lower better | 按细胞或状态权重后的 uncertainty | 用来避免大类完全主导解释 |
+Metrics:
 
-**它不能说明：**
-
-Embedding Coherence 高，不代表 projected expression 完全真实，也不代表 lineage direction 正确。
-
-### 7.3 Lineage Fidelity：预测的状态转移是否接近 reference graph
-
-**评价对象：**
-
-method-derived state transition matrix / predicted lineage graph vs frozen reference lineage graph。
-
-**它想说明：**
-
-方法是否能恢复 benchmark 定义的 coarse milestone transition structure。
-
-| Metric | 越大/越小越好 | 想说明什么 | 解释时的注意点 |
-|---|---|---|---|
-| AUROC | higher better | 所有可能 state pairs 中，reference edges 是否总体得到更高 score | 在负边很多时可能看起来较高 |
-| AUPRC | higher better | 在 reference edges 稀疏时，预测高分边是否真正命中正边 | 对稀疏 graph 更有解释力 |
-| Jaccard top-k | higher better | 预测 top-k edges 和 reference edges 的重叠程度 | 更接近“图结构是否命中”的直观指标 |
-| Single-step recovery | higher better | reference 中直接相邻的 transition 是否被恢复 | 衡量局部转移边 |
-| Multi-step recovery | higher better | 较长路径或间接 lineage relation 是否被恢复 | 衡量 coarse trajectory path 的连通性 |
-
-**它不能说明：**
-
-Lineage Fidelity 高，说明方法符合 frozen silver graph，但不能单独证明 recovered lineage 是真实生物谱系。这个 caveat 必须主动讲。
-
-### 7.4 为什么需要 correlation baseline
-
-Lineage Fidelity 必须包含 scTimeBench-style correlation baseline。原因是：
-
-> 如果一个简单的 expression similarity baseline 就能恢复 reference graph，那么复杂 trajectory 方法必须证明自己提供了 baseline 之外的增益。
-
-这对 GSE230659 尤其重要，因为 timepoint 与 library effect 可能 confound。导师可能会非常关心这一点。
-
----
-
-## 8. Ranking 和 summary：为什么不能只给一个大表
-
-### 8.1 Ranking 规则
-
-当前 ranking 采用 within-dataset / within-scenario / within-provider 的 rank aggregation：
-
-1. 在同一个 dataset、scenario、result class、provider、label mode 内比较方法；
-2. 对每个 metric 排名；
-3. 同一 metric family 内平均 rank，得到 Forecast / Embedding / Lineage rank；
-4. 只有同时 eligible 的方法才进入 combined rank；
-5. WOT / CellRank2 只报告 Lineage Fidelity rank，不进入 Forecast/Embedding/combined rank。
-
-### 8.2 为什么用 rank 而不是直接平均 raw metric
-
-不同 metric 的尺度不同。例如 Wasserstein、ARI、AUPRC、entropy 不能直接求平均。Rank aggregation 的好处是：
-
-- 避免数值尺度不一致；
-- 保持 within-scenario comparison；
-- 让高低方向不同的指标可以统一汇总。
-
-**缺点也要承认：**
-
-- rank 会丢失 effect size；
-- 小差异可能被放大；
-- 当前多数 formal result 还缺少 seed variance，因此小的 rank 差异不能被过度解释。
-
----
-
-## 9. 当前结果应该如何展示和解释
-
-### 9.1 GSE178325 + GSE230659 official-silver summary
-
-**Combined summary over projection-capable methods:**
-
-| Rank | Method | Combined rank score | Mean ARI | Mean weighted entropy | Mean AUPRC | Mean AUROC | Mean Jaccard |
-|---:|---|---:|---:|---:|---:|---:|---:|
-| 1 | PRESCIENT | 1.7333 | 0.1150 | 0.2430 | 0.1819 | 0.4332 | 0.0667 |
-| 2 | MIOFlow | 1.7389 | 0.0712 | 0.2928 | 0.1855 | 0.4129 | 0.1000 |
-| 3 | scNODE | 1.7611 | 0.0767 | 0.1740 | 0.1785 | 0.3898 | 0.0667 |
-
-**解释方式：**
-
-不要说“PRESCIENT 明确胜出”。更稳妥的解释是：
-
-> 三个 projection-capable methods 的 combined rank 非常接近。PRESCIENT 以很小优势排第一，MIOFlow 的 Lineage Fidelity 最强，scNODE 的 Embedding Coherence rank 最好。当前结果更支持“不同方法有不同 tradeoff”，而不是一个绝对 winner。
-
-### 9.2 Dimension-specific result
-
-**Embedding Coherence:**
-
-| Rank | Method | Runs | Mean ARI | Median ARI | Mean weighted entropy |
-|---:|---|---:|---:|---:|---:|
-| 1 | scNODE | 6 | 0.0767 | 0.0572 | 0.1740 |
-| 2 | PRESCIENT | 6 | 0.1150 | 0.1053 | 0.2430 |
-| 3 | MIOFlow | 6 | 0.0712 | 0.0652 | 0.2928 |
-
-**Lineage Fidelity:**
-
-| Rank | Method | Runs | Mean AUPRC | Mean AUROC | Mean Jaccard |
-|---:|---|---:|---:|---:|---:|
-| 1 | MIOFlow | 6 | 0.1855 | 0.4129 | 0.1000 |
-| 2 | PRESCIENT | 6 | 0.1819 | 0.4332 | 0.0667 |
-| 3 | scNODE | 6 | 0.1785 | 0.3898 | 0.0667 |
-| 4 | CellRank2 | 1 | 0.1935 | 0.4359 | 0.0000 |
-| 5 | WOT | 1 | 0.1842 | 0.4103 | 0.0000 |
-
-**Lineage AUROC visualization:**
-
-![Lineage AUROC by model and scenario](benchmark/reports/figures/lineage_auroc_by_model_scenario.png)
-
-**解释重点：**
-
-- WOT 和 CellRank2 只在 lineage table 中出现，是因为 capability gating，不是因为缺失运行。
-- CellRank2 / WOT 当前只有 GSE230659 scenario A official-silver lineage result，因此不要和 6-run generative methods 做 combined comparison。
-- 结果应按 metric family 分开解释。
-
-### 9.3 GSE242424 OSKM silver result
-
-GSE242424 是对框架扩展性的关键展示：它不是同一个 human chemical iPSC provider 的重复，而是 OSKM fibroblast reprogramming，state system 和 graph 更复杂。
-
-**Method summary:**
-
-| Rank | Method | Mean AUROC | Mean AUPRC | Mean Jaccard | Mean ARI | Mean Wasserstein | Combined rank score |
-|---:|---|---:|---:|---:|---:|---:|---:|
-| 1 | MIOFlow | 0.7798 | 0.2460 | 0.3516 | 0.1559 | 0.0287 | 1.6667 |
-| 2 | PRESCIENT | 0.7053 | 0.1908 | 0.2286 | 0.1989 | 0.0276 | 2.1333 |
-| 3 | scNODE | 0.7595 | 0.2566 | 0.1674 | 0.1469 | 0.0357 | 2.2000 |
-
-**GSE242424 result visualizations:**
-
-![GSE242424 method summary metrics](benchmark/reports/gse242424_oskm_silver/figures/gse242424_method_summary_metrics.png)
-
-![GSE242424 combined rank score](benchmark/reports/gse242424_oskm_silver/figures/gse242424_combined_rank_score.png)
-
-**解释方式：**
-
-> 在 GSE242424 OSKM benchmark 中，MIOFlow overall rank 第一，主要由 AUROC 和 Jaccard 推动；PRESCIENT 的 mean ARI 和 Wasserstein 更好，说明 projected state structure / distribution preservation 有优势；scNODE 的 mean AUPRC 最高，但 Scenario B extrapolation 明显较弱。这再次说明不同指标看的是不同能力。
-
----
-
-## 10. 当前工作最重要的 caveats
-
-这部分要主动讲，不能等导师指出。
-
-### 10.1 Silver reference 不是真实 biological ground truth
-
-所有 Lineage Fidelity 结果都应表述为：
-
-> performance against a frozen silver-standard temporal reference
-
-而不是：
-
-> proof of recovering true lineage
-
-### 10.2 Time-library confounding
-
-当前数据集时间点与 library / sample 设计可能混杂。一个方法恢复了 reference graph，可能是在学习真实 reprogramming trajectory，也可能部分利用了 timepoint-specific expression differences。
-
-### 10.3 ARI 绝对值不宜过度解释
-
-Embedding Coherence 的 ARI 当前主要作为 relative diagnostic。下一步应加入：
-
-- label permutation null；
-- random projection null；
-- bootstrap over cells；
-- seed replicates。
-
-### 10.4 还缺少 run-to-run uncertainty
-
-当前很多 formal result 是 one formal run per method-scenario。小的 rank difference 不能作为统计上确定的胜负。至少需要：
-
-- 3 seeds per method-scenario；或
-- bootstrap confidence interval；或
-- sensitivity across annotation provider / graph variant。
-
-### 10.5 GSE242424 的 silver provider 来源不同
-
-GSE242424 label 来自 author ATAC-to-RNA cluster transfer 和 matched local scRNA cells。它是很好的 external extension，但它的 reference construction 与 GSE178325/GSE230659 不同，因此不应在不说明 provider 差异的情况下直接混入同一个 overall ranking。
-
----
-
-## 11. 最后希望导师具体给的指导
-
-### 11.1 关于生物学 reference
-
-1. GSE178325 中保留 `xen_like` 是否合理？
-2. GSE230659 是否应该保留 conceptual `hADSCs` start node？
-3. GSE242424 中 stalled / keratinocyte-like / hOSK / xOSK branches 是否应该进入主 reference graph？
-4. 是否需要加入人工 marker panel validation？
-
-### 11.2 关于评价指标
-
-1. Forecast / Embedding / Lineage 三个维度是否覆盖了导师认为重要的 trajectory method 能力？
-2. Lineage Fidelity 中 AUPRC、AUROC、Jaccard、single-step、multi-step 是否都应保留？
-3. Embedding Coherence 是否应该加入 null distribution 后再作为主结果？
-4. Wasserstein / MMD / Hausdorff 是否需要降维后计算，还是保持当前 HVG2000 expression space？
-
-### 11.3 关于论文方向
-
-可以请导师帮你判断三条路线：
-
-| 路线 | 核心卖点 | 需要补强 |
+| Metric | 越大/越小越好 | 想说明什么 |
 |---|---|---|
-| Benchmark paper | 一个面向 iPSC / OSKM reprogramming 的可复现 trajectory benchmark | reference validation、seed uncertainty、更多 baseline |
-| Method comparison report | 系统比较 MIOFlow / PRESCIENT / scNODE / WOT / CellRank2 | 结果解释和统计显著性 |
-| Method improvement | 根据 benchmark 暴露的问题改进某个模型 | 需要选定 failure mode，例如 Scenario B extrapolation |
+| Adjusted Rand Index (ARI) | higher better | projected embedding 中的无监督 cluster 是否对应 silver milestone states |
+| Mean normalized entropy | lower better | projected cells 的 state probability 是否更确定 |
+| Weighted entropy | lower better | 在考虑类别或细胞权重后，annotation uncertainty 是否更低 |
+
+解释边界：
+
+- Embedding Coherence 高，说明 projected embedding 的状态结构更接近 silver state system。
+- 它不直接说明 expression distribution 是否真实。
+- 当前 ARI 绝对值不宜过度解释，后续最好加入 label permutation 或 random-clustering null。
 
 ---
 
-## 12. 推荐汇报 slide 顺序
+### 4.3 Lineage Fidelity：利用 silver reference graph 评价 state transitions
 
-### Slide 1. 项目一句话
+Lineage Fidelity 回答的问题是：
 
-**标题：** A capability-gated trajectory benchmark for iPSC / OSKM reprogramming
+> 方法预测的 state-level transition matrix / lineage graph 是否接近 frozen silver reference graph？
 
-**要说：** 我在构造 benchmark，不只是跑模型。
+计算逻辑：
 
-### Slide 2. 为什么需要 benchmark
+```text
+method output
+  - transport map / transition scores / simulated projected cells
+        ->
+aggregate by final_milestone_label_coarse
+        ->
+state_transition_matrix.csv
+        vs
+reference_graph_edges.csv
+        ->
+Lineage Fidelity metrics
+```
 
-展示三类问题：expression distribution、state coherence、lineage graph。
+Metrics:
 
-### Slide 3. Pipeline 和每一步设计理由
+| Metric | 越大/越小越好 | 想说明什么 |
+|---|---|---|
+| AUROC | higher better | 在所有 possible state pairs 中，reference edges 是否总体得到更高 score |
+| AUPRC | higher better | 在 reference graph 稀疏时，高分边是否真正命中正边 |
+| Jaccard top-k | higher better | predicted top-k edges 与 reference edges 的重叠程度 |
+| Single-step recovery | higher better | reference graph 中直接相邻 transition 是否恢复 |
+| Multi-step recovery | higher better | 较长路径或间接 lineage relation 是否恢复 |
 
-展示从 QC -> HVG2000 -> silver labels -> reference graph -> scenarios -> metrics -> ranking。
+解释边界：
 
-### Slide 4. 数据和 QC
-
-展示 GSE230659、GSE178325、GSE242424 数据表和 QC 图。
-
-### Slide 5. Silver milestone system
-
-展示三个 provider 的表，强调 frozen / versioned / not true ground truth。
-
-### Slide 6. Reference graphs
-
-展示 GSE178325、GSE230659、GSE242424 graphs。重点请导师判断生物学合理性。
-
-### Slide 7. Scenario A/B/C 和 capability gating
-
-说明为什么 WOT / CellRank2 lineage-only，为什么 scNODE / MIOFlow / PRESCIENT 进入三类指标。
-
-### Slide 8. 三类指标解释
-
-用表格讲 Forecast、Embedding、Lineage 每个指标想说明什么。
-
-### Slide 9. Official-silver GSE178325 + GSE230659 结果
-
-展示 combined summary 和 dimension-specific summary。强调 rank 很接近。
-
-### Slide 10. GSE242424 OSKM extension
-
-展示 label distribution、method summary、combined score。强调框架可扩展。
-
-### Slide 11. Caveats
-
-silver reference、time-library confounding、ARI null、seed variance。
-
-### Slide 12. 需要导师给决策的问题
-
-明确让导师帮你判断 reference、metrics、论文方向。
+- Lineage Fidelity 高，说明方法符合 frozen silver graph。
+- 它不能单独证明方法恢复了真实 biological lineage。
+- 如果 reference graph 本身有争议，Lineage Fidelity 的解释也会受影响。
 
 ---
 
-## 13. 文件索引
+### 4.4 Silver standard 如何进入不同方法
+
+| 方法类型 | 方法输出 | silver standard 如何使用 |
+|---|---|---|
+| Generative / projected-cell methods：MIOFlow、PRESCIENT、scNODE | `projected_expression.npy`、`projected_embedding.npy`、projected cells | Forecast 用 expression；Embedding 用 projected embedding 与 silver labels；Lineage 将 projected / simulated results 聚合到 silver states |
+| Transition-only methods：WOT、CellRank2 | transport map、fate probabilities、transition matrix | 只用于 Lineage Fidelity：把 cell-level transition 聚合到 silver states，再与 reference graph 比较 |
+
+这就是 capability gating 与 silver standard 的结合：
+
+- **Capability gating** 决定一个方法能进入哪些 evaluator。
+- **Silver standard** 为 annotation-dependent metrics 提供 state labels 和 reference graph。
+
+---
+
+### 4.5 Ranking 如何避免混淆不同 reference
+
+所有 ranking 都应限制在同一组条件内：
+
+```text
+dataset
+scenario
+result_class
+ground_truth_provider
+label_mode
+```
+
+原因是不同数据集、不同 provider、不同 reference graph 的 metric scale 不一样。比如 GSE242424 有 10 个 states / 9 条 edges，而 GSE230659 只有 4 个 graph states / 3 条 edges，不能直接把 raw AUROC / AUPRC 混在一起做总平均。
+
+当前 ranking 规则：
+
+1. 在同一 dataset / scenario / provider / label mode 内，对每个 metric 排名。
+2. 同一个 metric family 内平均 rank，得到 Forecast / Embedding / Lineage rank。
+3. 只有同时 eligible 的方法才进入 combined rank。
+4. WOT / CellRank2 不进入 Forecast / Embedding / combined rank，只报告 Lineage Fidelity。
+
+---
+
+## 5. 汇报时建议强调的 caveats
+
+1. **Silver standard 不是真实 biological ground truth。**  
+   所有 Lineage Fidelity 结果都应表述为 performance against a frozen silver-standard temporal reference。
+
+2. **GSE230659 的 hADSCs start node 需要导师判断。**  
+   Reference graph 中有 hADSCs，但 observed label file 中没有 hADSCs label。
+
+3. **GSE242424 只在 matched subset 上做 formal silver benchmark。**  
+   不要把 59,187-cell matched subset 的结果和完整 156,969-cell local dataset 混为一谈。
+
+4. **Embedding Coherence 的 ARI 需要 null。**  
+   当前 ARI 更适合作为 relative diagnostic，不宜过度解释绝对值。
+
+5. **方法排名目前缺少充分 seed variance。**  
+   小的 rank difference 应描述为趋势，而不是统计上确定的胜负。
+
+---
+
+## 6. 可展示文件索引
 
 | 内容 | 文件 |
 |---|---|
-| 项目 README | `README.md` |
+| 项目总览 | `README.md` |
+| Benchmark 说明 | `benchmark/README.md` |
 | 主设计文档 | `experimental framework v2.md` |
-| Result manifest | `benchmark/results/result_manifest.yaml` |
-| Ground-truth registry | `benchmark/ground_truth/registry.yaml` |
-| Official-silver rankings | `benchmark/reports/official_silver/official_silver_model_rankings.md` |
-| Official-silver combined summary | `benchmark/reports/official_silver/official_silver_combined_method_summary_scnode_mioflow_prescient.csv` |
-| GSE242424 report | `benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md` |
-| GSE230659 projected annotation audit | `benchmark/reports/official/gse230659_projected_hvg_annotation_audit.md` |
-| Core summary | `benchmark/reports/core_summary.csv` |
-| Lineage summary | `benchmark/reports/lineage_summary.csv` |
+| Method capabilities | `benchmark/configs/method_capabilities.yaml` |
+| Provider registry | `benchmark/ground_truth/registry.yaml` |
+| GSE242424 provider provenance | `GSE242424_frozen_reference_lineage_graph_README.md` |
+| Official-silver ranking report | `benchmark/reports/official_silver/official_silver_model_rankings.md` |
+| GSE242424 OSKM report | `benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md` |
 | QC figures | `benchmark/reports/qc/` |
-
+| GSE242424 figures | `benchmark/reports/gse242424_oskm_silver/figures/` |

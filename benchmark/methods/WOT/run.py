@@ -7,7 +7,7 @@ Usage:
     conda activate traj_env
     cd C:\\Users\\37620\\trajectory
     python benchmark/methods/WOT/run.py \
-        --config benchmark/configs/wot_gse230659_observed.yaml
+        --config benchmark/configs/runtime/wot_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 
 What this script does:
     1. Reads the YAML config.
@@ -15,13 +15,13 @@ What this script does:
     3. Calls dataset.load_data() to obtain (train_adata, test_adata).
     4. Prepares WOT inputs from train_adata:
          - cell_days array  (from obs[dataset.time_key] — "time_label" for the
-                             base benchmark adata, "abs_day" for scGPT adatas)
+                             benchmark input h5ad)
          - growth rates     (uniform prior for smoke test)
     5. Computes consecutive transport maps via wot.ot.OTModel.
        day_field is set to the configured dataset.time_key (not hardcoded).
     6. Aggregates cell-level transport to the cell-state level using
-       obs[lineage.cell_state_key] (from config; e.g. "scTimeBench_cell_type"
-       for the base config, "scgpt_pseudostate_provisional" for scGPT-v1).
+       obs[lineage.cell_state_key] (from config; default
+       "final_milestone_label_coarse" for current official_silver runs).
     7. Writes benchmark output files to the configured output directory.
     8. Calls eval_lineage.py to compute Lineage Fidelity metrics
        (active when lineage.reference_graph_path is set in config).
@@ -158,8 +158,8 @@ def _run_wot_transport(train_adata, cell_days, growth_rates, wot_params: dict,
         The obs column holding numeric time labels.  Must match the column
         that is actually present in train_adata.obs.  Passed directly as
         day_field to wot.ot.OTModel.  Defaults to "time_label" for backward
-        compatibility with the original benchmark adata; use "abs_day" for
-        adata_scgpt_annotated.h5ad (scGPT-v1 configs).
+        compatibility with the original benchmark adata; current official
+        silver configs use "abs_day".
     skip_if_exists : bool
         If True and the tmap directory already contains at least one tmap_*.h5ad
         file, skip the OT computation entirely and reload the existing files.
@@ -450,16 +450,16 @@ def main():
     wot_cfg      = cfg.get("wot_params", {})
     lineage_cfg  = cfg.get("lineage", {})
 
-    pkl_path_raw  = dataset_cfg.get("pkl_path", "benchmark/datasets/gse230659_observed.dataset.pkl")
+    pkl_path_raw  = dataset_cfg.get("pkl_path") or ""
     h5ad_fallback = dataset_cfg.get("h5ad_path", "data/processed/adata_benchmark.h5ad")
     output_base   = output_cfg.get("base_dir", "benchmark/results/wot/scenario_A")
     time_key      = dataset_cfg.get("time_key", "time_label")
-    cell_state_key          = lineage_cfg.get("cell_state_key", "scTimeBench_cell_type")
+    cell_state_key          = lineage_cfg.get("cell_state_key", "final_milestone_label_coarse")
     edge_confidence_mode    = lineage_cfg.get("edge_confidence_mode", "all")
     exclude_uncertain_states = lineage_cfg.get("exclude_uncertain_states", False)
     growth_source           = wot_cfg.get("growth_rate_source", "uniform")
 
-    pkl_path = project_root / pkl_path_raw
+    pkl_path = project_root / pkl_path_raw if pkl_path_raw else None
 
     # --output-dir CLI flag overrides the config's output.base_dir when provided.
     if args.output_dir:
@@ -489,7 +489,7 @@ def main():
 
     # --- Load dataset ---
     print(f"\n[1/5] Loading dataset ...")
-    if pkl_path.exists():
+    if pkl_path is not None and pkl_path.exists():
         print(f"  Loading from pkl: {pkl_path}")
         with open(pkl_path, "rb") as f:
             dataset = pickle.load(f)
@@ -505,7 +505,10 @@ def main():
         # upfront. We materialize only the needed cell subset after filtering.
         # For full-data runs (no subsample, no train_times) backed mode is also
         # fine — the copy() call in scenario-time filtering will materialize.
-        print(f"  pkl not found at {pkl_path}. Falling back to h5ad direct load.")
+        if pkl_path is not None:
+            print(f"  pkl not found at {pkl_path}. Falling back to h5ad direct load.")
+        else:
+            print("  No pkl_path configured. Loading h5ad directly.")
         import anndata as ad
         h5ad_full = project_root / h5ad_fallback
 

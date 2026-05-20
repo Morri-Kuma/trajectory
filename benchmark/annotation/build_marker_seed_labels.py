@@ -16,7 +16,7 @@ Annotation columns written to adata.obs
 Per-milestone scores (one column per scored milestone):
   milestone_score_<milestone_name>      float32
 
-Legacy marker-derived columns (backward-compatible; unchanged):
+Marker-derived diagnostic columns:
   milestone_marker_label                str   top-scoring milestone label
   milestone_marker_score                float32   top mean-expression score
   milestone_marker_margin               float32   top score - second-best score
@@ -34,15 +34,6 @@ Stage 1 authoritative columns (conservative, threshold-gated):
       "high_confidence" | "ambiguous"
   stage1_source                         str
       "sample_time" | "marker_primary" | "marker_ambiguous"
-
-Step-3 placeholder columns (compatibility only; will be replaced by
-embedding/classifier/consensus logic in later steps):
-  milestone_embedding_label             str
-  milestone_embedding_confidence        float32
-  milestone_classifier_label            str
-  milestone_classifier_confidence       float32
-  consensus_milestone_label             str
-  consensus_confidence                  float32
 
 Metadata written to adata.uns["milestone_annotation_step3"]
     See _build_uns_metadata() for full field list.
@@ -95,12 +86,6 @@ _REQUIRED_OBS_COLS = [
     "milestone_marker_label",
     "milestone_marker_score",
     "milestone_marker_margin",
-    "milestone_embedding_label",
-    "milestone_embedding_confidence",
-    "milestone_classifier_label",
-    "milestone_classifier_confidence",
-    "consensus_milestone_label",
-    "consensus_confidence",
     # Stage 1 authoritative columns.
     "stage1_label",
     "stage1_confidence",
@@ -108,19 +93,6 @@ _REQUIRED_OBS_COLS = [
     "stage1_status",
     "stage1_source",
 ]
-
-_PLACEHOLDER_NOTE = (
-    "milestone_embedding_label, milestone_embedding_confidence, "
-    "milestone_classifier_label, milestone_classifier_confidence, "
-    "consensus_milestone_label, and consensus_confidence are Step-3 "
-    "temporary compatibility placeholders copied from marker-score columns.  "
-    "They will be replaced by real embedding, classifier, and consensus "
-    "logic in Steps 4-5.  "
-    "stage1_label, stage1_confidence, stage1_margin, stage1_status, and "
-    "stage1_source are the AUTHORITATIVE Stage 1 outputs; downstream "
-    "logic should use these columns rather than the placeholder columns."
-)
-
 
 # ---------------------------------------------------------------------------
 # CLI
@@ -185,7 +157,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=0.0,
         dest="min_top_score",
         help=(
-            "Legacy threshold: cells with top marker score below this are "
+            "Diagnostic threshold: cells with top marker score below this are "
             "labelled ambiguous in milestone_marker_label (default: 0.0).  "
             "Does NOT affect stage1_label; use --min-primary-score for Stage 1."
         ),
@@ -196,7 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=0.05,
         dest="min_score_margin",
         help=(
-            "Legacy threshold: cells where top - second-best score < this are "
+            "Diagnostic threshold: cells where top - second-best score < this are "
             "labelled ambiguous in milestone_marker_label (default: 0.05).  "
             "Does NOT affect stage1_label; use --min-primary-margin for Stage 1."
         ),
@@ -482,7 +454,7 @@ def _assign_stage1_labels(
         stage1_status[hadsc_mask] = "high_confidence"
         stage1_source[hadsc_mask] = "sample_time"
         stage1_confidence[hadsc_mask] = 1.0
-        # Margin: use legacy marker margin where available; fall back to 1.0.
+        # Margin: use marker score margin where available; fall back to 1.0.
         if old_margins is not None:
             _m = np.asarray(old_margins, dtype=np.float64)
             hadsc_margin = np.where(
@@ -695,7 +667,7 @@ def _run_annotation(args: argparse.Namespace) -> dict:
     score_dict = compute_mean_marker_scores(adata.X, all_indices_for_scoring)
 
     # ------------------------------------------------------------------
-    # 7. Legacy label assignment (milestone_marker_label and friends)
+    # 7. Marker diagnostic label assignment.
     #    Uses all primary milestones; thresholds from --min-top-score /
     #    --min-score-margin.  Backward-compatible; unchanged.
     # ------------------------------------------------------------------
@@ -761,18 +733,10 @@ def _run_annotation(args: argparse.Namespace) -> dict:
         if ms in output_milestones:
             adata.obs[f"milestone_score_{ms}"] = arr.astype(np.float32)
 
-    # Legacy marker columns (backward-compatible).
+    # Marker diagnostic columns.
     adata.obs["milestone_marker_label"] = labels.astype(str)
     adata.obs["milestone_marker_score"] = top_scores.astype(np.float32)
     adata.obs["milestone_marker_margin"] = margins.astype(np.float32)
-
-    # Step-3 compatibility placeholders.
-    adata.obs["milestone_embedding_label"] = labels.astype(str)
-    adata.obs["milestone_embedding_confidence"] = top_scores.astype(np.float32)
-    adata.obs["milestone_classifier_label"] = labels.astype(str)
-    adata.obs["milestone_classifier_confidence"] = top_scores.astype(np.float32)
-    adata.obs["consensus_milestone_label"] = labels.astype(str)
-    adata.obs["consensus_confidence"] = top_scores.astype(np.float32)
 
     # Stage 1 authoritative columns.
     adata.obs["stage1_label"] = stage1_label
@@ -789,7 +753,7 @@ def _run_annotation(args: argparse.Namespace) -> dict:
     stage1_status_counts = adata.obs["stage1_status"].value_counts().to_dict()
     stage1_source_counts = adata.obs["stage1_source"].value_counts().to_dict()
 
-    print(f"{tag} legacy marker label counts: {label_counts}")
+    print(f"{tag} marker label counts:        {label_counts}")
     print(f"{tag} stage1_label counts:        {stage1_label_counts}")
     print(f"{tag} stage1_status counts:       {stage1_status_counts}")
 
@@ -843,7 +807,7 @@ def _run_annotation(args: argparse.Namespace) -> dict:
             json.dump(uns_meta, fh, indent=2, default=_json_default)
         print(f"{tag} metadata           -> {meta_path}")
 
-        # Legacy label counts CSV.
+        # Marker diagnostic label counts CSV.
         counts_path = out_dir / "marker_seed_label_counts.csv"
         counts_df = pd.DataFrame(
             list(label_counts.items()), columns=["milestone_label", "cell_count"]
@@ -951,12 +915,10 @@ def _build_uns_metadata(
         "markers_yaml": str(markers_yaml_path),
         "primary_milestones": primary_milestones,
         "min_marker_overlap": args.min_marker_overlap,
-        # Legacy thresholds (milestone_marker_label only).
+        # Marker diagnostic thresholds (milestone_marker_label only).
         "min_top_score": args.min_top_score,
         "min_score_margin": args.min_score_margin,
         "max_cells_used": args.max_cells,
-        "placeholder_columns_created": True,
-        "placeholder_note": _PLACEHOLDER_NOTE,
         "marker_overlap_summary": {
             ms: {
                 "n_required": s["n_required"],
@@ -966,7 +928,7 @@ def _build_uns_metadata(
             }
             for ms, s in overlap_summary.items()
         },
-        # Legacy label counts (milestone_marker_label).
+        # Marker diagnostic label counts (milestone_marker_label).
         "label_counts": {str(k): int(v) for k, v in label_counts.items()},
         # Stage 1 counts.
         "stage1_label_counts": {

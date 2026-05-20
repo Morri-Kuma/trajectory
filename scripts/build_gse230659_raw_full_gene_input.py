@@ -246,7 +246,7 @@ for sample_name, stage, day in SAMPLES:
     kept = np.where(keep)[0]
     abs_day = abs_day_for(stage, day)
     stage_label = stage_day_label(stage, day)
-    cell_type_proxy = STAGE_TO_CELLTYPE_PROXY.get(stage, "unknown")
+    stage_group = STAGE_TO_CELLTYPE_PROXY.get(stage, "unknown")
     obs = pd.DataFrame(
         {
             "barcode": [f"{sample_name}_{b}" for b in barcodes.loc[keep, "barcode"].astype(str)],
@@ -257,7 +257,7 @@ for sample_name, stage, day in SAMPLES:
             "abs_day": abs_day,
             "time_label": abs_day,
             "scTimeBench_timepoint": abs_day,
-            "scTimeBench_cell_type": cell_type_proxy,
+            "benchmark_cell_state": stage_group,
             "dataset_id": DATASET_ID,
             "batch_id": BATCH_ID,
             "n_genes_by_counts": qc.loc[keep, "n_genes_by_counts"].to_numpy(),

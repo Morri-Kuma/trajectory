@@ -4,7 +4,7 @@ from enum import Enum
 
 
 class ObservationColumns(Enum):
-    CELL_TYPE = "scTimeBench_cell_type"
+    CELL_TYPE = "benchmark_cell_state"
     TIMEPOINT = "scTimeBench_timepoint"
 
 

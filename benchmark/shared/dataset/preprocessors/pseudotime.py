@@ -31,7 +31,7 @@ class DPTPseudotime(BaseDatasetPreprocessor):
 
     The implementation mirrors scTimeBench's ``Pseudotime`` preprocessor, with
     one trajectory-specific extension: ``preprocess_type: obsm`` can use an
-    existing embedding such as ``X_scGPT`` before Scanpy computes neighbors.
+    existing embedding such as ``X_pca`` before Scanpy computes neighbors.
     """
 
     def __init__(
@@ -43,7 +43,7 @@ class DPTPseudotime(BaseDatasetPreprocessor):
         n_neighbors=15,
         n_top_genes=1000,
         pca_components=50,
-        obsm_key="X_scGPT",
+        obsm_key="X_pca",
         copy_to_timepoint=False,
         **kwargs,
     ):

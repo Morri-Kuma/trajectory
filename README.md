@@ -2,7 +2,7 @@
 
 **Author**: Kuma, Graduate School of Frontier Sciences, The University of Tokyo  
 **Primary domain**: human iPSC reprogramming trajectories  
-**Framework**: Experimental Framework v2 (see `experimental framework v2.md`)
+**Framework**: official silver trajectory benchmark
 
 ---
 
@@ -23,13 +23,13 @@ evaluation dimensions as the base and adds domain-specific benchmark assets:
   tasks;
 - per-method, per-scenario outputs for forecast accuracy, embedding coherence,
   and lineage fidelity;
-- explicit separation of current reportable results from legacy scGPT
-  pseudostate results, pilot runs, smoke tests, and archived/debug outputs.
+- explicit separation of current reportable results from pilot, smoke, and
+  archived/debug outputs.
 
 ## Current Status
 
-The benchmark has moved beyond the initial WOT/CellRank2 lineage-only stage and
-beyond the legacy scGPT pseudostate reference system.
+The benchmark uses only the current official silver label providers for
+reportable runs.
 
 | Component | Status |
 |---|---|
@@ -39,20 +39,14 @@ beyond the legacy scGPT pseudostate reference system.
 | Forecast Accuracy | Active for generative/projected-cell methods |
 | Embedding Coherence | Active for methods with projected embeddings or projected cells |
 | Lineage Fidelity | Active for methods with state-level transition output |
-| Legacy scGPT pseudostate providers | Retained for backward compatibility and provenance, not primary report ground truth |
-
 Current report entry points:
 
 - `benchmark/reports/official_silver/official_silver_model_rankings.md`
+- `benchmark/reports/official_silver/official_silver_combined_method_summary_scnode_mioflow_prescient.csv`
+- `benchmark/reports/official_silver/official_silver_embedding_method_summary.csv`
+- `benchmark/reports/official_silver/official_silver_lineage_method_summary.csv`
 - `benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md`
-- `benchmark/reports/core_summary.csv`
-- `benchmark/reports/embedding_summary.csv`
-- `benchmark/reports/lineage_summary.csv`
 - `benchmark/results/result_manifest.yaml`
-
-Legacy scGPT-v1 summaries are retained under `benchmark/reports/official/` and
-older paths, but should be interpreted as historical or sensitivity outputs
-unless a manifest entry explicitly selects them.
 
 ## Evaluation Dimensions
 
@@ -86,7 +80,6 @@ corresponding inputs and reference state systems are frozen.
 
 ```text
 trajectory/
-|-- experimental framework v2.md      # benchmark design reference
 |-- README.md                         # project-level overview
 |-- data/                             # raw and processed dataset assets
 |-- benchmark/

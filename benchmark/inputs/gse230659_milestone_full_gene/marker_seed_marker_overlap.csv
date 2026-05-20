@@ -1,4 +1,0 @@
-milestone,n_required,n_matched,n_column_indices,matched_genes,missing_genes
-epithelial_like,5,5,5,KRT8;KRT18;KRT19;EPCAM;LIN28A,
-intermediate_plastic,5,5,5,LIN28A;SALL4;MSX1;MSX2;HOXB9,
-hCiPS,6,6,6,POU5F1;SOX2;NANOG;KLF4;DPPA4;LIN28A,

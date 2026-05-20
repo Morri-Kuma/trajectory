@@ -76,7 +76,7 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
     Parameters
     ----------
     reference_graph_path : str, optional
-        Path to the reference lineage graph JSON (scGPT v1 format).
+        Path to the reference lineage graph JSON.
         If provided, Lineage Fidelity metrics are computed against this graph.
         If None (default), metric computation is deferred.
         Typically read from the method config's lineage.reference_graph_path.
@@ -228,8 +228,7 @@ def main():
     parser.add_argument("--scenario", required=True,
                         help="Scenario ID (A–F)")
     parser.add_argument("--adata", required=True,
-                        help="Path to input h5ad (adata_benchmark.h5ad or "
-                             "adata_scgpt_annotated.h5ad for scGPT-v1 configs)")
+                        help="Path to the benchmark input h5ad")
     parser.add_argument("--output-dir", required=True,
                         help="Directory for output files")
     parser.add_argument("--scenario-config", default=None,
@@ -238,7 +237,7 @@ def main():
         "--method-config", default=None,
         help=(
             "Path to a method-level YAML config "
-            "(e.g. cellrank2_gse230659_observed_scgpt_v1.yaml). "
+            "(e.g. cellrank2_gse230659_marker_fm_silver_A_hvg2000_formal.yaml). "
             "When provided, reads lineage.reference_graph_path and "
             "lineage.edge_confidence_mode from the config. "
             "These override the defaults (None and 'all' respectively)."

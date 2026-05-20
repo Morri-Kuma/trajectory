@@ -247,8 +247,6 @@ def write_annotation_votes_tsv(out_dir: Path, obs) -> None:
     df.rename(columns={STATE_KEY: "final_milestone_label_coarse"}, inplace=True)
     df["final_milestone_confidence"] = 1.0
     df["final_milestone_source"] = FINAL_MILESTONE_SOURCE
-    df["consensus_milestone_label"] = df["final_milestone_label_coarse"]
-    df["consensus_confidence"] = 1.0
     df["provider_id"] = PROVIDER_ID
     df["label_mode"] = LABEL_MODE
     out_path = out_dir / "annotation_votes.tsv"
@@ -268,7 +266,6 @@ def write_ground_truth_metadata_json(out_dir: Path, counts: dict[str, int]) -> N
         "state_key": STATE_KEY,
         "confidence_key": "final_milestone_confidence",
         "source_key": "final_milestone_source",
-        "official_embedding_label_key": STATE_KEY,
         "analysis_role": ANALYSIS_ROLE,
         "version": "v1",
         "graph_type": GRAPH_TYPE,

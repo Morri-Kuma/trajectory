@@ -30,7 +30,7 @@ Aggregation:
 Configuration (injected into scenario_config by eval_dispatch.py):
   time_key         : obs column for experimental time (default "abs_day")
   cell_state_key   : obs column for cell-state labels
-                     (default "scgpt_pseudostate_provisional")
+                     (default "final_milestone_label_coarse")
   cellrank2_params : dict — kernel and WOT sub-parameters from the method config
                      (optional; defaults are used if absent)
 """
@@ -182,7 +182,7 @@ class CellRank2Adapter(BaseAdapter):
         # --- Read configuration (injected by eval_dispatch.py) ---
         time_key = self.scenario_config.get("time_key", "abs_day")
         cell_state_key = self.scenario_config.get(
-            "cell_state_key", "scgpt_pseudostate_provisional"
+            "cell_state_key", "final_milestone_label_coarse"
         )
         cr2_params = self.scenario_config.get("cellrank2_params", {})
         wot_params = cr2_params.get("wot_params", {})

@@ -12,11 +12,13 @@ Frozen reportable providers expose the following assets:
 - `ground_truth_metadata.json`: provenance for the provider export.
 - `annotation_votes.tsv`: provider-specific label provenance where available.
 
-Method configs may either:
+Method configs should:
 
 1. set `ground_truth.provider_id` to a registered provider;
-2. provide a full `ground_truth` block with explicit paths; or
-3. rely on legacy `state_system` / `lineage` fields.
+2. provide a full `ground_truth` block with explicit paths.
+
+Legacy `state_system` / `lineage` fallbacks have been removed from the
+reportable benchmark configuration surface.
 
 ## Current Reportable Providers
 
@@ -29,11 +31,9 @@ providers:
 | `gse230659_marker_fm_transition_silver_v1` | GSE230659 | primary report | Marker-FM transition silver provider; excludes `ambiguous` and `unknown_or_ood` from official metrics. |
 | `gse242424_oskm_reprogramming_silver_v1` | GSE242424 | primary report | Author-cluster OSKM reprogramming silver provider on the 59,187-cell matched subset. |
 
-Milestone consensus, embedding, and classifier providers for GSE178325 and
-GSE230659 are retained for sensitivity analyses. The `scgpt_v1` and
-`scgpt_v1_gse178325_0618` providers are deprecated legacy pseudostate
-references retained for backward compatibility with older configs and reports;
-they should not be used as primary benchmark ground truth.
+Older pseudostate, stage-proxy, and placeholder milestone providers have been
+removed from the active registry and should not be referenced by new reports or
+method configs.
 
 ## Provider Policy
 

@@ -129,7 +129,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--embedding-key", default=None, dest="embedding_key",
         help=(
             "adata.obsm key for an INDEPENDENT reference embedding "
-            "(e.g. X_pca, X_scGPT).  Must NOT be from the model being "
+            "(e.g. X_pca).  Must NOT be from the model being "
             "evaluated.  If omitted or absent, marker-only mode is used."
         ),
     )

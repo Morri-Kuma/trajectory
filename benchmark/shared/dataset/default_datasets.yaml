@@ -1,52 +1,19 @@
 datasets:
-  - name: GSE230659Dataset
-    tag: gse230659_scgpt_v1_scenario_A
-    id: GSE230659
-    h5ad_path: benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
-    time_key: abs_day
-    cell_state_key: scgpt_pseudostate_provisional
-    data_preprocessing_steps:
-      - name: CopyTrainTest
-
-  - name: GSE230659Dataset
-    tag: gse230659_scgpt_v1_scenario_B
-    id: GSE230659
-    h5ad_path: benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
-    time_key: abs_day
-    cell_state_key: scgpt_pseudostate_provisional
-    data_preprocessing_steps:
-      - name: ScenarioTimepointSplit
-        time_key: abs_day
-        train_times: [0.5, 2.0, 4.0, 8.0, 12.0, 16.0]
-        heldout_times: [16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
-
-  - name: GSE230659Dataset
-    tag: gse230659_scgpt_v1_scenario_C
-    id: GSE230659
-    h5ad_path: benchmark/results/scgpt/full/adata_scgpt_annotated.h5ad
-    time_key: abs_day
-    cell_state_key: scgpt_pseudostate_provisional
-    data_preprocessing_steps:
-      - name: ScenarioTimepointSplit
-        time_key: abs_day
-        train_times: [0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0]
-        heldout_times: [4.0, 12.0, 20.0, 28.0, 30.0]
-
   - name: GSE178325Dataset
-    tag: gse178325_0618_scgpt_v1_scenario_A
+    tag: gse178325_marker_fm_silver_scenario_A
     id: GSE178325
-    h5ad_path: benchmark/inputs/gse178325_scgpt_hvg2000/GSE178325_scGPT_annotated_HVG2000_benchmark_input.h5ad
+    h5ad_path: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: scgpt_pseudostate_provisional
+    cell_state_key: final_milestone_label_coarse
     data_preprocessing_steps:
       - name: CopyTrainTest
 
   - name: GSE178325Dataset
-    tag: gse178325_0618_scgpt_v1_scenario_B
+    tag: gse178325_marker_fm_silver_scenario_B
     id: GSE178325
-    h5ad_path: benchmark/inputs/gse178325_scgpt_hvg2000/GSE178325_scGPT_annotated_HVG2000_benchmark_input.h5ad
+    h5ad_path: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: scgpt_pseudostate_provisional
+    cell_state_key: final_milestone_label_coarse
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day
@@ -54,32 +21,65 @@ datasets:
         heldout_times: [20.0, 24.0, 25.0, 26.0, 28.0, 34.0, 36.0]
 
   - name: GSE178325Dataset
-    tag: gse178325_0618_scgpt_v1_scenario_C
+    tag: gse178325_marker_fm_silver_scenario_C
     id: GSE178325
-    h5ad_path: benchmark/inputs/gse178325_scgpt_hvg2000/GSE178325_scGPT_annotated_HVG2000_benchmark_input.h5ad
+    h5ad_path: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: scgpt_pseudostate_provisional
+    cell_state_key: final_milestone_label_coarse
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day
         train_times: [0.0, 0.5, 2.0, 4.0, 8.0, 16.0, 24.0]
         heldout_times: [1.0, 12.0, 20.0, 25.0, 26.0, 28.0, 34.0, 36.0]
 
-  - name: GSE242424Dataset
-    tag: gse242424_hvg2000_scenario_A
-    id: GSE242424
-    h5ad_path: benchmark/inputs/gse242424_hvg2000/GSE242424_HVG2000_benchmark_input.h5ad
+  - name: GSE230659Dataset
+    tag: gse230659_marker_fm_silver_scenario_A
+    id: GSE230659
+    h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: scTimeBench_cell_type
+    cell_state_key: final_milestone_label_coarse
+    data_preprocessing_steps:
+      - name: CopyTrainTest
+
+  - name: GSE230659Dataset
+    tag: gse230659_marker_fm_silver_scenario_B
+    id: GSE230659
+    h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    time_key: abs_day
+    cell_state_key: final_milestone_label_coarse
+    data_preprocessing_steps:
+      - name: ScenarioTimepointSplit
+        time_key: abs_day
+        train_times: [0.5, 2.0, 4.0, 8.0, 12.0, 16.0]
+        heldout_times: [16.33, 16.67, 17.0, 18.0, 20.0, 22.0, 24.0, 28.0, 30.0]
+
+  - name: GSE230659Dataset
+    tag: gse230659_marker_fm_silver_scenario_C
+    id: GSE230659
+    h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    time_key: abs_day
+    cell_state_key: final_milestone_label_coarse
+    data_preprocessing_steps:
+      - name: ScenarioTimepointSplit
+        time_key: abs_day
+        train_times: [0.5, 2.0, 8.0, 16.0, 16.33, 16.67, 17.0, 18.0, 22.0, 24.0]
+        heldout_times: [4.0, 12.0, 20.0, 28.0, 30.0]
+
+  - name: GSE242424Dataset
+    tag: gse242424_oskm_silver_scenario_A
+    id: GSE242424
+    h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+    time_key: abs_day
+    cell_state_key: final_milestone_label_coarse
     data_preprocessing_steps:
       - name: CopyTrainTest
 
   - name: GSE242424Dataset
-    tag: gse242424_hvg2000_scenario_B
+    tag: gse242424_oskm_silver_scenario_B
     id: GSE242424
-    h5ad_path: benchmark/inputs/gse242424_hvg2000/GSE242424_HVG2000_benchmark_input.h5ad
+    h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: scTimeBench_cell_type
+    cell_state_key: final_milestone_label_coarse
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day
@@ -87,11 +87,11 @@ datasets:
         heldout_times: [12.0, 14.0, 16.0]
 
   - name: GSE242424Dataset
-    tag: gse242424_hvg2000_scenario_C
+    tag: gse242424_oskm_silver_scenario_C
     id: GSE242424
-    h5ad_path: benchmark/inputs/gse242424_hvg2000/GSE242424_HVG2000_benchmark_input.h5ad
+    h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: scTimeBench_cell_type
+    cell_state_key: final_milestone_label_coarse
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day

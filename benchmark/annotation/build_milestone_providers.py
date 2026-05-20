@@ -15,15 +15,6 @@ Official providers (recommended, default)
   gse178325_marker_fm_transition_silver_v1/
   gse230659_marker_fm_transition_silver_v1/
 
-Legacy providers (backward-compatible sensitivity/placeholder modes)
---------------------------------------------------------------------
-  gse178325_milestone_consensus_v1/
-  gse178325_milestone_embedding_v1/
-  gse178325_milestone_classifier_v1/
-  gse230659_milestone_consensus_v1/
-  gse230659_milestone_embedding_v1/
-  gse230659_milestone_classifier_v1/
-
 Each provider directory contains:
   state_labels.tsv              cell-level labels (schema-only unless --input-h5ad)
   state_metadata.tsv            one row per primary milestone
@@ -35,17 +26,11 @@ Each provider directory contains:
 Label modes (--label-mode)
 --------------------------
   official_silver   frozen silver-standard provider from Stage 2 (DEFAULT)
-  legacy_all        old consensus/embedding/classifier modes only
-  all               official_silver plus all legacy modes
-  consensus         individual legacy consensus mode
-  embedding_based   individual legacy embedding mode
-  classifier_based  individual legacy classifier mode
 
 Usage
 -----
   python benchmark/annotation/build_milestone_providers.py --dry-run
   python benchmark/annotation/build_milestone_providers.py
-  python benchmark/annotation/build_milestone_providers.py --label-mode all
   python benchmark/annotation/build_milestone_providers.py \
       --input-h5ad path/to/GSE230659_stage2.h5ad \
       --dataset-id GSE230659 \
@@ -78,20 +63,10 @@ _VALID_DATASET_IDS = ("GSE178325", "GSE230659")
 # Individual mode names
 _VALID_LABEL_MODES = (
     "official_silver",
-    "consensus",
-    "embedding_based",
-    "classifier_based",
 )
-_LEGACY_MODES = ("consensus", "embedding_based", "classifier_based")
 
-# All accepted --label-mode argument values (includes aggregates)
 _VALID_LABEL_MODE_ARGS = (
     "official_silver",
-    "legacy_all",
-    "all",
-    "consensus",
-    "embedding_based",
-    "classifier_based",
 )
 
 _DEFAULT_MARKERS_YAML = "benchmark/annotation/milestone_markers.yaml"
@@ -113,67 +88,12 @@ _MODE_CONFIG = {
         "status":             "frozen_silver_standard_milestone_provider",
         "label_type":         "frozen_silver_standard",
     },
-    # ---- Legacy placeholder modes (Step-3 marker-copy columns) ----
-    "consensus": {
-        "state_key":         "consensus_milestone_label",
-        "confidence_key":    "consensus_confidence",
-        "analysis_role":     "sensitivity_legacy_consensus",
-        "provider_suffix":   "milestone_consensus_v1",
-        "annotation_method": "marker_defined_milestone_provider",
-        "status":            "legacy_placeholder_milestone_provider",
-        "label_type":        "legacy_placeholder",
-    },
-    "embedding_based": {
-        "state_key":         "milestone_embedding_label",
-        "confidence_key":    "milestone_embedding_confidence",
-        "analysis_role":     "sensitivity_embedding_based",
-        "provider_suffix":   "milestone_embedding_v1",
-        "annotation_method": "marker_defined_milestone_provider",
-        "status":            "legacy_placeholder_milestone_provider",
-        "label_type":        "legacy_placeholder",
-    },
-    "classifier_based": {
-        "state_key":         "milestone_classifier_label",
-        "confidence_key":    "milestone_classifier_confidence",
-        "analysis_role":     "sensitivity_classifier_based",
-        "provider_suffix":   "milestone_classifier_v1",
-        "annotation_method": "marker_defined_milestone_provider",
-        "status":            "legacy_placeholder_milestone_provider",
-        "label_type":        "legacy_placeholder",
-    },
 }
 
 # Default excluded labels (overridden by excluded_from_official_metrics in YAML)
 _EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT = [
     "ambiguous",
     "unknown_or_ood",
-]
-
-# Step-3 placeholder state keys (legacy modes)
-_STEP3_PLACEHOLDER_KEYS = {
-    "consensus_milestone_label",
-    "milestone_embedding_label",
-    "milestone_classifier_label",
-}
-
-_PLACEHOLDER_WARNING = (
-    "This state_key column is a Step-3 marker-copy placeholder (legacy mode). "
-    "Do not treat as final biology; use official_silver mode for frozen labels."
-)
-
-# annotation_votes.tsv column lists
-_ANNOTATION_VOTES_COLS_LEGACY = [
-    "cell_id",
-    "milestone_marker_label",
-    "milestone_marker_score",
-    "milestone_embedding_label",
-    "milestone_embedding_confidence",
-    "milestone_classifier_label",
-    "milestone_classifier_confidence",
-    "consensus_milestone_label",
-    "consensus_confidence",
-    "provider_id",
-    "label_mode",
 ]
 
 _ANNOTATION_VOTES_COLS_OFFICIAL_SILVER = [
@@ -198,15 +118,9 @@ _ANNOTATION_VOTES_COLS_OFFICIAL_SILVER = [
     "trajectory_membership_label",
     "trajectory_membership_score",
     "trajectory_membership_margin",
-    # Legacy columns (kept for backward compat)
+    # Marker diagnostics.
     "milestone_marker_label",
     "milestone_marker_score",
-    "milestone_embedding_label",
-    "milestone_embedding_confidence",
-    "milestone_classifier_label",
-    "milestone_classifier_confidence",
-    "consensus_milestone_label",
-    "consensus_confidence",
     # Provider tracking
     "provider_id",
     "label_mode",
@@ -218,20 +132,10 @@ _ANNOTATION_VOTES_COLS_OFFICIAL_SILVER = [
 # ---------------------------------------------------------------------------
 
 def _resolve_modes(label_mode_arg: str | None) -> list:
-    """Resolve a --label-mode argument value to a list of individual mode names.
-
-    None / "official_silver" -> ["official_silver"]
-    "legacy_all"             -> [legacy modes]
-    "all"                    -> ["official_silver"] + [legacy modes]
-    individual mode name     -> [that mode]
-    """
-    if label_mode_arg is None or label_mode_arg == "official_silver":
+    """Resolve --label-mode. Only official_silver is supported."""
+    if label_mode_arg in (None, "official_silver"):
         return ["official_silver"]
-    if label_mode_arg == "legacy_all":
-        return list(_LEGACY_MODES)
-    if label_mode_arg == "all":
-        return ["official_silver"] + list(_LEGACY_MODES)
-    return [label_mode_arg]
+    raise ValueError(f"Unsupported label mode: {label_mode_arg!r}")
 
 
 # ---------------------------------------------------------------------------
@@ -317,65 +221,43 @@ def _build_reference_graph(
         if isinstance(e, (list, tuple)) and len(e) == 2
     ]
 
-    if label_mode == "official_silver":
-        expanded_order = (ds_cfg or {}).get("expanded_trajectory_order") or []
-        excluded = (
-            (ds_cfg or {}).get("excluded_from_official_metrics")
-            or list(_EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT)
-        )
-        graph_meta = {
-            "provider_id":              provider_id,
-            "dataset_id":               dataset_id,
-            "label_mode":               label_mode,
-            "label_type":               mode_cfg["label_type"],
-            "state_key":                state_key,
-            "expanded_state_key":       mode_cfg.get("expanded_state_key"),
-            "graph_type":               "marker_defined_coarse_milestone_graph",
-            "version":                  "v1",
-            "generated_by":             "benchmark/annotation/build_milestone_providers.py",
-            "source_markers_yaml":      str(markers_yaml_path),
-            "analysis_role":            analysis_role,
-            "deprecated":               False,
-            "n_states":                 len(primary_milestones),
-            "n_edges":                  len(edges),
-            "expanded_trajectory_order":    expanded_order,
-            "excluded_from_official_metrics": excluded,
-            "policy": [
-                "Official frozen silver-standard coarse milestone reference graph.",
-                "Nodes are primary_milestones only.",
-                "Transition labels are in final_milestone_label_expanded (supplementary)"
-                " and are NOT graph nodes.",
-                "All edges have confidence=high; all nodes have status=confirmed.",
-                "Excluded from official metrics: ambiguous, unknown_or_ood.",
-                "Provenance: Liuyang et al. 2023 DOI 10.1016/j.stem.2023.02.008;"
-                " Guan et al. 2022 DOI 10.1038/s41586-022-04593-5;"
-                " companion code https://github.com/sajuukLyu/CSC_2023",
-            ],
-        }
-    else:
-        graph_meta = {
-            "provider_id":         provider_id,
-            "dataset_id":          dataset_id,
-            "label_mode":          label_mode,
-            "label_type":          mode_cfg.get("label_type"),
-            "state_key":           state_key,
-            "graph_type":          "marker_defined_milestone_graph",
-            "version":             "v1",
-            "generated_by":        "benchmark/annotation/build_milestone_providers.py",
-            "source_markers_yaml": str(markers_yaml_path),
-            "analysis_role":       analysis_role,
-            "deprecated":          False,
-            "n_states":            len(primary_milestones),
-            "n_edges":             len(edges),
-            "policy": [
-                "Legacy marker-copy placeholder graph.",
-                "All edges have confidence=high; all nodes have status=confirmed.",
-                "Nodes are primary milestones only.",
-                "Step-3 label columns may be marker-copy placeholders until"
-                " Steps 4-5 embedding/classifier models are implemented.",
-                "Use official_silver mode for frozen silver-standard labels.",
-            ],
-        }
+    if label_mode != "official_silver":
+        raise ValueError(f"Unsupported label_mode after cleanup: {label_mode}")
+
+    expanded_order = (ds_cfg or {}).get("expanded_trajectory_order") or []
+    excluded = (
+        (ds_cfg or {}).get("excluded_from_official_metrics")
+        or list(_EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT)
+    )
+    graph_meta = {
+        "provider_id":              provider_id,
+        "dataset_id":               dataset_id,
+        "label_mode":               label_mode,
+        "label_type":               mode_cfg["label_type"],
+        "state_key":                state_key,
+        "expanded_state_key":       mode_cfg.get("expanded_state_key"),
+        "graph_type":               "marker_defined_coarse_milestone_graph",
+        "version":                  "v1",
+        "generated_by":             "benchmark/annotation/build_milestone_providers.py",
+        "source_markers_yaml":      str(markers_yaml_path),
+        "analysis_role":            analysis_role,
+        "deprecated":               False,
+        "n_states":                 len(primary_milestones),
+        "n_edges":                  len(edges),
+        "expanded_trajectory_order":    expanded_order,
+        "excluded_from_official_metrics": excluded,
+        "policy": [
+            "Official frozen silver-standard coarse milestone reference graph.",
+            "Nodes are primary_milestones only.",
+            "Transition labels are in final_milestone_label_expanded (supplementary)"
+            " and are NOT graph nodes.",
+            "All edges have confidence=high; all nodes have status=confirmed.",
+            "Excluded from official metrics: ambiguous, unknown_or_ood.",
+            "Provenance: Liuyang et al. 2023 DOI 10.1016/j.stem.2023.02.008;"
+            " Guan et al. 2022 DOI 10.1038/s41586-022-04593-5;"
+            " companion code https://github.com/sajuukLyu/CSC_2023",
+        ],
+    }
 
     return {"_meta": graph_meta, "nodes": nodes, "edges": edges}
 
@@ -548,12 +430,7 @@ def _build_one_provider(
 
     provider_dir = provider_root / pid
 
-    # Choose vote columns based on mode
-    vote_cols = (
-        _ANNOTATION_VOTES_COLS_OFFICIAL_SILVER
-        if label_mode == "official_silver"
-        else _ANNOTATION_VOTES_COLS_LEGACY
-    )
+    vote_cols = _ANNOTATION_VOTES_COLS_OFFICIAL_SILVER
 
     # Build graph
     graph = _build_reference_graph(
@@ -609,81 +486,48 @@ def _build_one_provider(
     def _rel(fname: str) -> str:
         return (provider_dir / fname).as_posix()
 
-    # Build metadata dict (mode-specific)
-    if label_mode == "official_silver":
-        metadata: dict = {
-            "provider_id":            pid,
-            "dataset_id":             dataset_id,
-            "label_mode":             label_mode,
-            "label_type":             mode_cfg["label_type"],
-            "annotation_method":      mode_cfg["annotation_method"],
-            "status":                 mode_cfg["status"],
-            "state_key":              state_key,
-            "expanded_state_key":     mode_cfg.get("expanded_state_key"),
-            "confidence_key":         confidence_key,
-            "source_key":             mode_cfg.get("source_key"),
-            "membership_key":         mode_cfg.get("membership_key"),
-            "official_embedding_label_key":      state_key,
-            "supplementary_embedding_label_key": mode_cfg.get("expanded_state_key"),
-            "analysis_role":          analysis_role,
-            "version":                "v1",
-            "source_markers_yaml":    str(markers_yaml_path),
-            "excluded_from_official_metrics":  excluded,
-            "expanded_trajectory_order":       expanded_order,
-            "primary_milestones":              primary_milestones,
-            "n_states":               n_states,
-            "n_graph_edges":          n_graph_edges,
-            "n_cell_labels":          label_stats.get("n_cell_labels", 0),
-            "coarse_label_counts":    label_stats.get("coarse_label_counts", {}),
-            "expanded_label_counts":  label_stats.get("expanded_label_counts", {}),
-            "source_counts":          label_stats.get("source_counts", {}),
-            "membership_counts":      label_stats.get("membership_counts", {}),
-            "label_coverage_fraction": label_stats.get("label_coverage_fraction", 0.0),
-            "input_h5ad":             input_h5ad,
-            "state_labels_status":    state_labels_status,
-            "reference_graph_path":   _rel("reference_graph.json"),
-            "reference_edges_path":   _rel("reference_graph_edges.csv"),
-            "label_path":             _rel("state_labels.tsv"),
-            "metadata_path":          _rel("state_metadata.tsv"),
-            "annotation_votes_path":  _rel("annotation_votes.tsv"),
-            "generated_by":           "benchmark/annotation/build_milestone_providers.py",
-            "provenance": [
-                "Liuyang et al. 2023, Cell Stem Cell,"
-                " DOI: 10.1016/j.stem.2023.02.008",
-                "Guan et al. 2022, Nature,"
-                " DOI: 10.1038/s41586-022-04593-5",
-                "Companion code: https://github.com/sajuukLyu/CSC_2023",
-            ],
-        }
-    else:
-        # Legacy mode metadata (backward-compatible)
-        metadata = {
-            "provider_id":       pid,
-            "dataset_id":        dataset_id,
-            "label_mode":        label_mode,
-            "label_type":        mode_cfg.get("label_type"),
-            "state_key":         state_key,
-            "annotation_method": mode_cfg["annotation_method"],
-            "status":            mode_cfg["status"],
-            "analysis_role":     analysis_role,
-            "version":           "v1",
-            "source_markers_yaml": str(markers_yaml_path),
-            "reference_graph_path": _rel("reference_graph.json"),
-            "reference_edges_path": _rel("reference_graph_edges.csv"),
-            "label_path":           _rel("state_labels.tsv"),
-            "metadata_path":        _rel("state_metadata.tsv"),
-            "annotation_votes_path": _rel("annotation_votes.tsv"),
-            "n_states":     n_states,
-            "n_graph_edges": n_graph_edges,
-            "primary_milestones": primary_milestones,
-            "input_h5ad":             input_h5ad,
-            "state_labels_status":    state_labels_status,
-            "placeholder_warning": (
-                _PLACEHOLDER_WARNING
-                if state_key in _STEP3_PLACEHOLDER_KEYS else None
-            ),
-            "generated_by": "benchmark/annotation/build_milestone_providers.py",
-        }
+    metadata: dict = {
+        "provider_id":            pid,
+        "dataset_id":             dataset_id,
+        "label_mode":             label_mode,
+        "label_type":             mode_cfg["label_type"],
+        "annotation_method":      mode_cfg["annotation_method"],
+        "status":                 mode_cfg["status"],
+        "state_key":              state_key,
+        "expanded_state_key":     mode_cfg.get("expanded_state_key"),
+        "confidence_key":         confidence_key,
+        "source_key":             mode_cfg.get("source_key"),
+        "membership_key":         mode_cfg.get("membership_key"),
+        "analysis_role":          analysis_role,
+        "version":                "v1",
+        "source_markers_yaml":    str(markers_yaml_path),
+        "excluded_from_official_metrics":  excluded,
+        "expanded_trajectory_order":       expanded_order,
+        "primary_milestones":              primary_milestones,
+        "n_states":               n_states,
+        "n_graph_edges":          n_graph_edges,
+        "n_cell_labels":          label_stats.get("n_cell_labels", 0),
+        "coarse_label_counts":    label_stats.get("coarse_label_counts", {}),
+        "expanded_label_counts":  label_stats.get("expanded_label_counts", {}),
+        "source_counts":          label_stats.get("source_counts", {}),
+        "membership_counts":      label_stats.get("membership_counts", {}),
+        "label_coverage_fraction": label_stats.get("label_coverage_fraction", 0.0),
+        "input_h5ad":             input_h5ad,
+        "state_labels_status":    state_labels_status,
+        "reference_graph_path":   _rel("reference_graph.json"),
+        "reference_edges_path":   _rel("reference_graph_edges.csv"),
+        "label_path":             _rel("state_labels.tsv"),
+        "metadata_path":          _rel("state_metadata.tsv"),
+        "annotation_votes_path":  _rel("annotation_votes.tsv"),
+        "generated_by":           "benchmark/annotation/build_milestone_providers.py",
+        "provenance": [
+            "Liuyang et al. 2023, Cell Stem Cell,"
+            " DOI: 10.1016/j.stem.2023.02.008",
+            "Guan et al. 2022, Nature,"
+            " DOI: 10.1038/s41586-022-04593-5",
+            "Companion code: https://github.com/sajuukLyu/CSC_2023",
+        ],
+    }
 
     if dry_run:
         print(f"{tag}   [dry-run] {pid}")
@@ -755,72 +599,43 @@ def _update_registry(
         pid = meta["provider_id"]
         lm  = meta["label_mode"]
 
-        if lm == "official_silver":
-            excluded = meta.get(
-                "excluded_from_official_metrics",
-                list(_EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT),
-            )
-            entry = {
-                "provider_id":       pid,
-                "annotation_method": meta["annotation_method"],
-                "status":            meta["status"],
-                "state_key":         meta["state_key"],
-                "label_path":        meta["label_path"],
-                "metadata_path":     meta["metadata_path"],
-                "reference_graph_path":  meta["reference_graph_path"],
-                "reference_edges_path":  meta["reference_edges_path"],
-                "confidence_mode":   "all",
-                "exclude_uncertain_states": True,
-                "excluded_labels":   excluded,
-                "n_states":          meta["n_states"],
-                "n_graph_edges":     meta["n_graph_edges"],
-                "n_cell_labels":     meta.get("n_cell_labels", 0),
-                "source_h5ad":       meta.get("input_h5ad") or "",
-                "label_mode":        lm,
-                "label_type":        meta.get("label_type"),
-                "analysis_role":     meta["analysis_role"],
-                "coarse_label_key":  meta["state_key"],
-                "expanded_label_key": meta.get("expanded_state_key"),
-                "official_embedding_label_key":
-                    meta.get("official_embedding_label_key"),
-                "supplementary_embedding_label_key":
-                    meta.get("supplementary_embedding_label_key"),
-                "notes": (
-                    f"Official frozen silver-standard milestone provider"
-                    f" for {meta['dataset_id']}."
-                    f" state_key={meta['state_key']}."
-                    " Frozen coarse labels from Stage 2 trajectory-aware annotation."
-                    " Excluded from official metrics:"
-                    " ambiguous, unknown_or_ood."
-                ),
-            }
-        else:
-            # Legacy entry (preserves existing format + adds label_type)
-            entry = {
-                "provider_id":       pid,
-                "annotation_method": meta["annotation_method"],
-                "status":            meta["status"],
-                "state_key":         meta["state_key"],
-                "label_path":        meta["label_path"],
-                "metadata_path":     meta["metadata_path"],
-                "reference_graph_path": meta["reference_graph_path"],
-                "reference_edges_path": meta["reference_edges_path"],
-                "confidence_mode":   "all",
-                "exclude_uncertain_states": False,
-                "n_states":          meta["n_states"],
-                "n_graph_edges":     meta["n_graph_edges"],
-                "source_h5ad":       meta.get("input_h5ad") or "",
-                "label_mode":        lm,
-                "label_type":        meta.get("label_type"),
-                "analysis_role":     meta["analysis_role"],
-                "notes": (
-                    f"Legacy placeholder provider for {meta['dataset_id']}"
-                    f" ({lm} mode)."
-                    f" state_key={meta['state_key']}."
-                    " Step-3 marker-copy placeholder."
-                    " Use official_silver mode for frozen labels."
-                ),
-            }
+        if lm != "official_silver":
+            raise ValueError(f"Unsupported label_mode in registry update: {lm}")
+
+        excluded = meta.get(
+            "excluded_from_official_metrics",
+            list(_EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT),
+        )
+        entry = {
+            "provider_id":       pid,
+            "annotation_method": meta["annotation_method"],
+            "status":            meta["status"],
+            "state_key":         meta["state_key"],
+            "label_path":        meta["label_path"],
+            "metadata_path":     meta["metadata_path"],
+            "reference_graph_path":  meta["reference_graph_path"],
+            "reference_edges_path":  meta["reference_edges_path"],
+            "confidence_mode":   "all",
+            "exclude_uncertain_states": True,
+            "excluded_labels":   excluded,
+            "n_states":          meta["n_states"],
+            "n_graph_edges":     meta["n_graph_edges"],
+            "n_cell_labels":     meta.get("n_cell_labels", 0),
+            "source_h5ad":       meta.get("input_h5ad") or "",
+            "label_mode":        lm,
+            "label_type":        meta.get("label_type"),
+            "analysis_role":     meta["analysis_role"],
+            "coarse_label_key":  meta["state_key"],
+            "expanded_label_key": meta.get("expanded_state_key"),
+            "notes": (
+                f"Official frozen silver-standard milestone provider"
+                f" for {meta['dataset_id']}."
+                f" state_key={meta['state_key']}."
+                " Frozen coarse labels from Stage 2 trajectory-aware annotation."
+                " Excluded from official metrics:"
+                " ambiguous, unknown_or_ood."
+            ),
+        }
 
         registry["providers"][pid] = entry
         if not dry_run:
@@ -855,11 +670,6 @@ def build_parser() -> argparse.ArgumentParser:
         epilog=(
             "Label mode reference:\n"
             "  official_silver   frozen silver-standard Stage 2 provider (DEFAULT)\n"
-            "  legacy_all        old consensus/embedding/classifier modes\n"
-            "  all               official_silver + all legacy modes\n"
-            "  consensus         legacy consensus placeholder\n"
-            "  embedding_based   legacy embedding placeholder\n"
-            "  classifier_based  legacy classifier placeholder\n"
         ),
     )
     parser.add_argument(
@@ -891,9 +701,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="label_mode",
         help=(
             "Which label mode(s) to build.  "
-            "Omit for default (official_silver only).  "
-            "Use 'all' to build official_silver + all legacy modes.  "
-            "Use 'legacy_all' for legacy modes only."
+            "Omit for default (official_silver only)."
         ),
     )
     parser.add_argument(

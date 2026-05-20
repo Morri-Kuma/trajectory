@@ -21,15 +21,15 @@ Usage
   python -m benchmark.evaluation.build_projected_milestone_transitions \\
       --projected-labels <csv> \\
       --output-dir <dir> \\
-      --label-mode consensus \\
-      --cell-state-key consensus_milestone_label \\
+      --label-mode official_silver \\
+      --cell-state-key final_milestone_label_coarse \\
       --exclude-label ambiguous
 
   python -m benchmark.evaluation.build_projected_milestone_transitions \\
       --projected-labels <csv> \\
       --output-dir <dir> \\
-      --label-mode consensus \\
-      --cell-state-key consensus_milestone_label \\
+      --label-mode official_silver \\
+      --cell-state-key final_milestone_label_coarse \\
       --exclude-label ambiguous \\
       --all-timepoint-pairs
 """
@@ -202,8 +202,8 @@ def _build_transition_matrix(
 def run_transition_build(
     projected_labels_csv: str,
     output_dir: str,
-    label_mode: str = "consensus",
-    cell_state_key: str = "consensus_milestone_label",
+    label_mode: str = "official_silver",
+    cell_state_key: str = "final_milestone_label_coarse",
     exclude_labels: Optional[List[str]] = None,
     dataset_id: Optional[str] = None,
     all_timepoint_pairs: bool = False,
@@ -258,9 +258,9 @@ def run_transition_build(
 
     # Write metadata
     # Step 10 naming policy: mode_specific_outputs records the mode-specific
-    # file aliases; generic_compatibility_outputs records backward-compatible
+    # file aliases; generic_compatibility_outputs records stable-name
     # generic files. Both sets exist in the same directory — mode-specific
-    # files carry the label_mode suffix; generic files are kept for legacy callers.
+    # files carry the label_mode suffix; generic files are kept for stable names.
     out_dir_str = str(out_dir)
     metadata = {
         "dataset_id": dataset_id,
@@ -296,8 +296,8 @@ def run_transition_build(
             "projected_transition_metadata.json": str(out_dir / "projected_transition_metadata.json"),
         },
         "compatibility_note": (
-            "generic_compatibility_outputs are kept for backward compatibility. "
-            "mode_specific_outputs are the preferred files for Step 11+ summary scripts."
+            "generic_compatibility_outputs are kept for stable filenames. "
+            "mode_specific_outputs are the preferred files for official silver reports."
         ),
         **build_meta,
     }
@@ -321,17 +321,17 @@ def main(argv: Optional[List[str]] = None) -> int:
                         help="Path to projected_milestone_labels.csv.")
     parser.add_argument("--output-dir", required=True,
                         help="Output directory for STM and edge files.")
-    parser.add_argument("--label-mode", default="consensus",
-                        help="Label mode (consensus / embedding_based / classifier_based).")
-    parser.add_argument("--cell-state-key", default="consensus_milestone_label",
+    parser.add_argument("--label-mode", default="official_silver",
+                        help="Label mode (default: official_silver).")
+    parser.add_argument("--cell-state-key", default="final_milestone_label_coarse",
                         help="Column name in the CSV to use as state labels.")
     parser.add_argument("--exclude-label", action="append", dest="exclude_labels",
                         default=[], metavar="LABEL",
                         help="Label to exclude (repeatable).")
     parser.add_argument("--dataset-id", default=None)
     parser.add_argument("--provider-id", default=None,
-                        help="Provider ID for Step 10 metadata compatibility "
-                             "(e.g. gse230659_milestone_consensus_v1).")
+                        help="Provider ID for metadata compatibility "
+                             "(e.g. gse230659_marker_fm_transition_silver_v1).")
     parser.add_argument("--all-timepoint-pairs", action="store_true",
                         help="Use all pairs, not just consecutive pairs.")
     args = parser.parse_args(argv)

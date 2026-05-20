@@ -2,9 +2,8 @@
 Ground-truth provider loader.
 
 The benchmark treats cell-state labels and reference lineage graphs as a
-replaceable provider layer. scGPT-v1 is the current silver-standard provider,
-but CellTypist/scANVI/marker-based providers can be added by registering the
-same fields in ``benchmark/ground_truth/registry.yaml`` or by placing a
+replaceable provider layer. Current reportable runs resolve to official silver
+providers registered in ``benchmark/ground_truth/registry.yaml`` or to a
 ``ground_truth`` block directly in a method config.
 """
 
@@ -76,13 +75,13 @@ def _provider_from_registry(provider_id: str, project_root: Path) -> Dict[str, A
     return cfg
 
 
-def _legacy_ground_truth_config(method_config: Dict[str, Any]) -> Dict[str, Any]:
+def _config_ground_truth_config(method_config: Dict[str, Any]) -> Dict[str, Any]:
     """Build a provider-like config from pre-provider lineage/state_system keys."""
     lineage = method_config.get("lineage") or {}
     state_system = method_config.get("state_system") or {}
     version = state_system.get("version") or lineage.get("state_system_version")
     return {
-        "provider_id": version or "legacy_lineage_config",
+        "provider_id": version or "config_lineage_provider",
         "state_key": lineage.get("cell_state_key"),
         "label_path": state_system.get("label_tsv"),
         "metadata_path": state_system.get("metadata_tsv"),
@@ -121,7 +120,7 @@ def load_ground_truth(
     Resolution order:
       1. ``method_config["ground_truth"]`` if present.
       2. Registry entry named by ``provider_id`` or ``ground_truth.provider_id``.
-      3. Legacy ``lineage`` + ``state_system`` fields.
+      3. Config-local ``lineage`` + ``state_system`` fields.
 
     Config-local fields override registry defaults, which lets a run vary
     confidence mode or state key without creating a new provider entry.
@@ -148,19 +147,19 @@ def load_ground_truth(
     elif gt_cfg:
         cfg = dict(gt_cfg)
     else:
-        legacy_cfg = _legacy_ground_truth_config(method_config)
-        legacy_provider_id = legacy_cfg.get("provider_id")
-        if legacy_provider_id:
+        config_cfg = _config_ground_truth_config(method_config)
+        config_provider_id = config_cfg.get("provider_id")
+        if config_provider_id:
             try:
-                provider_cfg = _provider_from_registry(str(legacy_provider_id), root)
+                provider_cfg = _provider_from_registry(str(config_provider_id), root)
             except (KeyError, FileNotFoundError):
                 provider_cfg = {}
-        cfg = _merge_provider_config(provider_cfg, legacy_cfg)
+        cfg = _merge_provider_config(provider_cfg, config_cfg)
 
     if "provider_id" not in cfg or not cfg.get("provider_id"):
-        cfg["provider_id"] = resolved_provider_id or "legacy_lineage_config"
+        cfg["provider_id"] = resolved_provider_id or "config_lineage_provider"
 
-    # Accept both provider vocabulary and legacy lineage vocabulary.
+    # Accept both provider vocabulary and config-local lineage vocabulary.
     if not cfg.get("state_key"):
         cfg["state_key"] = cfg.get("cell_state_key")
     if not cfg.get("confidence_mode"):

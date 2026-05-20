@@ -21,15 +21,15 @@ Usage:
     conda activate traj_env
     # From project root (or set TRAJ_PROJECT_ROOT=/path/to/project):
     python benchmark/methods/scNODE/run.py \
-        --config benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml
+        --config benchmark/configs/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 
     # On HPC (SGE/SLURM), export TRAJ_PROJECT_ROOT first, then:
     python benchmark/methods/scNODE/run.py \
-        --config benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml
+        --config benchmark/configs/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 
     Or via train_and_test.sh (called from benchmark/):
         bash benchmark/methods/scNODE/train_and_test.sh \
-            benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml
+            benchmark/configs/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 
 What this script does:
     1. Reads the YAML config.
@@ -760,7 +760,7 @@ def main():
     parser.add_argument(
         "--config", "--yaml_config", required=True,
         metavar="YAML",
-        help="Path to YAML config (e.g. benchmark/configs/scnode_gse230659_observed_scgpt_v1.yaml)"
+        help="Path to YAML config (e.g. benchmark/configs/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml)"
     )
     args = parser.parse_args()
 
@@ -785,7 +785,7 @@ def main():
     output_cfg    = cfg.get("output", {})
 
     time_key           = dataset_cfg.get("time_key", "abs_day")
-    cell_state_key     = lineage_cfg.get("cell_state_key", "scgpt_pseudostate_provisional")
+    cell_state_key     = lineage_cfg.get("cell_state_key", "final_milestone_label_coarse")
     ref_graph_path     = lineage_cfg.get("reference_graph_path")
     edge_conf_mode     = lineage_cfg.get("edge_confidence_mode", "medium_and_above")
     excl_uncertain     = lineage_cfg.get("exclude_uncertain_states", False)

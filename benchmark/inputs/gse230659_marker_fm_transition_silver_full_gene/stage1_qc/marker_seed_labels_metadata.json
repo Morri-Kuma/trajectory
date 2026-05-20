@@ -43,8 +43,6 @@
   "min_top_score": 0.0,
   "min_score_margin": 0.05,
   "max_cells_used": null,
-  "placeholder_columns_created": true,
-  "placeholder_note": "milestone_embedding_label, milestone_embedding_confidence, milestone_classifier_label, milestone_classifier_confidence, consensus_milestone_label, and consensus_confidence are Step-3 temporary compatibility placeholders copied from marker-score columns.  They will be replaced by real embedding, classifier, and consensus logic in Steps 4-5.  stage1_label, stage1_confidence, stage1_margin, stage1_status, and stage1_source are the AUTHORITATIVE Stage 1 outputs; downstream logic should use these columns rather than the placeholder columns.",
   "marker_overlap_summary": {
     "hADSCs": {
       "n_required": 8,

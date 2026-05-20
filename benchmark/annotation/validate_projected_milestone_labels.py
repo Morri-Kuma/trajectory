@@ -6,8 +6,8 @@ Checks
 ------
   1.  projected_milestone_labels.csv exists and has required columns.
   2.  n_rows > 0.
-  3.  consensus_milestone_label is not all ambiguous.
-  4.  consensus_confidence exists and is numeric.
+  3.  final_milestone_label_coarse is not all ambiguous.
+  4.  final_milestone_confidence exists and is numeric.
   5.  timepoint column exists and has at least one unique value.
   6.  If projected_expression.npy exists, row count matches CSV length.
   7.  projected_embedding.npy, if present, is NOT checked against CSV row count for
@@ -18,19 +18,10 @@ Checks
   8.  If projected_cluster_labels.csv exists, row count matches CSV length.
   9.  projected_milestone_annotation_metadata.json exists and parses.
   10. Metadata smoke_test and formal_benchmark flags are explicit booleans.
-  11. If annotation_policy == "two_provider_projection":
-      a. formal_two_provider_complete must be present and True in metadata.
-      b. If formal_two_provider_complete is False, the run is degraded (warn).
-      c. If formal_two_provider_complete is True but any milestone_embedding_label
-         == "unavailable": error (inconsistent state).
-      d. A degraded run (formal_two_provider_complete == False) must NOT be
-         used as the Embedding Coherence input without explicit acknowledgement.
-      e. projected_hvg_embedding.npy must exist and row count must match CSV.
-
 Usage
 -----
   python -m benchmark.annotation.validate_projected_milestone_labels \\
-      benchmark/results/smoke/projected_milestone_labels/scnode_consensus_A [--verbose]
+      benchmark/results/scnode/gse230659_marker_fm_silver_A_hvg2000_formal [--verbose]
 
 Exit codes: 0 = pass, 1 = fail.
 """
@@ -47,10 +38,10 @@ from typing import Any, Dict, List, Tuple
 REQUIRED_COLUMNS = [
     "projected_cell_id",
     "timepoint",
-    "milestone_embedding_label",
-    "milestone_classifier_label",
-    "consensus_milestone_label",
-    "consensus_confidence",
+    "final_milestone_label_coarse",
+    "final_milestone_confidence",
+    "label_mode",
+    "provider_id",
 ]
 
 
@@ -92,32 +83,32 @@ def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
         return errors, warnings
     note(f"n_projected_cells: {len(rows)}")
 
-    # 3. consensus_milestone_label not all ambiguous
-    if "consensus_milestone_label" in fieldnames:
-        labels = [r.get("consensus_milestone_label", "") for r in rows]
+    # 3. final_milestone_label_coarse not all ambiguous
+    if "final_milestone_label_coarse" in fieldnames:
+        labels = [r.get("final_milestone_label_coarse", "") for r in rows]
         n_ambig = sum(1 for l in labels if l == "ambiguous")
         if n_ambig == len(rows):
-            errors.append("All consensus_milestone_label values are 'ambiguous'")
+            errors.append("All final_milestone_label_coarse values are 'ambiguous'")
         else:
             from collections import Counter
             counts = Counter(labels)
-            note(f"consensus_milestone_label distribution: {dict(counts)}")
+            note(f"final_milestone_label_coarse distribution: {dict(counts)}")
             if n_ambig > 0:
                 warnings.append(f"{n_ambig}/{len(rows)} cells have label 'ambiguous'")
 
-    # 4. consensus_confidence is numeric
-    if "consensus_confidence" in fieldnames:
+    # 4. final_milestone_confidence is numeric
+    if "final_milestone_confidence" in fieldnames:
         non_numeric = 0
         for r in rows[:100]:  # spot-check
-            v = r.get("consensus_confidence", "")
+            v = r.get("final_milestone_confidence", "")
             try:
                 float(v)
             except (ValueError, TypeError):
                 non_numeric += 1
         if non_numeric > 0:
-            errors.append(f"consensus_confidence has {non_numeric} non-numeric values (spot-checked 100)")
+            errors.append(f"final_milestone_confidence has {non_numeric} non-numeric values (spot-checked 100)")
         else:
-            note("consensus_confidence: numeric OK")
+            note("final_milestone_confidence: numeric OK")
 
     # 5. timepoint has at least one unique value
     if "timepoint" in fieldnames:
@@ -277,61 +268,6 @@ def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
         else:
             note(f"n_projected_cells in metadata: {n_meta}")
 
-    # 11. Two-provider completeness check (only for two_provider_projection runs)
-    policy = meta.get("annotation_policy", "") if "meta" in dir() else ""
-    # Re-read meta if we parsed it above but went out of scope (handle both paths)
-    _meta_for_check: Dict[str, Any] = {}
-    _meta_path_check = out_dir / "projected_milestone_annotation_metadata.json"
-    if _meta_path_check.exists():
-        try:
-            with open(_meta_path_check, encoding="utf-8") as _f:
-                _meta_for_check = json.load(_f)
-        except Exception:
-            pass
-
-    _policy_check = _meta_for_check.get("annotation_policy", "")
-    if _policy_check == "two_provider_projection":
-        _ftpc = _meta_for_check.get("formal_two_provider_complete")
-
-        # Detect unavailable embedding labels in CSV
-        _n_unavail = 0
-        _csv_for_check = out_dir / "projected_milestone_labels.csv"
-        if _csv_for_check.exists():
-            try:
-                with open(_csv_for_check, newline="", encoding="utf-8") as _f:
-                    _n_unavail = sum(
-                        1 for r in csv.DictReader(_f)
-                        if r.get("milestone_embedding_label", "") == "unavailable"
-                    )
-            except Exception:
-                pass
-
-        if _ftpc is None:
-            errors.append(
-                "two_provider_projection metadata is missing "
-                "'formal_two_provider_complete'.  Re-run annotate_projected_cells.py "
-                "to regenerate the metadata with this field."
-            )
-        elif _ftpc is False:
-            # Degraded run: allowed but must be flagged
-            warnings.append(
-                "two_provider_projection run is DEGRADED: "
-                "formal_two_provider_complete=False.  The embedding provider was "
-                "unavailable (milestone_embedding_label='unavailable' for "
-                f"{_n_unavail} cell(s)).  This output CANNOT be used as a formal "
-                "complete Embedding Coherence input.  Re-run annotate_projected_cells.py "
-                "with a valid projected_expression.npy and the HVG2000 PCA embedding "
-                "provider to obtain a complete result."
-            )
-        elif _ftpc is True and _n_unavail > 0:
-            errors.append(
-                f"Inconsistent state: formal_two_provider_complete=True but "
-                f"{_n_unavail} cell(s) have milestone_embedding_label='unavailable'.  "
-                "Metadata and CSV are out of sync -- regenerate both files."
-            )
-        else:
-            note(f"formal_two_provider_complete: {_ftpc} (embedding labels consistent)")
-
     return errors, warnings
 
 
@@ -343,7 +279,7 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument(
         "root",
         nargs="?",
-        default="benchmark/results/smoke/projected_milestone_labels/scnode_consensus_A",
+        default="benchmark/results/scnode/gse230659_marker_fm_silver_A_hvg2000_formal",
         help="Output directory to validate.",
     )
     parser.add_argument("--verbose", "-v", action="store_true")

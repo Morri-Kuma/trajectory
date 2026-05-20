@@ -54,24 +54,15 @@ import numpy as np
 
 LABEL_MODES: Dict[str, str] = {
     "official_silver": "final_milestone_label_coarse",
-    "consensus": "consensus_milestone_label",
-    "embedding_based": "milestone_embedding_label",
-    "classifier_based": "milestone_classifier_label",
 }
 
 LABEL_MODE_PROVIDER_SUFFIX: Dict[str, str] = {
     "official_silver": "marker_fm_transition_silver_v1",
-    "consensus": "milestone_consensus_v1",
-    "embedding_based": "milestone_embedding_v1",
-    "classifier_based": "milestone_classifier_v1",
 }
 
 CLUSTER_CANDIDATES: List[str] = [
-    "leiden_scgpt_res0.5",
     "leiden",
     "louvain",
-    "scgpt_pseudostate_provisional",
-    "gse230659_scgpt_pseudostate_v1",
 ]
 
 
@@ -151,7 +142,7 @@ def _load_projected_milestone_obs(csv_path: Path) -> Dict[str, np.ndarray]:
 
 def _detect_embedding(obsm_dict: Dict[str, np.ndarray],
                        preferred_key: Optional[str] = None) -> Tuple[str, np.ndarray]:
-    priority = ["X_scGPT", "X_pca", "X_umap"]
+    priority = ["X_pca", "X_umap"]
     if preferred_key:
         if preferred_key not in obsm_dict:
             raise ValueError(
@@ -562,7 +553,7 @@ def _write_mode_json(result: Dict[str, Any], label_mode: str, output_dir: Path):
             f"Mode-specific embedding coherence metrics for label_mode={label_mode!r}. "
             "See provider_agreement_metrics.json for cross-provider comparison. "
             "Step 10 output naming policy: these files are the preferred outputs "
-            "for summary scripts; embedding_metrics.json (legacy) is not written."
+            "for official silver reporting; embedding_metrics.json is not written."
         )
     path = output_dir / f"embedding_metrics_{label_mode}.json"
     _atomic_write_json(path, result)

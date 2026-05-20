@@ -86,7 +86,7 @@ class ScNODEAdapter(BaseAdapter):
         time_key = self.scenario_config.get("time_key", "abs_day")
         dataset_id = self.scenario_config.get("dataset_id", "GSE230659")
         cell_state_key = self.scenario_config.get(
-            "cell_state_key", "scgpt_pseudostate_provisional"
+            "cell_state_key", "final_milestone_label_coarse"
         )
         scnode_cfg = self.scenario_config.get("scnode_params", {}) or {}
         scenario_params = self.scenario_config.get("scenario_params", {}) or {}
