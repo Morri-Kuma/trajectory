@@ -1,6 +1,6 @@
 {
-  "adjusted_rand_index": 0.015813597391673886,
-  "avg_normalized_classifier_entropy": 0.49610787864071576,
+  "adjusted_rand_index": 0.18289185597472285,
+  "avg_normalized_classifier_entropy": 0.4518034380299612,
   "projected_latent_dim": 30,
   "n_eval_timepoints": 9,
   "eval_timepoints": [
@@ -15,17 +15,5 @@
     30.0
   ],
   "status": "completed",
-  "embedding_space": "PRESCIENT PCA space",
-  "result_class": "marker_fm_transition_silver_formal",
-  "formal_benchmark": true,
-  "method_config": "benchmark/configs/runtime/prescient_gse230659_marker_fm_silver_B_hvg2000_formal.yaml",
-  "label_mode": "official_silver",
-  "provider_id": "gse230659_marker_fm_transition_silver_v1",
-  "cell_state_key": "final_milestone_label_coarse",
-  "ground_truth": {
-    "provider_id": "gse230659_marker_fm_transition_silver_v1",
-    "label_mode": "official_silver",
-    "state_key": "final_milestone_label_coarse",
-    "source_h5ad": "benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad"
-  }
+  "embedding_space": "PRESCIENT PCA space"
 }

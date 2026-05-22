@@ -53,7 +53,7 @@ import numpy as np
 # ---------------------------------------------------------------------------
 
 LABEL_MODES: Dict[str, str] = {
-    "official_silver": "final_milestone_label_coarse",
+    "official_silver": "final_milestone_label_expanded",
 }
 
 LABEL_MODE_PROVIDER_SUFFIX: Dict[str, str] = {

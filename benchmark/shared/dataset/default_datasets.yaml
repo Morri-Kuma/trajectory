@@ -4,7 +4,7 @@ datasets:
     id: GSE178325
     h5ad_path: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: final_milestone_label_coarse
+    cell_state_key: final_milestone_label_expanded
     data_preprocessing_steps:
       - name: CopyTrainTest
 
@@ -13,7 +13,7 @@ datasets:
     id: GSE178325
     h5ad_path: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: final_milestone_label_coarse
+    cell_state_key: final_milestone_label_expanded
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day
@@ -25,7 +25,7 @@ datasets:
     id: GSE178325
     h5ad_path: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: final_milestone_label_coarse
+    cell_state_key: final_milestone_label_expanded
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day
@@ -37,7 +37,7 @@ datasets:
     id: GSE230659
     h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: final_milestone_label_coarse
+    cell_state_key: final_milestone_label_expanded
     data_preprocessing_steps:
       - name: CopyTrainTest
 
@@ -46,7 +46,7 @@ datasets:
     id: GSE230659
     h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: final_milestone_label_coarse
+    cell_state_key: final_milestone_label_expanded
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day
@@ -58,7 +58,7 @@ datasets:
     id: GSE230659
     h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     time_key: abs_day
-    cell_state_key: final_milestone_label_coarse
+    cell_state_key: final_milestone_label_expanded
     data_preprocessing_steps:
       - name: ScenarioTimepointSplit
         time_key: abs_day

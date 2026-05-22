@@ -3,7 +3,7 @@
 The active cell-state system is the frozen ``official_silver`` provider layer.
 Observed-cell labels are built from curated milestone markers, sample/time
 anchoring where available, and trajectory-aware resolution into
-``final_milestone_label_coarse``.
+``final_milestone_label_expanded`` for official marker-FM metrics.
 """
 
 __all__ = [

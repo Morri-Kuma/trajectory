@@ -4,16 +4,31 @@
     "dataset_id": "GSE230659",
     "label_mode": "official_silver",
     "label_type": "frozen_silver_standard",
-    "state_key": "final_milestone_label_coarse",
+    "state_key": "final_milestone_label_expanded",
     "expanded_state_key": "final_milestone_label_expanded",
-    "graph_type": "marker_defined_coarse_milestone_graph",
+    "graph_type": "marker_defined_expanded_transition_graph",
     "version": "v1",
     "generated_by": "benchmark/annotation/build_milestone_providers.py",
     "source_markers_yaml": "benchmark/annotation/milestone_markers.yaml",
     "analysis_role": "primary_report",
     "deprecated": false,
-    "n_states": 4,
-    "n_edges": 3,
+    "n_states": 7,
+    "n_edges": 6,
+    "official_state_ids": [
+      "stage_00_hADSCs",
+      "stage_01_hADSCs_to_epithelial_like",
+      "stage_02_epithelial_like",
+      "stage_03_epithelial_like_to_intermediate_plastic",
+      "stage_04_intermediate_plastic",
+      "stage_05_intermediate_plastic_to_hCiPS",
+      "stage_06_hCiPS"
+    ],
+    "primary_milestones": [
+      "hADSCs",
+      "epithelial_like",
+      "intermediate_plastic",
+      "hCiPS"
+    ],
     "expanded_trajectory_order": [
       "stage_00_hADSCs",
       "stage_01_hADSCs_to_epithelial_like",
@@ -28,9 +43,8 @@
       "unknown_or_ood"
     ],
     "policy": [
-      "Official frozen silver-standard coarse milestone reference graph.",
-      "Nodes are primary_milestones only.",
-      "Transition labels are in final_milestone_label_expanded (supplementary) and are NOT graph nodes.",
+      "Official frozen silver-standard expanded transition reference graph.",
+      "Nodes are expanded_trajectory_order stages, including transition labels, because official marker-FM metrics use final_milestone_label_expanded.",
       "All edges have confidence=high; all nodes have status=confirmed.",
       "Excluded from official metrics: ambiguous, unknown_or_ood.",
       "Provenance: Liuyang et al. 2023 DOI 10.1016/j.stem.2023.02.008; Guan et al. 2022 DOI 10.1038/s41586-022-04593-5; companion code https://github.com/sajuukLyu/CSC_2023"
@@ -38,61 +52,109 @@
   },
   "nodes": [
     {
-      "id": "hADSCs",
-      "label": "hADSCs",
+      "id": "stage_00_hADSCs",
+      "label": "stage_00_hADSCs",
       "status": "confirmed",
-      "role": "primary_milestone",
+      "role": "expanded_primary_stage",
       "order": 0
     },
     {
-      "id": "epithelial_like",
-      "label": "epithelial_like",
+      "id": "stage_01_hADSCs_to_epithelial_like",
+      "label": "stage_01_hADSCs_to_epithelial_like",
       "status": "confirmed",
-      "role": "primary_milestone",
+      "role": "expanded_transition_stage",
       "order": 1
     },
     {
-      "id": "intermediate_plastic",
-      "label": "intermediate_plastic",
+      "id": "stage_02_epithelial_like",
+      "label": "stage_02_epithelial_like",
       "status": "confirmed",
-      "role": "primary_milestone",
+      "role": "expanded_primary_stage",
       "order": 2
     },
     {
-      "id": "hCiPS",
-      "label": "hCiPS",
+      "id": "stage_03_epithelial_like_to_intermediate_plastic",
+      "label": "stage_03_epithelial_like_to_intermediate_plastic",
       "status": "confirmed",
-      "role": "primary_milestone",
+      "role": "expanded_transition_stage",
       "order": 3
+    },
+    {
+      "id": "stage_04_intermediate_plastic",
+      "label": "stage_04_intermediate_plastic",
+      "status": "confirmed",
+      "role": "expanded_primary_stage",
+      "order": 4
+    },
+    {
+      "id": "stage_05_intermediate_plastic_to_hCiPS",
+      "label": "stage_05_intermediate_plastic_to_hCiPS",
+      "status": "confirmed",
+      "role": "expanded_transition_stage",
+      "order": 5
+    },
+    {
+      "id": "stage_06_hCiPS",
+      "label": "stage_06_hCiPS",
+      "status": "confirmed",
+      "role": "expanded_primary_stage",
+      "order": 6
     }
   ],
   "edges": [
     {
-      "source": "hADSCs",
-      "target": "epithelial_like",
+      "source": "stage_00_hADSCs",
+      "target": "stage_01_hADSCs_to_epithelial_like",
       "weight": 1.0,
       "confidence": "high",
       "source_status": "confirmed",
       "target_status": "confirmed",
-      "edge_type": "marker_defined_milestone_order"
+      "edge_type": "marker_defined_expanded_stage_order"
     },
     {
-      "source": "epithelial_like",
-      "target": "intermediate_plastic",
+      "source": "stage_01_hADSCs_to_epithelial_like",
+      "target": "stage_02_epithelial_like",
       "weight": 1.0,
       "confidence": "high",
       "source_status": "confirmed",
       "target_status": "confirmed",
-      "edge_type": "marker_defined_milestone_order"
+      "edge_type": "marker_defined_expanded_stage_order"
     },
     {
-      "source": "intermediate_plastic",
-      "target": "hCiPS",
+      "source": "stage_02_epithelial_like",
+      "target": "stage_03_epithelial_like_to_intermediate_plastic",
       "weight": 1.0,
       "confidence": "high",
       "source_status": "confirmed",
       "target_status": "confirmed",
-      "edge_type": "marker_defined_milestone_order"
+      "edge_type": "marker_defined_expanded_stage_order"
+    },
+    {
+      "source": "stage_03_epithelial_like_to_intermediate_plastic",
+      "target": "stage_04_intermediate_plastic",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "marker_defined_expanded_stage_order"
+    },
+    {
+      "source": "stage_04_intermediate_plastic",
+      "target": "stage_05_intermediate_plastic_to_hCiPS",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "marker_defined_expanded_stage_order"
+    },
+    {
+      "source": "stage_05_intermediate_plastic_to_hCiPS",
+      "target": "stage_06_hCiPS",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "marker_defined_expanded_stage_order"
     }
   ]
 }

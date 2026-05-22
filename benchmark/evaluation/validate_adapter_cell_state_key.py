@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 
-EXPECTED_CELL_STATE_KEY = "final_milestone_label_coarse"
+EXPECTED_CELL_STATE_KEY = "final_milestone_label_expanded"
 
 
 def _check_dir(run_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:

@@ -1,0 +1,23 @@
+{
+  "dataset_id": "GSE178325",
+  "method": "mioflow",
+  "scenario": "A",
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "label_mode": "official_silver",
+  "state_key": "final_milestone_label_coarse",
+  "n_projected_cells": 30000,
+  "label_counts": {
+    "hADSCs": 1979,
+    "intermediate_plastic": 6292,
+    "xen_like": 163,
+    "epithelial_like": 17921,
+    "hCiPS": 3645
+  },
+  "annotation_policy": "projected_cluster_label_nearest_centroid_bridge",
+  "annotation_policy_note": "This bridge converts the method runner's projected_cluster_label column into projected_milestone_labels.csv so run-output Leiden clusters can be compared against projected milestone labels. Confidence is a numeric placeholder and is not calibrated.",
+  "source_projected_cluster_labels": "benchmark/results/mioflow/gse178325_marker_fm_silver_A_hvg2000_formal/projected_cluster_labels.csv",
+  "output_projected_milestone_labels": "benchmark/results/mioflow/gse178325_marker_fm_silver_A_hvg2000_formal/projected_milestone_labels.csv",
+  "smoke_test": false,
+  "formal_benchmark": true,
+  "timestamp_utc": "2026-05-22T01:48:04.674457+00:00"
+}

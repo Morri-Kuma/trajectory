@@ -1,0 +1,17 @@
+{
+  "method": "wot",
+  "dataset": "GSE230659",
+  "scenario": "A",
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": false,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "lineage_fidelity"
+  ],
+  "config": "/home/xzy0723/projects/trajectory/benchmark/configs/runtime/wot_gse230659_marker_fm_silver_A_hvg2000_formal.yaml",
+  "runtime_seconds": 812.7,
+  "status": "completed",
+  "notes": "WOT evaluated on Lineage Fidelity only. Forecast Accuracy and Embedding Coherence explicitly skipped.",
+  "cell_state_key": "final_milestone_label_coarse"
+}

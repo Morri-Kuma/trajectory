@@ -1,0 +1,41 @@
+{
+  "auroc": 0.4393939393939394,
+  "auprc": 0.12831908831908834,
+  "jaccard_similarity": 0.11764705882352941,
+  "jaccard_similarity_topk": 0.0,
+  "single_step_recovery": 0.0,
+  "multi_step_recovery": 0.0,
+  "baseline": {
+    "auroc": 0.5512820512820512,
+    "auprc": 0.24107142857142855,
+    "jaccard_similarity": 0.25,
+    "single_step_recovery": 0.0,
+    "multi_step_recovery": 0.0,
+    "method": "correlation_baseline",
+    "baseline_style": "sctimebench_correlation",
+    "correlation_method": "spearmanr",
+    "averaging_method": "maximum",
+    "cell_state_key": "final_milestone_label_coarse",
+    "time_key": "abs_day",
+    "n_states_used": 3,
+    "n_timepoint_pairs_used": 5,
+    "n_source_cell_votes": 22262,
+    "n_predicted_edges_thresholded": 12,
+    "graph_threshold": 0.0,
+    "note": "scTimeBench-style cell-level Spearman correlation baseline with maximum target-state aggregation and row-normalized source-state votes."
+  },
+  "status": "completed",
+  "edge_confidence_mode": "all",
+  "n_reference_edges": 3,
+  "cell_state_key": "final_milestone_label_coarse",
+  "time_key": "abs_day",
+  "ground_truth": {
+    "provider_id": "gse230659_marker_fm_transition_silver_v1",
+    "state_key": "final_milestone_label_coarse",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false
+  },
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "reference_graph_path": "benchmark\\ground_truth\\providers\\gse230659_marker_fm_transition_silver_v1\\reference_graph.json",
+  "compatibility_note": "label_mode and provider_id are promoted from ground_truth for Step 10 output naming compatibility. See run_metadata.json and the nested ground_truth block for full evaluation context."
+}

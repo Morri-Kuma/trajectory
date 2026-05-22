@@ -1,0 +1,23 @@
+{
+  "dataset_id": "GSE230659",
+  "method": "scnode",
+  "scenario": "C",
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "label_mode": "official_silver",
+  "state_key": "final_milestone_label_coarse",
+  "n_projected_cells": 10000,
+  "label_counts": {
+    "hADSCs": 3337,
+    "intermediate_plastic": 1487,
+    "hCiPS": 1446,
+    "ambiguous": 514,
+    "epithelial_like": 3216
+  },
+  "annotation_policy": "projected_cluster_label_nearest_centroid_bridge",
+  "annotation_policy_note": "This bridge converts the method runner's projected_cluster_label column into projected_milestone_labels.csv so run-output Leiden clusters can be compared against projected milestone labels. Confidence is a numeric placeholder and is not calibrated.",
+  "source_projected_cluster_labels": "benchmark/results/scnode/gse230659_marker_fm_silver_C_hvg2000_formal/projected_cluster_labels.csv",
+  "output_projected_milestone_labels": "benchmark/results/scnode/gse230659_marker_fm_silver_C_hvg2000_formal/projected_milestone_labels.csv",
+  "smoke_test": false,
+  "formal_benchmark": true,
+  "timestamp_utc": "2026-05-22T02:37:06.030828+00:00"
+}

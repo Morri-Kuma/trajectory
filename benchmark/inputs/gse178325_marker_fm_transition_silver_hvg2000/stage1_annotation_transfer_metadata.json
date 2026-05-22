@@ -1,11 +1,16 @@
 {
-  "script": "run_gse178325_marker_fm_transition_silver_annotation.sh",
   "dataset_id": "GSE178325",
-  "status": "completed",
-  "source_stage1_full_gene_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_full_gene/GSE178325_stage1_marker_seed_full_gene.h5ad",
-  "output_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_stage1_marker_seed_HVG2000.h5ad",
-  "alignment": "obs_names_ordered",
-  "columns_transferred": [
+  "n_cells": 80475,
+  "n_vars": 2000,
+  "stage1_label_counts": {
+    "epithelial_like": 39545,
+    "hADSCs": 33449,
+    "ambiguous": 5837,
+    "hCiPS": 1477,
+    "intermediate_plastic": 123,
+    "xen_like": 44
+  },
+  "transferred_obs_columns": [
     "milestone_score_hADSCs",
     "milestone_score_epithelial_like",
     "milestone_score_intermediate_plastic",
@@ -19,6 +24,5 @@
     "stage1_margin",
     "stage1_status",
     "stage1_source"
-  ],
-  "timestamp": "2026-05-11T12:58:26.601123+00:00"
+  ]
 }

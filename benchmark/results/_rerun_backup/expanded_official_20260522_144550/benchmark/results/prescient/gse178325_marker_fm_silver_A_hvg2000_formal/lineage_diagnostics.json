@@ -1,0 +1,12 @@
+{
+  "cell_state_key": "final_milestone_label_coarse",
+  "assignment_temperature": 1.0,
+  "source_transition_counts": {
+    "ambiguous": 185,
+    "epithelial_like": 36620,
+    "hADSCs": 35672,
+    "hCiPS": 211,
+    "intermediate_plastic": 135,
+    "xen_like": 28
+  }
+}

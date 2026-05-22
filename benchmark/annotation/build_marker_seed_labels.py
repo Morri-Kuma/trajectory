@@ -2,10 +2,10 @@
 ==============================
 Annotate observed benchmark cells with milestone marker-gene seed labels.
 
-Stage 1 of a two-stage annotation layer: assigns primary/manual/marker-based
-coarse labels and explicitly routes uncertain cells to ``ambiguous`` instead
-of forcing all cells into a milestone.  Stage 1 output is designed to support
-later Stage 2 trajectory-aware resolution.
+Stage 1 of a two-stage annotation layer: assigns marker-based coarse labels
+and explicitly routes uncertain cells to ``ambiguous`` instead of forcing all
+cells into a milestone. Stage 1 output is designed to support later Stage 2
+trajectory-aware resolution.
 
 Step 3 implementation: reads an input .h5ad, scores each cell against curated
 milestone marker-gene signatures (mean expression of matched genes), assigns
@@ -24,16 +24,16 @@ Marker-derived diagnostic columns:
 Stage 1 authoritative columns (conservative, threshold-gated):
   stage1_label                          str
       Assigned label: a primary milestone name or "ambiguous".
-      hADSCs cells are assigned primarily by
-      source sample / time == 0 (not by generic MSC marker score).
+      hADSCs is treated as a marker-defined hADSC-like state, not as a
+      sample/time-only starting-cell assignment.
   stage1_confidence                     float32
-      Score driving the assignment (1.0 for sample/time hADSCs).
+      Score driving the marker-based assignment.
   stage1_margin                         float32
       Score margin (top - second).
   stage1_status                         str
       "high_confidence" | "ambiguous"
   stage1_source                         str
-      "sample_time" | "marker_primary" | "marker_ambiguous"
+      "marker_primary" | "marker_ambiguous"
 
 Metadata written to adata.uns["milestone_annotation_step3"]
     See _build_uns_metadata() for full field list.
@@ -59,13 +59,11 @@ Usage
       --max-cells 2000
 
 hADSC assignment policy (Stage 1)
-----------------------------------
-hADSCs are assigned PRIMARILY by source sample / time == 0, following the
-treatment in Liuyang et al. 2023 (Cell Stem Cell,
-DOI: 10.1016/j.stem.2023.02.008).  The hADSCs marker-gene set in
-milestone_markers.yaml is an AUXILIARY somatic/fibroblast-like support score
-only.  If obs[sample_key] or obs[time_key] columns are absent, the script
-falls back to marker-only scoring for all milestones (with a warning).
+---------------------------------
+hADSCs are assigned by marker evidence as a marker-defined hADSC-like state.
+Sample/time hADSC evidence is still recorded as metadata for provenance, but
+it is no longer used to force authoritative Stage 1 hADSC labels or to remove
+hADSCs from marker competition.
 
 Status: Step 3 -- marker-score seed labels + Stage 1 conservative routing.
 """
@@ -198,14 +196,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     # ------------------------------------------------------------------
-    # Stage 1: hADSC sample/timepoint assignment
+    # Stage 1: hADSC sample/timepoint provenance
     # ------------------------------------------------------------------
     hadsc_grp = parser.add_argument_group(
-        "Stage 1 hADSC assignment",
+        "Stage 1 hADSC sample/time provenance",
         description=(
-            "hADSCs are assigned primarily by source sample / time == 0.  "
-            "If the relevant obs columns are absent the script falls back to "
-            "marker-only logic with a warning."
+            "Sample/time evidence for hADSC-like starting cells is recorded "
+            "for provenance only. Authoritative hADSC labels are assigned "
+            "by marker competition."
         ),
     )
     hadsc_grp.add_argument(
@@ -226,6 +224,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="hadsc_sample_values",
         help=(
             "Comma-separated sample values that identify hADSC cells "
+            "as historical sample/time candidates for provenance "
             "(default: ADSC,hADSC,hADSCs)."
         ),
     )
@@ -235,14 +234,15 @@ def build_parser() -> argparse.ArgumentParser:
         dest="hadsc_time_values",
         help=(
             "Comma-separated timepoint values (numeric or string) that "
-            "identify hADSC cells (default: 0,0.0)."
+            "identify historical sample/time hADSC candidates for provenance "
+            "(default: 0,0.0)."
         ),
     )
     hadsc_grp.add_argument(
         "--hadsc-label",
         default="hADSCs",
         dest="hadsc_label",
-        help="Stage 1 label string assigned to hADSC cells (default: hADSCs).",
+        help="Marker-defined hADSC-like label string (default: hADSCs).",
     )
 
     # ------------------------------------------------------------------
@@ -251,9 +251,9 @@ def build_parser() -> argparse.ArgumentParser:
     s1_grp = parser.add_argument_group(
         "Stage 1 thresholds and routing",
         description=(
-            "Thresholds for routing non-hADSC cells.  All default to 0.0 "
-            "(permissive) so that existing runs see minimal change; tighten "
-            "for conservative silver-standard label production."
+            "Thresholds for routing cells to high-confidence Stage 1 labels. "
+            "Low-margin cells are left ambiguous for Stage 2 transition "
+            "resolution."
         ),
     )
     s1_grp.add_argument(
@@ -269,11 +269,13 @@ def build_parser() -> argparse.ArgumentParser:
     s1_grp.add_argument(
         "--min-primary-margin",
         type=float,
-        default=0.0,
+        default=0.10,
         dest="min_primary_margin",
         help=(
-            "Minimum top - second-best primary score margin for a "
-            "high-confidence Stage 1 label (default: 0.0)."
+            "Minimum top - second-best primary score margin required for a "
+            "high-confidence Stage 1 label. The margin must be strictly "
+            "greater than this value, so adjacent low-margin cells are routed "
+            "to Stage 2 (default: 0.10)."
         ),
     )
     s1_grp.add_argument(
@@ -295,7 +297,11 @@ def _resolve_hadsc_mask(
     args: argparse.Namespace,
     tag: str,
 ) -> tuple:
-    """Return a boolean mask of hADSC cells identified by sample / timepoint.
+    """Return sample/time hADSC candidate mask for provenance only.
+
+    The returned mask is not used for authoritative Stage 1 assignment under
+    the marker-defined hADSC-like policy. It is kept so metadata can report
+    how many cells would have matched the historical sample/time rule.
 
     Parameters
     ----------
@@ -306,8 +312,8 @@ def _resolve_hadsc_mask(
     Returns
     -------
     hadsc_mask : np.ndarray[bool]  shape (n_cells,)
-    meta       : dict with keys sample_key_found, time_key_found,
-                 sample_time_used, n_hadsc_by_sample_time
+        Sample/time hADSC candidates, recorded for provenance only.
+    meta       : dict with sample/time provenance fields.
     """
     import numpy as np
 
@@ -415,21 +421,21 @@ def _assign_stage1_labels(
 ) -> tuple:
     """Compute Stage 1 label arrays for all cells.
 
-    Assignment priority (highest to lowest):
-      1. hADSC by sample/time -> stage1_source = "sample_time"
-      2. High-confidence primary -> stage1_source = "marker_primary"
-      3. Ambiguous -> stage1_source = "marker_ambiguous"
+    Assignment priority:
+      1. High-confidence marker-defined primary -> "marker_primary"
+      2. Ambiguous/low-margin marker evidence -> "marker_ambiguous"
 
     Parameters
     ----------
     n_cells             : int
     hadsc_mask          : np.ndarray[bool], shape (n_cells,)
-    score_dict          : dict[str, np.ndarray] — all scored milestones
-    primary_milestones  : list[str] — all primary milestone names
-    primary_for_stage1  : list[str] — primary milestones that compete for
-                          non-hADSC cells (excludes hADSCs if sample/time used)
-    old_margins         : np.ndarray[float] | None — margins from assign_labels
-                          (used as fallback margin for hADSC sample/time cells)
+                          Historical sample/time hADSC candidates; ignored
+                          for authoritative Stage 1 assignment.
+    score_dict          : dict[str, np.ndarray] - all scored milestones
+    primary_for_stage1  : list[str] - primary milestones that compete for
+                          all cells, including marker-defined hADSCs
+    old_margins         : np.ndarray[float] | None - margins from assign_labels
+                          retained for call compatibility
     args                : CLI namespace (for threshold and label-string values)
 
     Returns
@@ -438,6 +444,7 @@ def _assign_stage1_labels(
         Each is a np.ndarray of shape (n_cells,).
     """
     import numpy as np
+    _ = hadsc_mask, old_margins
 
     # Initialise to ambiguous defaults for all cells.
     stage1_label = np.full(n_cells, args.ambiguous_label, dtype=object)
@@ -447,42 +454,12 @@ def _assign_stage1_labels(
     stage1_source = np.full(n_cells, "marker_ambiguous", dtype=object)
 
     # ------------------------------------------------------------------
-    # Step A: assign hADSC cells by sample / timepoint
-    # ------------------------------------------------------------------
-    if hadsc_mask.any():
-        stage1_label[hadsc_mask] = args.hadsc_label
-        stage1_status[hadsc_mask] = "high_confidence"
-        stage1_source[hadsc_mask] = "sample_time"
-        stage1_confidence[hadsc_mask] = 1.0
-        # Margin: use marker score margin where available; fall back to 1.0.
-        if old_margins is not None:
-            _m = np.asarray(old_margins, dtype=np.float64)
-            hadsc_margin = np.where(
-                np.isnan(_m[hadsc_mask]) | np.isinf(_m[hadsc_mask]),
-                1.0,
-                np.abs(_m[hadsc_mask]),
-            )
-            stage1_margin[hadsc_mask] = hadsc_margin
-        else:
-            stage1_margin[hadsc_mask] = 1.0
-
-    non_hadsc = ~hadsc_mask
-    if not non_hadsc.any():
-        return (
-            stage1_label.astype(str),
-            stage1_confidence.astype(np.float32),
-            _clamp_margin(stage1_margin).astype(np.float32),
-            stage1_status.astype(str),
-            stage1_source.astype(str),
-        )
-
-    # ------------------------------------------------------------------
-    # Step B: build primary score matrix for non-hADSC competition
+    # Step A: build primary score matrix for marker competition
     # ------------------------------------------------------------------
     primary_stage1_available = [m for m in primary_for_stage1 if m in score_dict]
 
     if not primary_stage1_available:
-        # No primary markers scored: non-hADSC cells remain ambiguous.
+        # No primary markers scored: all cells remain ambiguous.
         return (
             stage1_label.astype(str),
             stage1_confidence.astype(np.float32),
@@ -510,16 +487,15 @@ def _assign_stage1_labels(
     top_prim_labels = prim_name_arr[top_idx]
 
     # ------------------------------------------------------------------
-    # Step C: vectorised routing for non-hADSC cells
+    # Step B: vectorised routing for all cells
     # ------------------------------------------------------------------
-    # High confidence: meets score + margin thresholds.
+    # High confidence: meets score + strict margin thresholds.
     high_conf = (
         (top_prim_scores >= args.min_primary_score)
-        & (prim_margins >= args.min_primary_margin)
-        & non_hadsc
+        & (prim_margins > args.min_primary_margin)
     )
-    # Ambiguous: everything else that is non-hADSC
-    ambig = non_hadsc & ~high_conf
+    # Ambiguous: everything else goes to Stage 2.
+    ambig = ~high_conf
 
     # Apply high confidence
     stage1_label[high_conf] = top_prim_labels[high_conf]
@@ -679,30 +655,25 @@ def _run_annotation(args: argparse.Namespace) -> dict:
     )
 
     # ------------------------------------------------------------------
-    # 8. Resolve hADSC mask (sample / timepoint first)
+    # 8. Resolve hADSC sample/time provenance candidates
     # ------------------------------------------------------------------
     hadsc_mask, hadsc_meta = _resolve_hadsc_mask(adata, args, tag)
     sample_time_used: bool = hadsc_meta["sample_time_used"]
-
     if not sample_time_used:
         print(
             f"{tag} WARN: neither '{args.sample_key}' nor '{args.time_key}' "
-            "obs columns found.  Falling back to marker-only hADSC assignment; "
-            "hADSCs will compete as a primary milestone in Stage 1 scoring."
+            "obs columns found. hADSC sample/time provenance unavailable; "
+            "marker-defined hADSC assignment is unaffected."
         )
 
-    # Primary milestones competing for non-hADSC cells in Stage 1:
-    # exclude hADSCs from the marker competition when sample/time was used.
-    if sample_time_used:
-        primary_for_stage1 = [
-            m for m in primary_milestones if m != args.hadsc_label
-        ]
-    else:
-        primary_for_stage1 = list(primary_milestones)
+    # Primary milestones competing for all cells in Stage 1. hADSCs are now
+    # marker-defined hADSC-like states and are not excluded by sample/time.
+    primary_for_stage1 = list(primary_milestones)
 
     print(
-        f"{tag} Stage 1: sample_time_used={sample_time_used}, "
-        f"hadsc_by_sample_time={hadsc_meta['n_hadsc_by_sample_time']}, "
+        f"{tag} Stage 1: marker-defined hADSC policy; "
+        f"sample_time_provenance_available={sample_time_used}, "
+        f"hadsc_sample_time_candidates={hadsc_meta['n_hadsc_by_sample_time']}, "
         f"primary_for_stage1={primary_for_stage1}"
     )
 
@@ -891,10 +862,10 @@ def _build_uns_metadata(
         "annotation_stage": "marker_seed_labels_step3",
         # Stage 1 policy block.
         "stage1_policy": {
-            "name": "marker_sample_time_stage1_v1",
+            "name": "marker_defined_hadsc_stage1_v2",
             "hadsc_assignment": (
-                "primary assignment by source sample/timepoint (obs columns); "
-                "marker gene set is auxiliary somatic/fibroblast-like support only"
+                "marker-defined hADSC-like state; sample/time evidence is "
+                "recorded for provenance only and does not force hADSC labels"
             ),
             "hadsc_label": args.hadsc_label,
             "sample_key": args.sample_key,
@@ -903,11 +874,14 @@ def _build_uns_metadata(
             "hadsc_time_values": hadsc_meta["hadsc_time_values"],
             "sample_key_found": hadsc_meta["sample_key_found"],
             "time_key_found": hadsc_meta["time_key_found"],
-            "sample_time_used": hadsc_meta["sample_time_used"],
+            "sample_time_used": False,
+            "sample_time_used_for_authoritative_assignment": False,
+            "sample_time_provenance_available": hadsc_meta["sample_time_used"],
             "primary_for_stage1": primary_for_stage1,
             "thresholds": {
                 "min_primary_score": args.min_primary_score,
                 "min_primary_margin": args.min_primary_margin,
+                "primary_margin_rule": "strictly_greater_than",
                 "ambiguous_label": args.ambiguous_label,
             },
         },
@@ -942,8 +916,10 @@ def _build_uns_metadata(
         },
         "stage1_summary": {
             "n_cells": n_total,
-            "n_assigned_by_sample_time": n_sample_time,
-            "frac_assigned_by_sample_time": _frac(n_sample_time),
+            "n_sample_time_hadsc_candidates": n_sample_time,
+            "frac_sample_time_hadsc_candidates": _frac(n_sample_time),
+            "n_assigned_by_sample_time": 0,
+            "frac_assigned_by_sample_time": 0.0,
             "n_high_confidence": n_high_conf,
             "frac_high_confidence": _frac(n_high_conf),
             "n_ambiguous": n_ambig,

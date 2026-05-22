@@ -2,10 +2,10 @@
   "script": "build_trajectory_aware_labels",
   "status": "completed",
   "dataset_id": "GSE178325",
-  "input_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_stage1_marker_seed_HVG2000.h5ad",
-  "output_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+  "input_h5ad": "/home/xzy0723/projects/trajectory/benchmark/_rerun_tmp/20260522_104627/GSE178325/GSE178325_stage1_marker_seed_HVG2000.h5ad",
+  "output_h5ad": "/home/xzy0723/projects/trajectory/benchmark/_rerun_tmp/20260522_104627/GSE178325/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
   "markers_yaml": "benchmark/annotation/milestone_markers.yaml",
-  "embedding_key": "X_scGPT",
+  "embedding_key": null,
   "primary_milestones": [
     "hADSCs",
     "epithelial_like",
@@ -38,42 +38,49 @@
     "transition_position_high": 0.75
   },
   "stage1_input_counts": {
-    "high_confidence": 80475,
-    "ambiguous": 0
+    "high_confidence": 74638,
+    "ambiguous": 5837
   },
   "final_coarse_label_counts": {
-    "epithelial_like": 67817,
-    "hADSCs": 5706,
-    "intermediate_plastic": 4654,
-    "hCiPS": 2144,
-    "xen_like": 154
+    "epithelial_like": 41771,
+    "hADSCs": 35685,
+    "hCiPS": 1483,
+    "ambiguous": 1347,
+    "intermediate_plastic": 137,
+    "xen_like": 52
   },
   "final_expanded_label_counts": {
-    "stage_02_epithelial_like": 67817,
-    "stage_00_hADSCs": 5706,
-    "stage_04_intermediate_plastic": 4654,
-    "stage_08_hCiPS": 2144,
-    "stage_06_xen_like": 154
+    "stage_02_epithelial_like": 39545,
+    "stage_00_hADSCs": 33449,
+    "stage_01_hADSCs_to_epithelial_like": 4368,
+    "stage_08_hCiPS": 1477,
+    "ambiguous": 1347,
+    "stage_04_intermediate_plastic": 123,
+    "stage_03_epithelial_like_to_intermediate_plastic": 108,
+    "stage_06_xen_like": 44,
+    "stage_07_xen_like_to_hCiPS": 14
   },
   "final_source_counts": {
-    "marker_primary": 74769,
-    "sample_time": 5706
+    "marker_primary": 74638,
+    "stage2_marker_transition": 4490,
+    "stage2_unresolved_ambiguous": 1347
   },
   "trajectory_membership_counts": {
-    "in_trajectory": 80475
+    "in_trajectory": 79128,
+    "ambiguous": 1347
   },
-  "coverage_fraction_primary_milestones": 1.0,
+  "coverage_fraction_primary_milestones": 0.9833,
   "resolution_summary": {
     "n_marker_single": 0,
     "frac_marker_single": 0.0,
-    "n_marker_transition": 0,
-    "frac_marker_transition": 0.0,
+    "n_marker_transition": 4490,
+    "frac_marker_transition": 0.0558,
     "n_embedding_single": 0,
     "frac_embedding_single": 0.0,
     "n_embedding_transition": 0,
     "frac_embedding_transition": 0.0,
-    "n_unresolved_ambiguous": 0,
-    "frac_unresolved_ambiguous": 0.0,
+    "n_unresolved_ambiguous": 1347,
+    "frac_unresolved_ambiguous": 0.0167,
     "n_unknown_or_ood": 0,
     "frac_unknown_or_ood": 0.0
   },

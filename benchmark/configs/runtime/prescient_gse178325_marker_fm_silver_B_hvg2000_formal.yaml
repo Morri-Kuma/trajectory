@@ -1,4 +1,4 @@
-run_id: prescient_gse178325_marker_fm_silver_B_hvg2000_formal
+﻿run_id: prescient_gse178325_marker_fm_silver_B_hvg2000_formal
 method: prescient
 scenario: B
 scenario_name: GSE178325 prescient scenario B official_silver marker_fm_transition
@@ -52,7 +52,7 @@ prescient_params:
   use_cuda: true
   training_protocol: gse178325_0618_hvg2000
 lineage:
-  cell_state_key: final_milestone_label_coarse
+  cell_state_key: final_milestone_label_expanded
   cell_state_annotation_is_proxy: false
   state_system_version: gse178325_marker_fm_transition_silver_v1
   reference_graph_path: benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph.json
@@ -68,16 +68,16 @@ evaluation:
   status: formal
 ground_truth:
   provider_id: gse178325_marker_fm_transition_silver_v1
-  state_key: final_milestone_label_coarse
+  state_key: final_milestone_label_expanded
   confidence_mode: all
   exclude_uncertain_states: false
-cell_state_key: final_milestone_label_coarse
+cell_state_key: final_milestone_label_expanded
 time_key: abs_day
 state_system:
   version: gse178325_marker_fm_transition_silver_v1
   status: frozen_silver_standard_milestone_provider
-  n_states: 5
-  n_graph_edges: 4
+  n_states: 9
+  n_graph_edges: 8
   source_h5ad: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
   note: Frozen marker+foundation-model transition silver labels; official metrics
-    use final_milestone_label_coarse.
+    use final_milestone_label_expanded.

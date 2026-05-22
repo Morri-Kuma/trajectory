@@ -1,0 +1,62 @@
+{
+  "wasserstein_distance": 0.05976825231507547,
+  "gaussian_mmd": 2.7180100539682082e-06,
+  "energy_distance_mmd": 0.002581769223710516,
+  "hausdorff_loss": 21.863673300389785,
+  "n_eval_timepoints": 7,
+  "eval_timepoints": [
+    20.0,
+    24.0,
+    25.0,
+    26.0,
+    28.0,
+    34.0,
+    36.0
+  ],
+  "scenario_type": "forecast",
+  "max_cells_per_timepoint": 1000,
+  "metric_backend": "scTimeBench_geomloss",
+  "metric_definitions": {
+    "wasserstein_distance": {
+      "loss": "sinkhorn",
+      "p": 2,
+      "blur": 0.05,
+      "scaling": 0.5,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "gaussian_mmd": {
+      "loss": "gaussian",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "energy_distance_mmd": {
+      "loss": "energy",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "hausdorff_loss": {
+      "implementation": "torch.cdist_bidirectional_hausdorff",
+      "normalize_by_n_genes": false
+    }
+  },
+  "aggregation": "mean_over_eval_timepoints",
+  "status": "completed",
+  "result_class": "marker_fm_transition_silver_formal",
+  "formal_benchmark": true,
+  "method_config": "benchmark/configs/runtime/prescient_gse178325_marker_fm_silver_B_hvg2000_formal.yaml",
+  "label_mode": "official_silver",
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "cell_state_key": "final_milestone_label_coarse",
+  "ground_truth": {
+    "provider_id": "gse178325_marker_fm_transition_silver_v1",
+    "label_mode": "official_silver",
+    "state_key": "final_milestone_label_coarse",
+    "source_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad"
+  }
+}

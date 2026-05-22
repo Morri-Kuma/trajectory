@@ -810,7 +810,8 @@ def _enrich_lineage_metrics_compat(
         metrics["compatibility_note"] = (
             "label_mode and provider_id are promoted from ground_truth for "
             "Step 10 output naming compatibility. "
-            "See smoke_metadata.json for full evaluation context."
+            "See run_metadata.json and the nested ground_truth block for full "
+            "evaluation context."
         )
     return metrics
 
@@ -854,7 +855,7 @@ def run_lineage_evaluation(
         reference. See load_reference_graph() for details. Default False.
     cell_state_key : str, optional
         Name of the obs column that holds the cell-state label used by the
-        method (e.g. ``"final_milestone_label_coarse"``). Required by the
+        method (e.g. ``"final_milestone_label_expanded"``). Required by the
         correlation baseline; if absent the baseline reports a clear "skipped"
         status instead of returning silently empty values.
     time_key : str, optional

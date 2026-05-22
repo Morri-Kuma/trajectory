@@ -1171,3 +1171,10 @@ At this point the official silver benchmark loop is closed: annotation providers
 GSE242424 raw scRNA matrices were audited with `GSE242423_scRNA_genes.tsv`; all 9 samples matched the 36,601-gene feature table and yielded 156,969 QC-passing cells.
 Reusable MTX streaming utilities and `build_gse242424_raw_full_gene_input.py` produced the full-gene h5ad, followed by `build_gse242424_hvg2000_input.py` producing the 156,969 x 2,000 HVG2000 benchmark input with 50D PCA.
 GSE242424 was registered in the dataset factory with Scenario A/B/C configs; `scTimeBench_cell_type` is currently a time/stage proxy and `iPSC abs_day=16` remains provisional.
+
+---
+
+**2026.5.20 - Legacy label/report cleanup and framework realignment**
+Legacy scGPT pseudostate, milestone consensus/embedding/classifier provider artifacts, outdated configs/scripts, and old summary/report names were removed from the active project tree.
+The retained active provider set is `gse178325_marker_fm_transition_silver_v1`, `gse230659_marker_fm_transition_silver_v1`, and `gse242424_oskm_reprogramming_silver_v1`, centered on `final_milestone_label_coarse`.
+`experimental framework v2.md` was restored as the project-concept record and then updated so its silver-standard sections describe the executed Stage 1 marker-seed, Stage 2 trajectory-aware resolution, and official-silver provider-freezing workflow.

@@ -8,7 +8,7 @@
     "official_silver"
   ],
   "state_keys": [
-    "final_milestone_label_coarse"
+    "final_milestone_label_expanded"
   ],
   "status": "skipped: fewer than two label modes requested"
 }

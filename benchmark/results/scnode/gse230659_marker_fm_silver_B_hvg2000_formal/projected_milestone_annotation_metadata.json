@@ -1,18 +1,25 @@
 {
   "dataset_id": "GSE230659",
+  "method": "scnode",
+  "scenario": "B",
   "provider_id": "gse230659_marker_fm_transition_silver_v1",
   "label_mode": "official_silver",
-  "state_key": "final_milestone_label_coarse",
-  "source": "projected_cluster_labels.csv copied to official_silver projected labels",
+  "state_key": "final_milestone_label_expanded",
   "n_projected_cells": 18000,
-  "primary_labels": [
-    "epithelial_like",
-    "hCiPS",
-    "intermediate_plastic"
-  ],
-  "coarse_to_expanded": {
-    "epithelial_like": "stage_02_epithelial_like",
-    "intermediate_plastic": "stage_04_intermediate_plastic",
-    "hCiPS": "stage_06_hCiPS"
-  }
+  "label_counts": {
+    "stage_00_hADSCs": 3308,
+    "stage_01_hADSCs_to_epithelial_like": 1080,
+    "stage_06_hCiPS": 2884,
+    "stage_04_intermediate_plastic": 6116,
+    "ambiguous": 2561,
+    "stage_05_intermediate_plastic_to_hCiPS": 1273,
+    "stage_03_epithelial_like_to_intermediate_plastic": 778
+  },
+  "annotation_policy": "projected_cluster_label_nearest_centroid_bridge",
+  "annotation_policy_note": "This bridge converts the method runner's projected_cluster_label column into projected_milestone_labels.csv so run-output Leiden clusters can be compared against projected milestone labels. Confidence is a numeric placeholder and is not calibrated.",
+  "source_projected_cluster_labels": "benchmark/results/scnode/gse230659_marker_fm_silver_B_hvg2000_formal/projected_cluster_labels.csv",
+  "output_projected_milestone_labels": "benchmark/results/scnode/gse230659_marker_fm_silver_B_hvg2000_formal/projected_milestone_labels.csv",
+  "smoke_test": false,
+  "formal_benchmark": true,
+  "timestamp_utc": "2026-05-22T06:26:46.871115+00:00"
 }

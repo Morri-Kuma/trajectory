@@ -79,13 +79,13 @@ class TrajectoryH5ADDataset(BaseDataset):
 class GSE230659Dataset(TrajectoryH5ADDataset):
     dataset_id = "GSE230659"
     default_time_key = "abs_day"
-    default_cell_state_key = "final_milestone_label_coarse"
+    default_cell_state_key = "final_milestone_label_expanded"
 
 
 class GSE178325Dataset(TrajectoryH5ADDataset):
     dataset_id = "GSE178325"
     default_time_key = "abs_day"
-    default_cell_state_key = "final_milestone_label_coarse"
+    default_cell_state_key = "final_milestone_label_expanded"
 
 
 class GSE242424Dataset(TrajectoryH5ADDataset):

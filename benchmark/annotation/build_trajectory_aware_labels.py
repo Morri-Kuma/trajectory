@@ -22,8 +22,8 @@ Output obs columns
   stage2_label_expanded           str
   stage2_confidence               float32
   stage2_source                   str
-  final_milestone_label_coarse    str   FROZEN coarse label (official metrics)
-  final_milestone_label_expanded  str   FROZEN expanded label (supplementary)
+  final_milestone_label_coarse    str   FROZEN coarse compatibility label
+  final_milestone_label_expanded  str   FROZEN expanded label (official metrics)
   final_milestone_confidence      float32
   final_milestone_source          str
 
@@ -32,8 +32,8 @@ Design rules
 - Do not use embeddings from the model being evaluated.
 - Do not force all cells into primary milestones.
 - unknown_or_ood and ambiguous are valid final labels.
-- final_milestone_label_coarse drives official scTimeBench-style metrics.
-- final_milestone_label_expanded is supplementary only.
+- final_milestone_label_expanded drives official marker-FM metrics.
+- final_milestone_label_coarse is retained for provenance and interpretation.
 
 Marker-only mode
 ----------------

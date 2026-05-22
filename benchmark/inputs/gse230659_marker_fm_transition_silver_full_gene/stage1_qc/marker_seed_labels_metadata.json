@@ -3,8 +3,8 @@
   "status": "completed",
   "annotation_stage": "marker_seed_labels_step3",
   "stage1_policy": {
-    "name": "marker_sample_time_stage1_v1",
-    "hadsc_assignment": "primary assignment by source sample/timepoint (obs columns); marker gene set is auxiliary somatic/fibroblast-like support only",
+    "name": "marker_defined_hadsc_stage1_v2",
+    "hadsc_assignment": "marker-defined hADSC-like state; sample/time evidence is recorded for provenance only and does not force hADSC labels",
     "hadsc_label": "hADSCs",
     "sample_key": "sample_id",
     "time_key": "abs_day",
@@ -19,15 +19,19 @@
     ],
     "sample_key_found": true,
     "time_key_found": true,
-    "sample_time_used": true,
+    "sample_time_used": false,
+    "sample_time_used_for_authoritative_assignment": false,
+    "sample_time_provenance_available": true,
     "primary_for_stage1": [
+      "hADSCs",
       "epithelial_like",
       "intermediate_plastic",
       "hCiPS"
     ],
     "thresholds": {
       "min_primary_score": 0.0,
-      "min_primary_margin": 0.0,
+      "min_primary_margin": 0.1,
+      "primary_margin_rule": "strictly_greater_than",
       "ambiguous_label": "ambiguous"
     }
   },
@@ -105,24 +109,30 @@
     "intermediate_plastic": 187
   },
   "stage1_label_counts": {
-    "epithelial_like": 67112,
-    "hCiPS": 5370,
-    "intermediate_plastic": 2712
+    "hADSCs": 42054,
+    "epithelial_like": 20907,
+    "ambiguous": 8094,
+    "hCiPS": 4008,
+    "intermediate_plastic": 131
   },
   "stage1_status_counts": {
-    "high_confidence": 75194
+    "high_confidence": 67100,
+    "ambiguous": 8094
   },
   "stage1_source_counts": {
-    "marker_primary": 75194
+    "marker_primary": 67100,
+    "marker_ambiguous": 8094
   },
   "stage1_summary": {
     "n_cells": 75194,
+    "n_sample_time_hadsc_candidates": 0,
+    "frac_sample_time_hadsc_candidates": 0.0,
     "n_assigned_by_sample_time": 0,
     "frac_assigned_by_sample_time": 0.0,
-    "n_high_confidence": 75194,
-    "frac_high_confidence": 1.0,
-    "n_ambiguous": 0,
-    "frac_ambiguous": 0.0
+    "n_high_confidence": 67100,
+    "frac_high_confidence": 0.8924,
+    "n_ambiguous": 8094,
+    "frac_ambiguous": 0.1076
   },
   "n_cells": 75194,
   "n_genes": 27219

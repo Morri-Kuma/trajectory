@@ -22,14 +22,14 @@ Usage
       --projected-labels <csv> \\
       --output-dir <dir> \\
       --label-mode official_silver \\
-      --cell-state-key final_milestone_label_coarse \\
+      --cell-state-key final_milestone_label_expanded \\
       --exclude-label ambiguous
 
   python -m benchmark.evaluation.build_projected_milestone_transitions \\
       --projected-labels <csv> \\
       --output-dir <dir> \\
       --label-mode official_silver \\
-      --cell-state-key final_milestone_label_coarse \\
+      --cell-state-key final_milestone_label_expanded \\
       --exclude-label ambiguous \\
       --all-timepoint-pairs
 """
@@ -203,7 +203,7 @@ def run_transition_build(
     projected_labels_csv: str,
     output_dir: str,
     label_mode: str = "official_silver",
-    cell_state_key: str = "final_milestone_label_coarse",
+    cell_state_key: str = "final_milestone_label_expanded",
     exclude_labels: Optional[List[str]] = None,
     dataset_id: Optional[str] = None,
     all_timepoint_pairs: bool = False,
@@ -323,7 +323,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                         help="Output directory for STM and edge files.")
     parser.add_argument("--label-mode", default="official_silver",
                         help="Label mode (default: official_silver).")
-    parser.add_argument("--cell-state-key", default="final_milestone_label_coarse",
+    parser.add_argument("--cell-state-key", default="final_milestone_label_expanded",
                         help="Column name in the CSV to use as state labels.")
     parser.add_argument("--exclude-label", action="append", dest="exclude_labels",
                         default=[], metavar="LABEL",

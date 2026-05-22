@@ -4,8 +4,8 @@ Build milestone-based ground-truth provider directories and registry entries.
 
 Updated for Stage 2 two-stage annotation layer.  The official provider is now
 built from frozen silver-standard Stage 2 labels:
-  final_milestone_label_coarse     (official state key)
-  final_milestone_label_expanded   (supplementary only)
+  final_milestone_label_expanded   (official state key)
+  final_milestone_label_coarse     (coarse compatibility key)
   final_milestone_confidence
   final_milestone_source
   trajectory_membership_label
@@ -17,7 +17,7 @@ Official providers (recommended, default)
 
 Each provider directory contains:
   state_labels.tsv              cell-level labels (schema-only unless --input-h5ad)
-  state_metadata.tsv            one row per primary milestone
+  state_metadata.tsv            one row per official graph state
   annotation_votes.tsv          per-cell annotation evidence
   reference_graph.json          milestone reference graph (nodes + edges)
   reference_graph_edges.csv     edge list for quick inspection
@@ -77,7 +77,8 @@ _DEFAULT_PROVIDER_ROOT = "benchmark/ground_truth/providers"
 _MODE_CONFIG = {
     # ---- Official frozen silver-standard provider (recommended) ----
     "official_silver": {
-        "state_key":          "final_milestone_label_coarse",
+        "state_key":          "final_milestone_label_expanded",
+        "coarse_state_key":   "final_milestone_label_coarse",
         "expanded_state_key": "final_milestone_label_expanded",
         "confidence_key":     "final_milestone_confidence",
         "source_key":         "final_milestone_source",
@@ -152,6 +153,12 @@ def _provider_id(dataset_id: str, label_mode: str) -> str:
     return f"{prefix}_{suffix}"
 
 
+def _path_text(path: str | Path | None) -> str | None:
+    if path is None:
+        return None
+    return Path(path).as_posix()
+
+
 def _write_tsv(path: Path, rows: list, fieldnames: list) -> None:
     with path.open("w", newline="", encoding="ascii") as fh:
         writer = csv.DictWriter(
@@ -178,6 +185,24 @@ def _write_csv(path: Path, rows: list, fieldnames: list) -> None:
 # Reference graph builder
 # ---------------------------------------------------------------------------
 
+def _stage_payload(stage_id: str) -> str:
+    parts = str(stage_id).split("_", 2)
+    if len(parts) == 3 and parts[0] == "stage" and parts[1].isdigit():
+        return parts[2]
+    return str(stage_id)
+
+
+def _stage_marker_names(stage_id: str) -> list[str]:
+    payload = _stage_payload(stage_id)
+    if "_to_" in payload:
+        return [part for part in payload.split("_to_") if part]
+    return [payload]
+
+
+def _is_transition_stage(stage_id: str) -> bool:
+    return "_to_" in _stage_payload(stage_id)
+
+
 def _build_reference_graph(
     provider_id: str,
     dataset_id: str,
@@ -196,35 +221,59 @@ def _build_reference_graph(
     state_key = mode_cfg["state_key"]
     analysis_role = mode_cfg["analysis_role"]
 
+    expanded_order = (ds_cfg or {}).get("expanded_trajectory_order") or []
+    use_expanded_graph = bool(expanded_order) and (
+        state_key == mode_cfg.get("expanded_state_key")
+    )
+    graph_states = list(expanded_order) if use_expanded_graph else list(primary_milestones)
+
     nodes = [
         {
-            "id": ms,
-            "label": ms,
+            "id": state_id,
+            "label": state_id,
             "status": "confirmed",
-            "role": "primary_milestone",
+            "role": (
+                "expanded_transition_stage"
+                if use_expanded_graph and _is_transition_stage(state_id)
+                else "expanded_primary_stage" if use_expanded_graph
+                else "primary_milestone"
+            ),
             "order": i,
         }
-        for i, ms in enumerate(primary_milestones)
-    ]
-
-    edges = [
-        {
-            "source": str(e[0]),
-            "target": str(e[1]),
-            "weight": 1.0,
-            "confidence": "high",
-            "source_status": "confirmed",
-            "target_status": "confirmed",
-            "edge_type": "marker_defined_milestone_order",
-        }
-        for e in raw_edges
-        if isinstance(e, (list, tuple)) and len(e) == 2
+        for i, state_id in enumerate(graph_states)
     ]
 
     if label_mode != "official_silver":
         raise ValueError(f"Unsupported label_mode after cleanup: {label_mode}")
 
-    expanded_order = (ds_cfg or {}).get("expanded_trajectory_order") or []
+    if use_expanded_graph:
+        edge_pairs = list(zip(graph_states[:-1], graph_states[1:]))
+        edge_type = "marker_defined_expanded_stage_order"
+        graph_type = "marker_defined_expanded_transition_graph"
+        policy_head = "Official frozen silver-standard expanded transition reference graph."
+    else:
+        edge_pairs = [
+            (str(e[0]), str(e[1]))
+            for e in raw_edges
+            if isinstance(e, (list, tuple)) and len(e) == 2
+        ]
+        edge_type = "marker_defined_milestone_order"
+        graph_type = "marker_defined_coarse_milestone_graph"
+        policy_head = "Official frozen silver-standard coarse milestone reference graph."
+
+    edges = [
+        {
+            "source": str(src),
+            "target": str(tgt),
+            "weight": 1.0,
+            "confidence": "high",
+            "source_status": "confirmed",
+            "target_status": "confirmed",
+            "edge_type": edge_type,
+        }
+        for src, tgt in edge_pairs
+    ]
+
     excluded = (
         (ds_cfg or {}).get("excluded_from_official_metrics")
         or list(_EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT)
@@ -236,21 +285,27 @@ def _build_reference_graph(
         "label_type":               mode_cfg["label_type"],
         "state_key":                state_key,
         "expanded_state_key":       mode_cfg.get("expanded_state_key"),
-        "graph_type":               "marker_defined_coarse_milestone_graph",
+        "graph_type":               graph_type,
         "version":                  "v1",
         "generated_by":             "benchmark/annotation/build_milestone_providers.py",
-        "source_markers_yaml":      str(markers_yaml_path),
+        "source_markers_yaml":      Path(markers_yaml_path).as_posix(),
         "analysis_role":            analysis_role,
         "deprecated":               False,
-        "n_states":                 len(primary_milestones),
+        "n_states":                 len(graph_states),
         "n_edges":                  len(edges),
+        "official_state_ids":       graph_states,
+        "primary_milestones":       list(primary_milestones),
         "expanded_trajectory_order":    expanded_order,
         "excluded_from_official_metrics": excluded,
         "policy": [
-            "Official frozen silver-standard coarse milestone reference graph.",
-            "Nodes are primary_milestones only.",
-            "Transition labels are in final_milestone_label_expanded (supplementary)"
-            " and are NOT graph nodes.",
+            policy_head,
+            (
+                "Nodes are expanded_trajectory_order stages, including transition "
+                "labels, because official marker-FM metrics use "
+                "final_milestone_label_expanded."
+                if use_expanded_graph else
+                "Nodes are primary_milestones only."
+            ),
             "All edges have confidence=high; all nodes have status=confirmed.",
             "Excluded from official metrics: ambiguous, unknown_or_ood.",
             "Provenance: Liuyang et al. 2023 DOI 10.1016/j.stem.2023.02.008;"
@@ -266,17 +321,32 @@ def _build_reference_graph(
 # State metadata builder
 # ---------------------------------------------------------------------------
 
-def _build_state_metadata_rows(primary_milestones: list, marker_sets: dict) -> list:
+def _build_state_metadata_rows(state_ids: list, marker_sets: dict) -> list:
     rows = []
-    for i, ms in enumerate(primary_milestones):
-        ms_cfg = marker_sets.get(ms) or {}
-        genes = ms_cfg.get("genes") or []
-        notes = ms_cfg.get("notes") or ""
+    for i, state_id in enumerate(state_ids):
+        marker_names = _stage_marker_names(state_id)
+        genes: list[str] = []
+        notes_parts: list[str] = []
+        for marker_name in marker_names:
+            ms_cfg = marker_sets.get(marker_name) or {}
+            for gene in ms_cfg.get("genes") or []:
+                if gene not in genes:
+                    genes.append(gene)
+            note = ms_cfg.get("notes") or ""
+            if note:
+                notes_parts.append(f"{marker_name}: {note}")
+        role = (
+            "expanded_transition_stage"
+            if _is_transition_stage(state_id)
+            else "expanded_primary_stage" if str(state_id).startswith("stage_")
+            else "primary_milestone"
+        )
+        notes = " | ".join(notes_parts)
         rows.append({
-            "state_id":       ms,
-            "label":          ms,
+            "state_id":       state_id,
+            "label":          state_id,
             "order":          i,
-            "role":           "primary_milestone",
+            "role":           role,
             "status":         "confirmed",
             "marker_genes":   ";".join(str(g) for g in genes),
             "n_marker_genes": len(genes),
@@ -380,8 +450,9 @@ def _read_h5ad_labels(
         memb_counts     = _vc("trajectory_membership_label")
 
         n_total  = len(cell_ids)
+        state_counts = _vc(state_key)
         n_covered = sum(
-            v for k, v in coarse_counts.items()
+            v for k, v in state_counts.items()
             if k not in (excluded_labels or [])
         )
         coverage = round(n_covered / n_total, 4) if n_total > 0 else 0.0
@@ -389,6 +460,7 @@ def _read_h5ad_labels(
         label_stats = {
             "coarse_label_counts":    coarse_counts,
             "expanded_label_counts":  expanded_counts,
+            "state_label_counts":     state_counts,
             "source_counts":          source_counts,
             "membership_counts":      memb_counts,
             "label_coverage_fraction": coverage,
@@ -442,11 +514,12 @@ def _build_one_provider(
         markers_yaml_path=str(markers_yaml_path),
         ds_cfg=ds_cfg,
     )
-    n_states      = len(primary_milestones)
+    official_state_ids = [node["id"] for node in graph["nodes"]]
+    n_states      = len(official_state_ids)
     n_graph_edges = len(graph["edges"])
 
     # Build state metadata rows
-    state_meta_rows = _build_state_metadata_rows(primary_milestones, marker_sets)
+    state_meta_rows = _build_state_metadata_rows(official_state_ids, marker_sets)
 
     # Build edge rows for CSV
     edge_rows = [
@@ -494,25 +567,28 @@ def _build_one_provider(
         "annotation_method":      mode_cfg["annotation_method"],
         "status":                 mode_cfg["status"],
         "state_key":              state_key,
+        "coarse_state_key":       mode_cfg.get("coarse_state_key"),
         "expanded_state_key":     mode_cfg.get("expanded_state_key"),
         "confidence_key":         confidence_key,
         "source_key":             mode_cfg.get("source_key"),
         "membership_key":         mode_cfg.get("membership_key"),
         "analysis_role":          analysis_role,
         "version":                "v1",
-        "source_markers_yaml":    str(markers_yaml_path),
+        "source_markers_yaml":    markers_yaml_path.as_posix(),
         "excluded_from_official_metrics":  excluded,
         "expanded_trajectory_order":       expanded_order,
         "primary_milestones":              primary_milestones,
+        "official_state_ids":              official_state_ids,
         "n_states":               n_states,
         "n_graph_edges":          n_graph_edges,
         "n_cell_labels":          label_stats.get("n_cell_labels", 0),
         "coarse_label_counts":    label_stats.get("coarse_label_counts", {}),
         "expanded_label_counts":  label_stats.get("expanded_label_counts", {}),
+        "state_label_counts":     label_stats.get("state_label_counts", {}),
         "source_counts":          label_stats.get("source_counts", {}),
         "membership_counts":      label_stats.get("membership_counts", {}),
         "label_coverage_fraction": label_stats.get("label_coverage_fraction", 0.0),
-        "input_h5ad":             input_h5ad,
+        "input_h5ad":             _path_text(input_h5ad),
         "state_labels_status":    state_labels_status,
         "reference_graph_path":   _rel("reference_graph.json"),
         "reference_edges_path":   _rel("reference_graph_edges.csv"),
@@ -625,13 +701,16 @@ def _update_registry(
             "label_mode":        lm,
             "label_type":        meta.get("label_type"),
             "analysis_role":     meta["analysis_role"],
-            "coarse_label_key":  meta["state_key"],
+            "coarse_label_key":  meta.get("coarse_state_key")
+                                 or "final_milestone_label_coarse",
             "expanded_label_key": meta.get("expanded_state_key"),
             "notes": (
                 f"Official frozen silver-standard milestone provider"
                 f" for {meta['dataset_id']}."
                 f" state_key={meta['state_key']}."
-                " Frozen coarse labels from Stage 2 trajectory-aware annotation."
+                " Frozen expanded transition labels from Stage 2 trajectory-aware"
+                " annotation are used for official marker-FM metrics."
+                " Coarse labels are retained as compatibility metadata."
                 " Excluded from official metrics:"
                 " ambiguous, unknown_or_ood."
             ),
@@ -710,7 +789,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="input_h5ad",
         help=(
             "Stage 2 h5ad with obs[state_key] to populate state_labels.tsv.  "
-            "For official_silver, requires final_milestone_label_coarse.  "
+            "For official_silver, requires final_milestone_label_expanded.  "
             "If omitted, writes schema-only TSVs."
         ),
     )

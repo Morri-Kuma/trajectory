@@ -6,7 +6,7 @@ Checks
 ------
   1.  projected_milestone_labels.csv exists and has required columns.
   2.  n_rows > 0.
-  3.  final_milestone_label_coarse is not all ambiguous.
+  3.  final_milestone_label_expanded is not all ambiguous.
   4.  final_milestone_confidence exists and is numeric.
   5.  timepoint column exists and has at least one unique value.
   6.  If projected_expression.npy exists, row count matches CSV length.
@@ -39,6 +39,7 @@ REQUIRED_COLUMNS = [
     "projected_cell_id",
     "timepoint",
     "final_milestone_label_coarse",
+    "final_milestone_label_expanded",
     "final_milestone_confidence",
     "label_mode",
     "provider_id",
@@ -83,16 +84,16 @@ def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
         return errors, warnings
     note(f"n_projected_cells: {len(rows)}")
 
-    # 3. final_milestone_label_coarse not all ambiguous
-    if "final_milestone_label_coarse" in fieldnames:
-        labels = [r.get("final_milestone_label_coarse", "") for r in rows]
+    # 3. final_milestone_label_expanded not all ambiguous
+    if "final_milestone_label_expanded" in fieldnames:
+        labels = [r.get("final_milestone_label_expanded", "") for r in rows]
         n_ambig = sum(1 for l in labels if l == "ambiguous")
         if n_ambig == len(rows):
-            errors.append("All final_milestone_label_coarse values are 'ambiguous'")
+            errors.append("All final_milestone_label_expanded values are 'ambiguous'")
         else:
             from collections import Counter
             counts = Counter(labels)
-            note(f"final_milestone_label_coarse distribution: {dict(counts)}")
+            note(f"final_milestone_label_expanded distribution: {dict(counts)}")
             if n_ambig > 0:
                 warnings.append(f"{n_ambig}/{len(rows)} cells have label 'ambiguous'")
 

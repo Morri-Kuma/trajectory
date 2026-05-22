@@ -1,0 +1,44 @@
+{
+  "method": "scnode",
+  "run_id": "scnode_gse178325_marker_fm_silver_B_hvg2000_formal",
+  "dataset": "GSE178325",
+  "scenario": "B",
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 415.34,
+  "status": "failed",
+  "train_times": [
+    0.0,
+    0.5,
+    1.0,
+    2.0,
+    4.0,
+    8.0,
+    12.0,
+    16.0
+  ],
+  "heldout_times": [
+    20.0,
+    24.0,
+    25.0,
+    26.0,
+    28.0,
+    34.0,
+    36.0
+  ],
+  "n_sim_cells": 2000,
+  "notes": "Traceback (most recent call last):\n  File \"/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/methods/scNODE/run.py\", line 901, in main\n    from benchmark.evaluation.eval_lineage import run_lineage_evaluation\nModuleNotFoundError: No module named 'benchmark.evaluation'\n",
+  "ground_truth": {
+    "provider_id": "gse178325_marker_fm_transition_silver_v1",
+    "state_key": "final_milestone_label_coarse",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false
+  }
+}

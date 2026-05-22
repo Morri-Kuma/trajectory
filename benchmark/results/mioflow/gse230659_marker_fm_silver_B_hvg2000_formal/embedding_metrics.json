@@ -1,6 +1,6 @@
 {
-  "adjusted_rand_index": 0.0013176072775735732,
-  "avg_normalized_classifier_entropy": 0.026397551073997792,
+  "adjusted_rand_index": 0.06274964377015274,
+  "avg_normalized_classifier_entropy": 0.17169697581720955,
   "projected_latent_dim": 50,
   "n_eval_timepoints": 9,
   "eval_timepoints": [
@@ -15,17 +15,5 @@
     30.0
   ],
   "status": "completed",
-  "latent_space": "PCA",
-  "result_class": "marker_fm_transition_silver_formal",
-  "formal_benchmark": true,
-  "method_config": "benchmark/configs/runtime/mioflow_gse230659_marker_fm_silver_B_hvg2000_formal.yaml",
-  "label_mode": "official_silver",
-  "provider_id": "gse230659_marker_fm_transition_silver_v1",
-  "cell_state_key": "final_milestone_label_coarse",
-  "ground_truth": {
-    "provider_id": "gse230659_marker_fm_transition_silver_v1",
-    "label_mode": "official_silver",
-    "state_key": "final_milestone_label_coarse",
-    "source_h5ad": "benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad"
-  }
+  "latent_space": "PCA"
 }

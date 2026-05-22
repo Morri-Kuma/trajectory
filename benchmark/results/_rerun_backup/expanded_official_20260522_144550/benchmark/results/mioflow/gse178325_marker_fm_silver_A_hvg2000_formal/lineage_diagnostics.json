@@ -1,0 +1,11 @@
+{
+  "source_transition_counts": {
+    "ambiguous": 185,
+    "epithelial_like": 36620,
+    "hADSCs": 35672,
+    "hCiPS": 211,
+    "intermediate_plastic": 135,
+    "xen_like": 28
+  },
+  "latent_space": "PCA"
+}

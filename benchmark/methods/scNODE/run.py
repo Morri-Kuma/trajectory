@@ -771,9 +771,12 @@ def main():
         cfg = yaml.safe_load(f)
 
     project_root = _find_project_root()
-    # Add project root to path so eval_lineage can be imported
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
+    # Add project root to the front so ``benchmark.evaluation`` resolves to
+    # this repository, not scNODE_module/benchmark.
+    project_root_str = str(project_root)
+    while project_root_str in sys.path:
+        sys.path.remove(project_root_str)
+    sys.path.insert(0, project_root_str)
 
     # 鈹€鈹€ Parse config 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
     run_id        = cfg.get("run_id", "scnode_run")

@@ -1,0 +1,43 @@
+{
+  "method": "mioflow",
+  "dataset": "GSE230659",
+  "scenario": "C",
+  "result_class": "marker_fm_transition_silver_formal",
+  "formal_benchmark": true,
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 84.46,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "final_milestone_label_coarse",
+  "mioflow_params": {
+    "pca_dims": 50,
+    "hidden_dim": 64,
+    "n_epochs": 40,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "lambda_ot": 1.0,
+    "use_density_loss": false,
+    "lambda_density": 5.0,
+    "lambda_energy": 0.01,
+    "energy_time_steps": 10,
+    "seed": 42,
+    "n_sim_cells": 2000,
+    "metric_sample_cells": 1000,
+    "use_cuda": true
+  },
+  "notes": "",
+  "ground_truth": {
+    "provider_id": "gse230659_marker_fm_transition_silver_v1",
+    "state_key": "final_milestone_label_coarse",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false
+  }
+}

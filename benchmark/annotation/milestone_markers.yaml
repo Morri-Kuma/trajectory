@@ -10,9 +10,8 @@
 #     role                : "primary"
 #     notes               : short annotation note (ASCII)
 #   reference_graph_edges : directed edges [from, to] defining the trajectory
-#   expanded_trajectory_order : fine-grained stage labels incl. transition
-#                               stages; supplementary only, not used for
-#                               official scTimeBench-style coarse metrics
+#   expanded_trajectory_order : fine-grained official metric states including
+#                               explicit transition stages
 #   excluded_from_official_metrics : labels excluded from official evaluation
 #   notes                 : free-text dataset-level notes
 #
@@ -25,11 +24,9 @@
 #   Guan et al. 2022, Nature, DOI: 10.1038/s41586-022-04593-5
 # Companion code: https://github.com/sajuukLyu/CSC_2023
 #
-# Note on hADSCs: In Liuyang et al. 2023, hADSCs (human adult adipose-derived
-# mesenchymal stromal cells) are treated as the ADSC starting sample/timepoint
-# (time == 0), not as a universally marker-defined MSC class. Assignment of
-# the hADSCs milestone therefore relies primarily on source sample identity /
-# time == 0 rather than generic MSC surface marker expression.
+# Note on hADSCs: In this benchmark hADSCs is a marker-defined hADSC-like /
+# mesenchymal-like trajectory state. Sample identity and timepoint provenance
+# may still be reported, but they do not force authoritative hADSC labels.
 # ---------------------------------------------------------------------------
 
 GSE178325:
@@ -44,13 +41,11 @@ GSE178325:
       genes: [COL1A1, COL1A2, COL5A1, COL6A2, PRRX1, VIM, ZEB1, MMP3]
       role: primary
       notes: >
-        hADSCs (human adult adipose-derived mesenchymal stromal cells) are the
-        trajectory starting point. PRIMARY ASSIGNMENT: source sample identity /
-        time == 0 (ADSC starting sample), following the treatment in Liuyang
-        et al. 2023 (Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008).
-        This gene set is an AUXILIARY somatic/fibroblast-like support score
-        only; do not use it as the primary classifier. Generic MSC surface
-        markers (THY1, NT5E, ENG) are intentionally excluded from this set.
+        Marker-defined hADSC-like / mesenchymal-like trajectory state scored
+        from collagen/mesenchymal support genes. Sample/time provenance may
+        identify experimental starting cells, but authoritative labels use
+        marker competition. Generic MSC surface markers (THY1, NT5E, ENG) are
+        intentionally excluded from this set.
     epithelial_like:
       genes: [KRT8, KRT18, KRT19, EPCAM, LIN28A]
       role: primary
@@ -74,8 +69,7 @@ GSE178325:
     - [xen_like, hCiPS]
   expanded_trajectory_order:
     # Fine-grained stage labels including explicit transition stages.
-    # Supplementary only; official scTimeBench-style metrics use the coarse
-    # primary_milestones above.
+    # These labels drive the official marker-FM metrics.
     - stage_00_hADSCs
     - stage_01_hADSCs_to_epithelial_like
     - stage_02_epithelial_like
@@ -93,10 +87,10 @@ GSE178325:
     Stem Cell, DOI: 10.1016/j.stem.2023.02.008; Guan et al. 2022, Nature,
     DOI: 10.1038/s41586-022-04593-5; companion code:
     https://github.com/sajuukLyu/CSC_2023).
-    hADSCs are the ADSC starting sample (time == 0) and form the trajectory
-    root.
-    expanded_trajectory_order provides transition-stage labels for
-    supplementary analyses; coarse primary_milestones drive official metrics.
+    hADSCs is represented as a marker-defined hADSC-like trajectory root.
+    expanded_trajectory_order provides transition-stage labels for official
+    marker-FM metrics; coarse primary_milestones are retained for provenance
+    and interpretation.
 
 GSE230659:
   primary_milestones:
@@ -109,13 +103,11 @@ GSE230659:
       genes: [COL1A1, COL1A2, COL5A1, COL6A2, PRRX1, VIM, ZEB1, MMP3]
       role: primary
       notes: >
-        hADSCs (human adult adipose-derived mesenchymal stromal cells) are the
-        trajectory starting point. PRIMARY ASSIGNMENT: source sample identity /
-        time == 0 (ADSC starting sample), following the treatment in Liuyang
-        et al. 2023 (Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008).
-        This gene set is an AUXILIARY somatic/fibroblast-like support score
-        only; do not use it as the primary classifier. Generic MSC surface
-        markers (THY1, NT5E, ENG) are intentionally excluded from this set.
+        Marker-defined hADSC-like / mesenchymal-like trajectory state scored
+        from collagen/mesenchymal support genes. Sample/time provenance may
+        identify experimental starting cells, but authoritative labels use
+        marker competition. Generic MSC surface markers (THY1, NT5E, ENG) are
+        intentionally excluded from this set.
     epithelial_like:
       genes: [KRT8, KRT18, KRT19, EPCAM, LIN28A]
       role: primary
@@ -134,8 +126,7 @@ GSE230659:
     - [intermediate_plastic, hCiPS]
   expanded_trajectory_order:
     # Fine-grained stage labels including explicit transition stages.
-    # Supplementary only; official scTimeBench-style metrics use the coarse
-    # primary_milestones above.
+    # These labels drive the official marker-FM metrics.
     - stage_00_hADSCs
     - stage_01_hADSCs_to_epithelial_like
     - stage_02_epithelial_like
@@ -151,6 +142,7 @@ GSE230659:
     2023, Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008; Guan et al. 2022,
     Nature, DOI: 10.1038/s41586-022-04593-5; companion code:
     https://github.com/sajuukLyu/CSC_2023).
-    hADSCs are the ADSC starting sample (time == 0) and form the trajectory
-    root. expanded_trajectory_order provides transition-stage labels for
-    supplementary analyses; coarse primary_milestones drive official metrics.
+    hADSCs is represented as a marker-defined hADSC-like trajectory root.
+    expanded_trajectory_order provides transition-stage labels for official
+    marker-FM metrics; coarse primary_milestones are retained for provenance
+    and interpretation.

@@ -132,7 +132,7 @@ if m.get("label_mode") != "official_silver":
     raise SystemExit(f"unexpected label_mode: {m.get('label_mode')}")
 if m.get("provider_id") != "${PROVIDER_ID}":
     raise SystemExit(f"unexpected provider_id: {m.get('provider_id')}")
-if m.get("state_key") != "final_milestone_label_coarse":
+if m.get("state_key") != "final_milestone_label_expanded":
     raise SystemExit(f"unexpected state_key: {m.get('state_key')}")
 if not isinstance(m.get("n_cells_evaluated"), int) or m["n_cells_evaluated"] <= 0:
     raise SystemExit(f"invalid n_cells_evaluated: {m.get('n_cells_evaluated')}")
