@@ -1,0 +1,96 @@
+run_id: prescient_gse230659_rep_scfoundation_pca50_B
+method: prescient
+scenario: B
+scenario_name: GSE230659 prescient scenario B representation-dynamics rep_scfoundation_pca50
+  (supplementary)
+framework_version: v2
+result_class: representation_dynamics_supplementary
+formal_benchmark: false
+ground_truth:
+  provider_id: gse230659_marker_fm_transition_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE230659
+  h5ad_path: benchmark/inputs/representation/gse230659/rep_scfoundation_pca50/B/GSE230659_rep_scfoundation_pca50_B_X_rep.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times:
+  - 0.5
+  - 2.0
+  - 4.0
+  - 8.0
+  - 12.0
+  - 16.0
+  heldout_times:
+  - 16.33
+  - 16.67
+  - 17.0
+  - 18.0
+  - 20.0
+  - 22.0
+  - 24.0
+  - 28.0
+  - 30.0
+output:
+  base_dir: benchmark/results/representation_dynamics/prescient/gse230659_rep_scfoundation_pca50_B
+prescient_params:
+  num_pcs: 30
+  k_dim: 100
+  layers: 1
+  activation: softplus
+  pretrain_epochs: 25
+  train_epochs: 100
+  train_lr: 0.01
+  train_dt: 0.1
+  train_sd: 0.5
+  train_tau: 1.0e-06
+  train_batch: 0.03
+  train_clip: 0.25
+  save: 100
+  seed: 42
+  weight_name: uniform
+  n_sim_cells: 2000
+  metric_sample_cells: 1000
+  assignment_temperature: 1.0
+  use_cuda: true
+  training_protocol: full_formal_hvg2000
+  memory_note: 'Full formal PRESCIENT configuration: no per-timepoint training subsampling
+    and no embedding reference-cell cap. use_cuda=true enables GPU when the job requests
+    one; the runner falls back to CPU if CUDA is unavailable.'
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse230659_marker_fm_transition_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  mode: representation
+  run_eval_lineage: false
+  forecast_eval_script: benchmark/evaluation/eval_representation_forecast.py
+  temporal_signal_eval_script: benchmark/evaluation/eval_representation_temporal_signal.py
+  status: supplementary
+  note: Representation-space forecast (Mode A). Outputs are representation forecasts,
+    not gene-expression forecasts. Score with the representation evaluators; do not
+    feed projected outputs to the official gene-expression eval_forecast.
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day
+state_system:
+  version: gse230659_marker_fm_transition_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 4
+  n_graph_edges: 3
+  source_h5ad: benchmark/inputs/representation/gse230659/rep_scfoundation_pca50/B/GSE230659_rep_scfoundation_pca50_B_X_rep.h5ad
+  note: Frozen marker+foundation-model transition silver labels; official metrics
+    use final_milestone_label_coarse.
+representation:
+  enabled: true
+  input_mode: obsm
+  obsm_key: X_rep
+  representation_id: rep_scfoundation_pca50
+  input_space: scfm_embedding
+  output_space: representation
+  final_dim: 50
+  reducer_fit_scope: train_only

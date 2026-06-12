@@ -1,0 +1,12 @@
+{
+  "gse178325": {
+    "frac_ood": 0.7586579683131407,
+    "query_median_knn_dist": 3.243962605794271,
+    "ref_median_knn_dist": 1.991240644454956
+  },
+  "gse230659": {
+    "frac_ood": 0.7300183525281272,
+    "query_median_knn_dist": 3.128824869791667,
+    "ref_median_knn_dist": 1.991240644454956
+  }
+}

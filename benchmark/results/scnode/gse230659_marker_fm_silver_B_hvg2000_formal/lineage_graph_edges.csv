@@ -1,0 +1,10 @@
+source_state,target_state,weight
+hADSCs,hADSCs,0.267038
+hADSCs,hCiPS,0.235052
+hADSCs,intermediate_plastic,0.497911
+hCiPS,hADSCs,0.264838
+hCiPS,hCiPS,0.23651
+hCiPS,intermediate_plastic,0.498652
+intermediate_plastic,hADSCs,0.265458
+intermediate_plastic,hCiPS,0.236091
+intermediate_plastic,intermediate_plastic,0.498451

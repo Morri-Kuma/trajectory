@@ -22,14 +22,14 @@ reportable benchmark configuration surface.
 
 ## Current Reportable Providers
 
-The current primary benchmark providers are frozen silver-standard milestone
+The current primary benchmark providers are frozen milestone ground-truth
 providers:
 
 | Provider | Dataset | Role | Notes |
 |---|---|---|---|
 | `gse178325_marker_fm_transition_silver_v1` | GSE178325 | primary report | Marker-FM transition silver provider; excludes `ambiguous` and `unknown_or_ood` from official metrics. |
 | `gse230659_marker_fm_transition_silver_v1` | GSE230659 | primary report | Marker-FM transition silver provider; excludes `ambiguous` and `unknown_or_ood` from official metrics. |
-| `gse242424_oskm_reprogramming_silver_v1` | GSE242424 | primary report | Author-cluster OSKM reprogramming silver provider on the 59,187-cell matched subset. |
+| `gse242424_oskm_reprogramming_ground_truth_v1` | GSE242424 | primary report | Author-cluster OSKM reprogramming ground truth provider on the 59,187-cell matched subset. |
 
 Older pseudostate, stage-proxy, and placeholder milestone providers have been
 removed from the active registry and should not be referenced by new reports or

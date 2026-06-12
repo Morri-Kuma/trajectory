@@ -1,0 +1,37 @@
+{
+  "provider_id": "gse175634_cardiac_silver_v1",
+  "dataset_id": "GSE175634",
+  "label_mode": "official_silver",
+  "label_type": "frozen_silver_standard",
+  "state_key": "final_milestone_label_coarse",
+  "annotation_method": "author_annotation_direct",
+  "silver_standard_skipped": true,
+  "silver_standard_note": "Labels taken directly from the author 'type' column. No marker-seed or trajectory-aware annotation generation performed.",
+  "analysis_role": "primary_report",
+  "n_confirmed_states": 6,
+  "n_graph_edges": 5,
+  "excluded_labels": [
+    "UNK"
+  ],
+  "n_cells_labeled": 211272,
+  "n_cells_unk": 12930,
+  "n_cells_total": 224202,
+  "n_cells_per_state": {
+    "IPSC": 38510,
+    "MES": 53711,
+    "CMES": 18976,
+    "PROG": 34078,
+    "CM": 21368,
+    "CF": 44629
+  },
+  "source_h5ad": "benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad",
+  "generated_by": "scripts/build_gse175634_cardiac_author_provider.py",
+  "output_dir": "/home/xzy0723/projects/trajectory/benchmark/ground_truth/providers/gse175634_cardiac_silver_v1",
+  "outputs": [
+    "state_labels.tsv",
+    "state_metadata.tsv",
+    "reference_graph.json",
+    "reference_graph_edges.csv",
+    "ground_truth_metadata.json"
+  ]
+}

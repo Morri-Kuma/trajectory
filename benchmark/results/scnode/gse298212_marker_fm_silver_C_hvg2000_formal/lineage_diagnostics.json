@@ -1,0 +1,13 @@
+{
+  "unsupported_source_states": [],
+  "n_unsupported_source_states": 0,
+  "source_transition_counts": {
+    "blood_start": 8892,
+    "epithelial_like": 13825,
+    "hCiPS": 566,
+    "intermediate_plastic": 2379
+  },
+  "soft_assignment_nearest_fallback_count": 0,
+  "soft_assignment_skipped_count": 0,
+  "note": "States with zero source_transition_counts are written as all-zero STM rows because no valid source-cell transitions were available for those states in the training timepoint pairs."
+}

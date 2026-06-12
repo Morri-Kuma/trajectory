@@ -1,0 +1,5 @@
+source,target,weight,confidence,edge_type
+hADSCs,epithelial_like,1.0,high,marker_defined_milestone_order
+epithelial_like,intermediate_plastic,1.0,high,marker_defined_milestone_order
+intermediate_plastic,xen_like,1.0,high,marker_defined_milestone_order
+xen_like,hCiPS,1.0,high,marker_defined_milestone_order

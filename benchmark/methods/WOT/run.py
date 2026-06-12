@@ -1,7 +1,7 @@
 """
 benchmark/methods/WOT/run.py
 WOT smoke-test runner for the scTimeBench-aligned benchmark.
-Framework reference: experimental framework v2.md §10.1, §14
+Framework reference: docs/framework/experimental_framework_v2.md §10.1, §14
 
 Usage:
     conda activate traj_env
@@ -453,6 +453,7 @@ def main():
     pkl_path_raw  = dataset_cfg.get("pkl_path") or ""
     h5ad_fallback = dataset_cfg.get("h5ad_path", "data/processed/adata_benchmark.h5ad")
     output_base   = output_cfg.get("base_dir", "benchmark/results/wot/scenario_A")
+    dataset_id    = dataset_cfg.get("id", "unknown")
     time_key      = dataset_cfg.get("time_key", "time_label")
     cell_state_key          = lineage_cfg.get("cell_state_key", "final_milestone_label_coarse")
     edge_confidence_mode    = lineage_cfg.get("edge_confidence_mode", "all")
@@ -471,7 +472,7 @@ def main():
     # Build minimal run_metadata now; update at end with final status.
     run_meta = {
         "method":    "wot",
-        "dataset":   "GSE230659",
+        "dataset":   dataset_id,
         "scenario":  cfg.get("scenario", "A"),
         "capability_flags": {
             "supports_unseen_timepoint_projection": False,

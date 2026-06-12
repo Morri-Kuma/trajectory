@@ -1,0 +1,6 @@
+marker_silver,Fibroblast,Fibroblast-like,Intermediate,Partially-reprogrammed,Pre-iPSC,iPSC,unknown_or_ood,xOSK
+ambiguous,0,0,1,2,9,53,1,0
+epithelial_like,11,131,16,51,9,109,269,2
+hADSCs,115,592,5,47,1,15,434,3
+hCiPS,0,0,0,0,33,86,0,0
+intermediate_plastic,0,0,1,1,0,0,3,0

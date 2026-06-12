@@ -1,0 +1,46 @@
+{
+  "mode": "local_real",
+  "config_hash": "cf5ede01ed",
+  "queries": {
+    "gse178325": {
+      "n_cells": 3000,
+      "n_genes_shared": 2000,
+      "annotation_method": "knn_surrogate",
+      "overall_tv_composition": 0.6574605337369187,
+      "agreement_nmi": 0.1808150372362275,
+      "agreement_ari": 0.14362327291981317,
+      "correspondence_overall_agreement": 0.40625,
+      "pseudotime_spearman": 0.7138142445366574,
+      "graph_edge_jaccard": 0.0,
+      "frac_unknown_ood": 0.328,
+      "n_disagreement_cells": 2181,
+      "figures": {
+        "composition": "results/test_outputs/local_real_run/gse178325/fig_composition.png",
+        "agreement": "results/test_outputs/local_real_run/gse178325/fig_agreement.png",
+        "embed_silver": "results/test_outputs/local_real_run/gse178325/fig_embed_marker_silver.png",
+        "embed_scanvi": "results/test_outputs/local_real_run/gse178325/fig_embed_scanvi.png",
+        "pseudotime": "results/test_outputs/local_real_run/gse178325/fig_pseudotime.png"
+      }
+    },
+    "gse230659": {
+      "n_cells": 3000,
+      "n_genes_shared": 2000,
+      "annotation_method": "knn_surrogate",
+      "overall_tv_composition": 0.746598124123418,
+      "agreement_nmi": 0.17968660196800282,
+      "agreement_ari": 0.08612238747026668,
+      "correspondence_overall_agreement": 0.3181336161187699,
+      "pseudotime_spearman": 0.5134216129821756,
+      "graph_edge_jaccard": 0.0,
+      "frac_unknown_ood": 0.36966666666666664,
+      "n_disagreement_cells": 2400,
+      "figures": {
+        "composition": "results/test_outputs/local_real_run/gse230659/fig_composition.png",
+        "agreement": "results/test_outputs/local_real_run/gse230659/fig_agreement.png",
+        "embed_silver": "results/test_outputs/local_real_run/gse230659/fig_embed_marker_silver.png",
+        "embed_scanvi": "results/test_outputs/local_real_run/gse230659/fig_embed_scanvi.png",
+        "pseudotime": "results/test_outputs/local_real_run/gse230659/fig_pseudotime.png"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # benchmark_master.yaml
 # Master configuration for the scTimeBench-aligned benchmark.
-# Framework reference: experimental framework v2.md
+# Framework reference: docs/framework/experimental_framework_v2.md
 #
 # Three core benchmark dimensions:
 #   1. Forecast Accuracy      — INACTIVE for current stage (WOT, CellRank2 not eligible)
@@ -33,7 +33,7 @@ datasets:
 # Ground-truth providers
 # =============================================================================
 # Cell-state labels and reference lineage graphs are a replaceable provider
-# layer. Current reportable runs use official_silver providers registered in
+# layer. Current reportable runs use providers registered in
 # benchmark/ground_truth/registry.yaml and selected through
 # method-config ground_truth.provider_id.
 ground_truth:

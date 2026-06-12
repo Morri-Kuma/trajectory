@@ -1,0 +1,50 @@
+{
+  "wasserstein_distance": 0.027993419717829933,
+  "gaussian_mmd": 3.5145692268802533e-06,
+  "energy_distance_mmd": 0.0005097379090107995,
+  "hausdorff_loss": 16.736006263978876,
+  "n_eval_timepoints": 7,
+  "eval_timepoints": [
+    0.0,
+    1.0,
+    3.0,
+    5.0,
+    7.0,
+    11.0,
+    15.0
+  ],
+  "scenario_type": "reconstruction",
+  "max_cells_per_timepoint": 1000,
+  "metric_backend": "scTimeBench_geomloss",
+  "metric_definitions": {
+    "wasserstein_distance": {
+      "loss": "sinkhorn",
+      "p": 2,
+      "blur": 0.05,
+      "scaling": 0.5,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "gaussian_mmd": {
+      "loss": "gaussian",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "energy_distance_mmd": {
+      "loss": "energy",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "hausdorff_loss": {
+      "implementation": "torch.cdist_bidirectional_hausdorff",
+      "normalize_by_n_genes": false
+    }
+  },
+  "aggregation": "mean_over_eval_timepoints",
+  "status": "completed"
+}

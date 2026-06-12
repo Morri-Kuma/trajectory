@@ -66,7 +66,7 @@ datasets:
         heldout_times: [4.0, 12.0, 20.0, 28.0, 30.0]
 
   - name: GSE242424Dataset
-    tag: gse242424_oskm_silver_scenario_A
+    tag: gse242424_oskm_ground_truth_scenario_A
     id: GSE242424
     h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
     time_key: abs_day
@@ -75,7 +75,7 @@ datasets:
       - name: CopyTrainTest
 
   - name: GSE242424Dataset
-    tag: gse242424_oskm_silver_scenario_B
+    tag: gse242424_oskm_ground_truth_scenario_B
     id: GSE242424
     h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
     time_key: abs_day
@@ -87,7 +87,7 @@ datasets:
         heldout_times: [12.0, 14.0, 16.0]
 
   - name: GSE242424Dataset
-    tag: gse242424_oskm_silver_scenario_C
+    tag: gse242424_oskm_ground_truth_scenario_C
     id: GSE242424
     h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
     time_key: abs_day

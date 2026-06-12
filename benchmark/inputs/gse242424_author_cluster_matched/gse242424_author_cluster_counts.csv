@@ -1,0 +1,16 @@
+author_cluster_id,author_cluster_label,final_milestone_label_coarse,n_matched_cells
+1,Fibroblast,fibroblast,10983
+2,Fibroblast-like,fibroblast_like_stalled,140
+3,Fibroblast-like,fibroblast_like_stalled,10296
+4,Fibroblast-like,fibroblast_like_stalled,3284
+5,Fibroblast-like,fibroblast_like_stalled,3183
+6,Keratinocyte-like,keratinocyte_like,922
+7,hOSK,hOSK,498
+8,xOSK,xOSK,1678
+9,Intermediate,partial_intermediate,585
+10,Partially-reprogrammed,partially_reprogrammed,4445
+11,Intermediate,primary_intermediate,4424
+12,Intermediate,primary_intermediate,7213
+13,Pre-iPSC,pre_iPSC,1863
+14,Pre-iPSC,pre_iPSC,6548
+15,iPSC,iPSC,3125

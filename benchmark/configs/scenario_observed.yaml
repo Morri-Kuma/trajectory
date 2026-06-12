@@ -1,6 +1,6 @@
 # scenario_observed.yaml
 # Observed-time scenario definitions.
-# Framework reference: experimental framework v2.md §4.1
+# Framework reference: docs/framework/experimental_framework_v2.md §4.1
 #
 # These scenarios use the experimentally measured sampling time (day labels)
 # as the benchmark time axis.

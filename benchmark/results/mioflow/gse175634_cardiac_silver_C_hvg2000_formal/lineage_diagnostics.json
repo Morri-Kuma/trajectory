@@ -1,0 +1,12 @@
+{
+  "source_transition_counts": {
+    "CF": 196,
+    "CM": 108,
+    "CMES": 353,
+    "IPSC": 37997,
+    "MES": 43111,
+    "PROG": 14369,
+    "UNK": 2635
+  },
+  "latent_space": "PCA"
+}

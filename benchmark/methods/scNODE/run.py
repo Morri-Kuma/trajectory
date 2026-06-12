@@ -1,7 +1,7 @@
 ﻿"""
 benchmark/methods/scNODE/run.py
 scNODE standalone runner for the scTimeBench-aligned benchmark.
-Framework reference: experimental framework v2.md 搂10.3, 搂14 Steps 5-7
+Framework reference: docs/framework/experimental_framework_v2.md 搂10.3, 搂14 Steps 5-7
 
 Capability flags (per v2 搂6):
     scNODE: supports_unseen_timepoint_projection = True
@@ -385,7 +385,7 @@ def run_embedding_coherence(
       latent_seq[:, tp_idx, :] 鈥?the ODE-propagated latent at each tp.
     - Assign each projected latent to the nearest observed state centroid
       (computed from vaeReconstruct on training cells).
-    - ARI and classifier entropy are deferred (eval_embedding.py stubs).
+    - ARI and classifier entropy are deferred (eval_embedding_generative_inactive.py stub; official metrics via eval_embedding_milestone.py).
 
     Outputs
     -------
@@ -408,14 +408,16 @@ def run_embedding_coherence(
 
     eval_tps = heldout_tps if heldout_tps else all_unique_tps
 
+    with torch.no_grad():
+        latent_list, _ = model.vaeReconstruct([data_full])
+    all_latents_np = latent_list[0].detach().numpy()
+    np.save(str(output_dir / "embedding.npy"), all_latents_np)
+
     # Compute state centroids from all observed cells in adata_full
     observed_state_labels = []
     observed_centroids = {}
     if cell_state_key and cell_state_key in adata_full.obs.columns:
         state_labels_all = adata_full.obs[cell_state_key].values
-        with torch.no_grad():
-            latent_list, _ = model.vaeReconstruct([data_full])
-        all_latents_np = latent_list[0].detach().numpy()
         observed_state_labels = sorted(set(state_labels_all))
         for state in observed_state_labels:
             mask = state_labels_all == state
@@ -424,7 +426,6 @@ def run_embedding_coherence(
         print(f"[Embedding] Computed centroids for {len(observed_centroids)} states.")
     else:
         state_labels_all = None
-        all_latents_np = None
 
     clf = None
     if state_labels_all is not None and all_latents_np is not None:
@@ -505,6 +506,7 @@ def run_embedding_coherence(
     emb_arr = np.vstack(all_pred_latent) if all_pred_latent else np.array([])
     emb_path = output_dir / "projected_embedding.npy"
     np.save(str(emb_path), emb_arr)
+    np.save(str(output_dir / "next_timepoint_embedding.npy"), emb_arr)
 
     labels_df = pd.DataFrame(all_label_rows)
     labels_path = output_dir / "projected_cluster_labels.csv"
@@ -846,6 +848,15 @@ def main():
             if backed:
                 adata = adata.to_memory()
 
+        from benchmark.representations.model_input import representation_input_adata
+
+        adata = representation_input_adata(adata, cfg)
+        print(
+            "[scNODE] active input space: "
+            f"{adata.uns.get('model_input_space', 'expression')} "
+            f"shape={adata.X.shape}"
+        )
+
         # 鈹€鈹€ Prepare training data 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
         train_data, train_tps, all_unique_tps, _, data_np, cell_tps_np = prepare_data(
             adata, time_key, train_times
@@ -869,6 +880,12 @@ def main():
         if heldout_times:
             print(f"[scNODE] Re-loading full adata for held-out cell access ...")
             adata_full = anndata.read_h5ad(str(h5ad_path))
+            adata_full = representation_input_adata(adata_full, cfg)
+            print(
+                "[scNODE] full active input space: "
+                f"{adata_full.uns.get('model_input_space', 'expression')} "
+                f"shape={adata_full.X.shape}"
+            )
         else:
             adata_full = adata   # Scenario A: no holdout 鈫?same object is fine
 

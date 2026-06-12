@@ -1,0 +1,57 @@
+{
+  "wasserstein_distance": 107.66531387091398,
+  "gaussian_mmd": 1.748717586167414e-07,
+  "energy_distance_mmd": 0.07027247556902791,
+  "hausdorff_loss": 3959.1967441750267,
+  "n_eval_timepoints": 7,
+  "eval_timepoints": [
+    3.0,
+    7.0,
+    10.0,
+    11.0,
+    12.0,
+    13.0,
+    14.0
+  ],
+  "scenario_type": "forecast",
+  "metric_backend": "scTimeBench_exact",
+  "metric_protocol": "sctimebench_gex_prediction_otloss",
+  "lognorm": false,
+  "aggregate": "mean",
+  "exact_cell_usage": true,
+  "max_cells_per_timepoint": null,
+  "metric_definitions": {
+    "wasserstein_distance": {
+      "class": "WassersteinOTLoss",
+      "loss": "sinkhorn",
+      "p": 2,
+      "blur": 0.05,
+      "scaling": 0.5,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "gaussian_mmd": {
+      "class": "MMDLoss",
+      "loss": "gaussian",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "energy_distance_mmd": {
+      "class": "EnergyDistanceLoss",
+      "loss": "energy",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "hausdorff_loss": {
+      "class": "HausdorffLoss",
+      "implementation": "torch.cdist(x_true,x_pred,p=2)_bidirectional",
+      "normalize_by_n_genes": false
+    }
+  },
+  "status": "completed"
+}

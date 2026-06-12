@@ -89,8 +89,32 @@ class GSE178325Dataset(TrajectoryH5ADDataset):
 
 
 class GSE242424Dataset(TrajectoryH5ADDataset):
-    """GSE242424 iPSC reprogramming time-course using the OSKM silver provider."""
+    """GSE242424 iPSC reprogramming time course using the OSKM ground truth provider."""
 
     dataset_id = "GSE242424"
+    default_time_key = "abs_day"
+    default_cell_state_key = "final_milestone_label_coarse"
+
+
+class GSE298212Dataset(TrajectoryH5ADDataset):
+    """GSE298212 human blood-cell chemical reprogramming to hCiPS (Peng 2025).
+
+    Second human chemical-reprogramming system; no per-cell author labels, so the
+    official_silver milestone provider is built by the marker-FM workflow (shared
+    with GSE178325/GSE230659) or by scANVI within-modality transfer."""
+
+    dataset_id = "GSE298212"
+    default_time_key = "abs_day"
+    default_cell_state_key = "final_milestone_label_coarse"
+
+
+class GSE218855Dataset(TrajectoryH5ADDataset):
+    """GSE218855 mouse MEF fast chemical reprogramming to iPSC (Chen 2023).
+
+    Cross-species reprogramming robustness dataset. Uses mouse milestone markers;
+    official_silver provider is built by the marker-FM workflow with the mouse
+    marker set (benchmark/annotation/milestone_markers_mouse.yaml)."""
+
+    dataset_id = "GSE218855"
     default_time_key = "abs_day"
     default_cell_state_key = "final_milestone_label_coarse"

@@ -1,0 +1,7 @@
+marker_silver,ambiguous,epithelial_like,hADSCs,hCiPS,unknown_or_ood
+ambiguous,661,509,29,127,21
+epithelial_like,1214,39792,679,58,28
+hADSCs,16,7398,28229,9,33
+hCiPS,608,152,0,687,36
+intermediate_plastic,5,114,17,0,1
+xen_like,0,52,0,0,0

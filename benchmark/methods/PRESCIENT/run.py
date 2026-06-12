@@ -328,6 +328,14 @@ def _call_with_trusted_torch_load(func, *args, **kwargs):
         torch.load = original_load
 
 
+def _model_device(model) -> torch.device:
+    """Return the device used by a loaded PRESCIENT model."""
+    try:
+        return next(model.parameters()).device
+    except StopIteration:
+        return torch.device("cpu")
+
+
 def _simulate_pc(
     model,
     config,
@@ -338,7 +346,8 @@ def _simulate_pc(
     seed: int = 0,
 ) -> np.ndarray:
     """Simulate source PCs to a target code on the PRESCIENT time axis."""
-    device = device or torch.device("cpu")
+    device = torch.device(device) if device is not None else _model_device(model)
+    model.to(device)
     rng = torch.Generator(device="cpu")
     rng.manual_seed(int(seed))
     dt = float(config.train_dt)
@@ -561,7 +570,9 @@ def _write_embedding_outputs(
             })
 
     emb = np.vstack(all_pred_pc) if all_pred_pc else np.array([])
+    np.save(output_dir / "embedding.npy", xp_all)
     np.save(output_dir / "projected_embedding.npy", emb)
+    np.save(output_dir / "next_timepoint_embedding.npy", emb)
     pd.DataFrame(label_rows).to_csv(
         output_dir / "projected_cluster_labels.csv", index=False
     )
@@ -755,6 +766,15 @@ def run_pipeline(
             f"{cell_state_key!r}."
         )
 
+    from benchmark.representations.model_input import representation_input_adata
+
+    adata = representation_input_adata(adata, scenario_config)
+    print(
+        "[PRESCIENT] active input space: "
+        f"{adata.uns.get('model_input_space', 'expression')} "
+        f"shape={adata.X.shape}"
+    )
+
     t0 = time.time()
     status = "failed"
     notes = ""
@@ -861,7 +881,9 @@ def run_pipeline(
         "projected_expression": str(output_dir / "projected_expression.npy"),
         "forecast_metrics": str(output_dir / "forecast_metrics.json"),
         "per_timepoint_forecast_metrics": str(output_dir / "per_timepoint_forecast_metrics.csv"),
+        "embedding": str(output_dir / "embedding.npy"),
         "projected_embedding": str(output_dir / "projected_embedding.npy"),
+        "next_timepoint_embedding": str(output_dir / "next_timepoint_embedding.npy"),
         "embedding_metrics": str(output_dir / "embedding_metrics.json"),
         "projected_cluster_labels": str(output_dir / "projected_cluster_labels.csv"),
     }
@@ -897,6 +919,7 @@ def main() -> None:
         ),
         "scenario_params": scenario_params,
         "prescient_params": cfg.get("prescient_params", {}) or {},
+        "representation": cfg.get("representation", {}) or {},
         "result_class": cfg.get("result_class", "official"),
         "formal_benchmark": cfg.get("formal_benchmark", True),
     }

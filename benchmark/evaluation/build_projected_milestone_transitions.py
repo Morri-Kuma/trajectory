@@ -48,9 +48,16 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 
+OFFICIAL_CELL_STATE_KEY = "final_milestone_label_coarse"
+
+
 def _load_projected_labels(csv_path: Path) -> List[Dict[str, str]]:
     with open(csv_path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
+
+
+def _expanded_label_examples(labels: List[str]) -> List[str]:
+    return sorted({str(label) for label in labels if str(label).startswith("stage_")})[:20]
 
 
 def _build_transition_matrix(
@@ -221,11 +228,25 @@ def run_transition_build(
     print(f"[build_projected_transitions] {len(rows)} projected cells, "
           f"label_col={cell_state_key!r}, label_mode={label_mode!r}")
 
+    if label_mode == "official_silver" and cell_state_key != OFFICIAL_CELL_STATE_KEY:
+        raise ValueError(
+            "official_silver projected transitions must use "
+            f"{OFFICIAL_CELL_STATE_KEY!r}, got {cell_state_key!r}."
+        )
+
     if cell_state_key not in (rows[0].keys() if rows else {}):
         available = list(rows[0].keys()) if rows else []
         raise ValueError(
             f"Column {cell_state_key!r} not found in CSV. "
             f"Available: {available}"
+        )
+
+    expanded = _expanded_label_examples([r.get(cell_state_key, "") for r in rows])
+    if expanded:
+        raise ValueError(
+            "Projected transition labels contain expanded/stage labels, but "
+            f"official lineage outputs must use {OFFICIAL_CELL_STATE_KEY}. "
+            f"Examples: {expanded}"
         )
 
     stm_dict, edges, build_meta = _build_transition_matrix(

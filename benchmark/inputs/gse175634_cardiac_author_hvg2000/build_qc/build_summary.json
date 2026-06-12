@@ -1,0 +1,63 @@
+{
+  "dataset_id": "GSE175634",
+  "build_timestamp": "20260530_0002",
+  "n_cells_raw": 230786,
+  "n_cells_qc": 224202,
+  "n_cells_removed": 6584,
+  "n_genes_raw": 38943,
+  "n_genes_hvg": 2000,
+  "qc_params": {
+    "min_genes_per_cell": 200,
+    "max_genes_per_cell": 10000,
+    "min_counts_per_cell": 500,
+    "max_pct_mito": 25.0,
+    "min_cells_per_gene": 3
+  },
+  "norm_target_sum": 10000.0,
+  "n_hvg": 2000,
+  "label_counts": {
+    "MES": 53711,
+    "CF": 44629,
+    "IPSC": 38510,
+    "PROG": 34078,
+    "CM": 21368,
+    "CMES": 18976,
+    "UNK": 12930
+  },
+  "timepoint_counts": {
+    "day0": 39975,
+    "day1": 39912,
+    "day11": 38079,
+    "day15": 17727,
+    "day3": 29427,
+    "day5": 18882,
+    "day7": 40200
+  },
+  "obs_columns": [
+    "cell",
+    "exp.grp",
+    "sample",
+    "diffday",
+    "individual",
+    "S.Score",
+    "G2M.Score",
+    "CC.Difference",
+    "demux.dbl.prb",
+    "leiden",
+    "type",
+    "dpt_pseudotime",
+    "diffday_lower",
+    "abs_day",
+    "cell_id",
+    "sample_id",
+    "time_label",
+    "final_milestone_label_coarse",
+    "pct_counts_mt",
+    "n_genes",
+    "n_counts"
+  ],
+  "output_h5ad": "/home/xzy0723/projects/trajectory/benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad",
+  "silver_standard_skipped": true,
+  "silver_standard_note": "Author-provided type labels used directly as final_milestone_label_coarse. UNK cells are retained in the h5ad but will be excluded from official metrics.",
+  "runtime_s": 124.41
+}

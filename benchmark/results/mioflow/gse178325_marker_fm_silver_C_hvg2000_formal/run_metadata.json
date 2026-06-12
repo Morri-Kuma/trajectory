@@ -33,26 +33,38 @@
     "metric_sample_cells": 1000,
     "use_cuda": true
   },
-  "notes": "",
   "ground_truth": {
     "provider_id": "gse178325_marker_fm_transition_silver_v1",
+    "annotation_method": "marker_fm_transition_silver_provider",
+    "status": "frozen_silver_standard_milestone_provider",
     "state_key": "final_milestone_label_coarse",
     "label_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/state_labels.tsv",
     "metadata_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/state_metadata.tsv",
     "reference_graph_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph.json",
     "reference_edges_path": "benchmark/ground_truth/providers/gse178325_marker_fm_transition_silver_v1/reference_graph_edges.csv",
     "confidence_mode": "all",
-    "exclude_uncertain_states": false,
-    "status": "frozen_silver_standard_milestone_provider",
+    "exclude_uncertain_states": true,
+    "excluded_labels": [
+      "ambiguous",
+      "unknown_or_ood"
+    ],
     "n_states": 5,
     "n_graph_edges": 4,
-    "source_h5ad": "benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
-    "annotation_method": "marker_fm_transition_silver_provider",
-    "notes": "Official frozen silver-standard milestone provider for GSE178325. state_key=final_milestone_label_coarse. Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from official metrics: ambiguous, unknown_or_ood.",
+    "n_cell_labels": 80475,
+    "source_h5ad": "benchmark\\inputs\\gse178325_marker_fm_transition_silver_hvg2000\\GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
     "label_mode": "official_silver",
-    "analysis_role": "primary_report"
+    "label_type": "frozen_silver_standard",
+    "analysis_role": "primary_report",
+    "coarse_label_key": "final_milestone_label_coarse",
+    "expanded_label_key": "final_milestone_label_expanded",
+    "notes": "Official frozen silver-standard milestone provider for GSE178325. state_key=final_milestone_label_coarse. Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from official metrics: ambiguous, unknown_or_ood."
   },
   "method_config": "benchmark/configs/runtime/mioflow_gse178325_marker_fm_silver_C_hvg2000_formal.yaml",
   "label_mode": "official_silver",
-  "provider_id": "gse178325_marker_fm_transition_silver_v1"
+  "provider_id": "gse178325_marker_fm_transition_silver_v1",
+  "lineage_repair": {
+    "run_tag": "coarse_lineage_repair_20260607_205348",
+    "state_key": "final_milestone_label_coarse",
+    "transition_labels_mapped_to": "ambiguous"
+  }
 }

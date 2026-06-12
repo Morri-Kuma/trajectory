@@ -1,0 +1,101 @@
+run_id: scnode_gse230659_rep_scgpt_cls_pca50_C
+method: scnode
+scenario: C
+scenario_name: GSE230659 scnode scenario C representation-dynamics rep_scgpt_cls_pca50
+  (supplementary)
+framework_version: v2
+state_system:
+  version: gse230659_marker_fm_transition_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 4
+  n_graph_edges: 3
+  source_h5ad: benchmark/inputs/representation/gse230659/rep_scgpt_cls_pca50/C/GSE230659_rep_scgpt_cls_pca50_C_X_rep.h5ad
+  note: Frozen marker+foundation-model transition silver labels; official metrics
+    use final_milestone_label_coarse.
+dataset:
+  id: GSE230659
+  h5ad_path: benchmark/inputs/representation/gse230659/rep_scgpt_cls_pca50/C/GSE230659_rep_scgpt_cls_pca50_C_X_rep.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times:
+  - 0.5
+  - 2.0
+  - 8.0
+  - 16.0
+  - 16.33
+  - 16.67
+  - 17.0
+  - 18.0
+  - 22.0
+  - 24.0
+  heldout_interpolation:
+  - 4.0
+  - 12.0
+  - 20.0
+  heldout_extrapolation:
+  - 28.0
+  - 30.0
+  heldout_times:
+  - 4.0
+  - 12.0
+  - 20.0
+  - 28.0
+  - 30.0
+  n_train_cells_expected: 49820
+output:
+  base_dir: benchmark/results/representation_dynamics/scnode/gse230659_rep_scgpt_cls_pca50_C
+scnode_params:
+  latent_dim: 50
+  drift_latent_size:
+  - 50
+  - 50
+  enc_latent_list:
+  - 64
+  - 64
+  dec_latent_list:
+  - 64
+  - 64
+  pretrain_iters: 200
+  epochs: 10
+  iters: 100
+  batch_size: 32
+  lr: 0.001
+  latent_coeff: 1.0
+  kl_coeff: 0.0
+  seed: 42
+  n_sim_cells: 2000
+  n_sim_cells_cap: 2000
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse230659_marker_fm_transition_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  mode: representation
+  run_eval_lineage: false
+  forecast_eval_script: benchmark/evaluation/eval_representation_forecast.py
+  temporal_signal_eval_script: benchmark/evaluation/eval_representation_temporal_signal.py
+  status: supplementary
+  note: Representation-space forecast (Mode A). Outputs are representation forecasts,
+    not gene-expression forecasts. Score with the representation evaluators; do not
+    feed projected outputs to the official gene-expression eval_forecast.
+ground_truth:
+  provider_id: gse230659_marker_fm_transition_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+result_class: representation_dynamics_supplementary
+formal_benchmark: false
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day
+representation:
+  enabled: true
+  input_mode: obsm
+  obsm_key: X_rep
+  representation_id: rep_scgpt_cls_pca50
+  input_space: scfm_embedding
+  output_space: representation
+  final_dim: 50
+  reducer_fit_scope: train_only

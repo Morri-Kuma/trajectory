@@ -1,0 +1,17 @@
+annotation,program,state,auroc,n_state
+scanvi_label,pluripotency,Fibroblast,0.4306513293499155,444
+scanvi_label,pluripotency,Fibroblast-like,0.4394546340227432,337
+scanvi_label,pluripotency,Intermediate,0.634734122983871,16
+scanvi_label,pluripotency,Partially-reprogrammed,0.4643518852715417,21
+scanvi_label,pluripotency,Pre-iPSC,0.7959428539539035,9
+scanvi_label,pluripotency,iPSC,0.8511363330470171,231
+scanvi_label,pluripotency,unknown_or_ood,0.43054985236403287,937
+scanvi_label,pluripotency,xOSK,0.44285714285714284,5
+scanvi_label,stromal_fibroblast,Fibroblast,0.8931345387804257,444
+scanvi_label,stromal_fibroblast,Fibroblast-like,0.6522792279513446,337
+scanvi_label,stromal_fibroblast,Intermediate,0.2022586945564516,16
+scanvi_label,stromal_fibroblast,Partially-reprogrammed,0.38919367645997255,21
+scanvi_label,stromal_fibroblast,Pre-iPSC,0.2408337518834756,9
+scanvi_label,stromal_fibroblast,iPSC,0.15497174767949215,231
+scanvi_label,stromal_fibroblast,unknown_or_ood,0.3029479002159571,937
+scanvi_label,stromal_fibroblast,xOSK,0.40155388471177944,5

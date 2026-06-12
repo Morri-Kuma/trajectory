@@ -1,0 +1,88 @@
+{
+  "method": "prescient",
+  "dataset": "GSE242424",
+  "scenario": "C",
+  "result_class": "gse242424_oskm_ground_truth_formal",
+  "formal_benchmark": true,
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 60.22,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "final_milestone_label_coarse",
+  "train_times": [
+    0.0,
+    2.0,
+    6.0,
+    10.0,
+    14.0
+  ],
+  "heldout_times": [
+    4.0,
+    8.0,
+    12.0,
+    16.0
+  ],
+  "n_sim_cells": 2000,
+  "sampling": {
+    "subsample_per_timepoint": null,
+    "embedding_reference_cells_per_timepoint": null
+  },
+  "prescient_repo": "/home/xzy0723/projects/trajectory/benchmark/methods/PRESCIENT/prescient_module",
+  "prescient_params": {
+    "num_pcs": 30,
+    "k_dim": 100,
+    "layers": 1,
+    "activation": "softplus",
+    "pretrain_epochs": 25,
+    "train_epochs": 100,
+    "train_lr": 0.01,
+    "train_dt": 0.1,
+    "train_sd": 0.5,
+    "train_tau": 1e-06,
+    "train_batch": 0.03,
+    "train_clip": 0.25,
+    "save": 100,
+    "seed": 42,
+    "weight_name": "uniform",
+    "n_sim_cells": 2000,
+    "metric_sample_cells": 1000,
+    "assignment_temperature": 1.0,
+    "use_cuda": true,
+    "training_protocol": "full_formal_hvg2000",
+    "memory_note": "Full formal PRESCIENT configuration: no per-timepoint training subsampling and no embedding reference-cell cap. use_cuda=true enables GPU when the job requests one; the runner falls back to CPU if CUDA is unavailable."
+  },
+  "notes": "",
+  "ground_truth": {
+    "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1",
+    "annotation_method": "author_cluster_oskm_reprogramming_silver_provider",
+    "status": "frozen_ground_truth_milestone_provider",
+    "state_key": "final_milestone_label_coarse",
+    "label_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph_edges.csv",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false,
+    "excluded_labels": [],
+    "n_states": 10,
+    "n_graph_edges": 9,
+    "n_cell_labels": 59187,
+    "source_h5ad": "benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad",
+    "label_mode": "ground_truth",
+    "label_type": "frozen_ground_truth",
+    "analysis_role": "primary_report",
+    "coarse_label_key": "final_milestone_label_coarse",
+    "notes": "Official frozen silver-standard milestone provider for GSE242424 OSKM reprogramming (author-cluster-matched subset, 59187 cells). state_key=final_milestone_label_coarse. Ten coarse ATAC/RNA cluster milestones covering two reprogramming arms plus stalled/off-target branches. Labels transferred from author ATAC cluster annotations via author_atac_to_rna_cluster_transfer. No cells are excluded from official metrics because this provider has no ambiguous or unknown labels."
+  },
+  "method_config": "benchmark/configs/prescient_gse242424_oskm_ground_truth_C_hvg2000_formal.yaml",
+  "label_mode": "ground_truth",
+  "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1"
+}

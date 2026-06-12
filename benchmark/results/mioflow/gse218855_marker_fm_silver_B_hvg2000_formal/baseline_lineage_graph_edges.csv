@@ -1,0 +1,10 @@
+source_state,target_state,weight
+MEF,epithelial_like,0.048509701940388075
+MEF,iPSC,0.5170034006801361
+MEF,intermediate_plastic,0.4344868973794759
+epithelial_like,iPSC,0.29784714747039825
+epithelial_like,intermediate_plastic,0.2566200215285253
+iPSC,epithelial_like,0.3649184662847069
+iPSC,intermediate_plastic,0.21022476862053768
+intermediate_plastic,epithelial_like,0.32806804374240583
+intermediate_plastic,iPSC,0.3973268529769137

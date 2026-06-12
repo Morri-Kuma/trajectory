@@ -1,0 +1,57 @@
+run_id: mioflow_gse242424_oskm_ground_truth_A_hvg2000_formal
+method: mioflow
+scenario: A
+scenario_name: GSE242424 OSKM ground truth Scenario A formal MIOFlow run (HVG2000, author-cluster-matched)
+framework_version: v2
+result_class: gse242424_oskm_ground_truth_formal
+formal_benchmark: true
+label_mode: ground_truth
+provider_id: gse242424_oskm_reprogramming_ground_truth_v1
+state_system:
+  version: gse242424_oskm_reprogramming_ground_truth_v1
+  status: frozen_ground_truth_milestone_provider
+  n_states: 10
+  n_graph_edges: 9
+  source_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  note: Frozen author-cluster OSKM reprogramming ground truth labels; official metrics use final_milestone_label_coarse.
+ground_truth:
+  provider_id: gse242424_oskm_reprogramming_ground_truth_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE242424
+  h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+output:
+  base_dir: benchmark/results/mioflow/gse242424_oskm_ground_truth_A_hvg2000_formal
+mioflow_params:
+  pca_dims: 50
+  hidden_dim: 64
+  n_epochs: 40
+  batch_size: 64
+  learning_rate: 0.001
+  lambda_ot: 1.0
+  use_density_loss: false
+  lambda_density: 5.0
+  lambda_energy: 0.01
+  energy_time_steps: 10
+  seed: 42
+  n_sim_cells: 2000
+  metric_sample_cells: 1000
+  use_cuda: true
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse242424_oskm_reprogramming_ground_truth_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: active
+  primary_dimensions:
+  - forecast_accuracy
+  - embedding_coherence
+  - lineage_fidelity

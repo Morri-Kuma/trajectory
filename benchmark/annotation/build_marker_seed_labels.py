@@ -78,7 +78,7 @@ import sys
 from pathlib import Path
 
 
-_VALID_DATASET_IDS = ("GSE178325", "GSE230659")
+_VALID_DATASET_IDS = ("GSE178325", "GSE230659", "GSE298212", "GSE218855")
 _DEFAULT_MARKERS_YAML = "benchmark/annotation/milestone_markers.yaml"
 
 # Obs columns that must be present after annotation.

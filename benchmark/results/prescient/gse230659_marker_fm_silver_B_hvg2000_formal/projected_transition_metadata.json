@@ -1,0 +1,94 @@
+{
+  "dataset_id": "GSE230659",
+  "projected_labels_csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\projected_milestone_labels.csv",
+  "output_dir": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal",
+  "label_mode": "official_silver",
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "cell_state_key": "final_milestone_label_coarse",
+  "excluded_labels": [
+    "ambiguous",
+    "unknown_or_ood"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "transition_policy": "aggregate_frequency_consecutive_timepoints",
+  "transition_policy_note": "For each consecutive timepoint pair (t1, t2), the transition probability from source state s1 to target state s2 equals the frequency of s2 at t2, weighted by the frequency of s1 at t1. Row-normalized. This is a smoke bridge without single-cell tracking.",
+  "smoke_test": true,
+  "formal_benchmark": false,
+  "all_timepoint_pairs": false,
+  "timestamp": "2026-06-07T11:53:53.539471+00:00",
+  "mode_specific_outputs": {
+    "state_transition_matrix_official_silver.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\state_transition_matrix_official_silver.csv",
+    "lineage_graph_edges_official_silver.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\lineage_graph_edges_official_silver.csv",
+    "lineage_metrics_official_silver.json": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\lineage_metrics_official_silver.json"
+  },
+  "generic_compatibility_outputs": {
+    "state_transition_matrix.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\state_transition_matrix.csv",
+    "lineage_graph_edges.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\lineage_graph_edges.csv",
+    "projected_transition_metadata.json": "C:\\Users\\37620\\trajectory\\benchmark\\results\\prescient\\gse230659_marker_fm_silver_B_hvg2000_formal\\projected_transition_metadata.json"
+  },
+  "compatibility_note": "generic_compatibility_outputs are kept for stable filenames. mode_specific_outputs are the preferred files for official silver reports.",
+  "n_timepoints": 9,
+  "unique_timepoints": [
+    "16.33",
+    "16.67",
+    "17.0",
+    "18.0",
+    "20.0",
+    "22.0",
+    "24.0",
+    "28.0",
+    "30.0"
+  ],
+  "n_pairs_used": 8,
+  "n_cells_total": 18000,
+  "n_cells_valid": 2070,
+  "states": [
+    "epithelial_like",
+    "hADSCs",
+    "intermediate_plastic"
+  ],
+  "n_states": 3,
+  "tp_label_counts": {
+    "16.33": {
+      "epithelial_like": 381,
+      "intermediate_plastic": 21,
+      "hADSCs": 3
+    },
+    "16.67": {
+      "epithelial_like": 339,
+      "intermediate_plastic": 17,
+      "hADSCs": 4
+    },
+    "17.0": {
+      "epithelial_like": 340,
+      "hADSCs": 3,
+      "intermediate_plastic": 18
+    },
+    "18.0": {
+      "epithelial_like": 288,
+      "intermediate_plastic": 21,
+      "hADSCs": 2
+    },
+    "20.0": {
+      "epithelial_like": 211,
+      "intermediate_plastic": 14,
+      "hADSCs": 1
+    },
+    "22.0": {
+      "epithelial_like": 167,
+      "intermediate_plastic": 16,
+      "hADSCs": 1
+    },
+    "24.0": {
+      "epithelial_like": 129,
+      "intermediate_plastic": 8
+    },
+    "28.0": {
+      "epithelial_like": 49,
+      "intermediate_plastic": 1
+    },
+    "30.0": {
+      "epithelial_like": 36
+    }
+  }
+}

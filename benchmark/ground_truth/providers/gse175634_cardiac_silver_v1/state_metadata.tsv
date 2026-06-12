@@ -1,0 +1,7 @@
+state_id	label	status	role	order	n_cells	notes
+IPSC	IPSC	confirmed	primary_milestone	0	38510	Induced pluripotent stem cell starting state.
+MES	MES	confirmed	primary_milestone	1	53711	Mesoderm-like intermediate; follows IPSC at early timepoints.
+CMES	CMES	confirmed	primary_milestone	2	18976	Cardiac mesoderm intermediate; follows MES.
+PROG	PROG	confirmed	primary_milestone	3	34078	Progenitor state at bifurcation point before CM/CF resolution.
+CM	CM	confirmed	primary_milestone	4	21368	Cardiomyocyte terminal branch endpoint.
+CF	CF	confirmed	primary_milestone	5	44629	Cardiac fibroblast-like terminal branch endpoint.

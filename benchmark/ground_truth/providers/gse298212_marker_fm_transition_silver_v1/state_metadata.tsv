@@ -1,0 +1,7 @@
+state_id	label	order	role	status	marker_genes	n_marker_genes	notes
+blood_start	blood_start	0	primary_milestone	confirmed	PTPRC;CD34;GYPA;HBB;HBA1;HBA2;ALAS2;TFRC;GATA1;KLF1;LYZ;S100A8;S100A9;CD36;GP9	15	"Human peripheral/cord blood starting population (PBMC / erythroid-progenitor EPC; trajectory root). PRIMARY ASSIGNMENT: source sample identity / abs_day == 0, following the framework hADSCs convention. This hematopoietic/ erythroid gene set is an AUXILIARY support score only.
+"
+epithelial_like	epithelial_like	1	primary_milestone	confirmed	KRT8;KRT18;KRT19;KRT7;EPCAM;CDH1;CLDN4;CLDN7;OCLN	9	Epithelial-like reprogramming milestone (conserved across chemical protocols).
+intermediate_plastic	intermediate_plastic	2	primary_milestone	confirmed	LIN28A;LIN28B;SALL4;FBXO15;DPPA4;UTF1;DNMT3B;MYCN;TDGF1;SPP1	10	Intermediate plastic / IPC-like milestone (early-pluripotency factors; conserved chemical-reprogramming intermediate).
+hCiPS	hCiPS	3	primary_milestone	confirmed	POU5F1;SOX2;NANOG;KLF4;ZFP42;DPPA2;DPPA3;DPPA4;DNMT3B;ZSCAN4;SALL4;PRDM14;TDGF1	13	"hCiPS / pluripotency endpoint. NOTE: the deposited GSE298212 samples cover Stage-1 (S1D1-S1D8) only, so the terminal hCiPS state may be sparse or absent; annotation assigns whichever milestones are present.
+"

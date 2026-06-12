@@ -1,78 +1,177 @@
 schema_version: 1
-description: >
-  Canonical index for reportable benchmark result sets. Only current
-  official_silver providers are listed here.
+description: 'Canonical index for reportable benchmark result sets. Only current registered ground-truth providers are listed
+  here.
 
+  '
 official_silver:
   gse178325_marker_fm_transition_silver_hvg2000:
-    description: "GSE178325 official_silver benchmark on the marker-FM transition provider."
-    dataset_role: "primary_benchmark"
-    status: "reportable"
-    label_mode: "official_silver"
+    description: GSE178325 official_silver benchmark on the marker-FM transition provider.
+    dataset_role: primary_benchmark
+    status: reportable
+    label_mode: official_silver
     providers:
-      - "gse178325_marker_fm_transition_silver_v1"
-    scenarios: [A, B, C]
-    summary: "benchmark/reports/official_silver/official_silver_model_rankings.md"
+    - gse178325_marker_fm_transition_silver_v1
+    scenarios:
+    - A
+    - B
+    - C
+    - D
+    - E
+    - F
+    summary: benchmark/reports/official_silver/official_silver_model_rankings.md
     result_dirs:
       mioflow:
-        A: "benchmark/results/mioflow/gse178325_marker_fm_silver_A_hvg2000_formal"
-        B: "benchmark/results/mioflow/gse178325_marker_fm_silver_B_hvg2000_formal"
-        C: "benchmark/results/mioflow/gse178325_marker_fm_silver_C_hvg2000_formal"
+        A: benchmark/results/mioflow/gse178325_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/mioflow/gse178325_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/mioflow/gse178325_marker_fm_silver_C_hvg2000_formal
+        D: benchmark/results/mioflow/gse178325_marker_fm_silver_D_pseudotime_formal
+        E: benchmark/results/mioflow/gse178325_marker_fm_silver_E_pseudotime_formal
+        F: benchmark/results/mioflow/gse178325_marker_fm_silver_F_pseudotime_formal
       prescient:
-        A: "benchmark/results/prescient/gse178325_marker_fm_silver_A_hvg2000_formal"
-        B: "benchmark/results/prescient/gse178325_marker_fm_silver_B_hvg2000_formal"
-        C: "benchmark/results/prescient/gse178325_marker_fm_silver_C_hvg2000_formal"
+        A: benchmark/results/prescient/gse178325_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/prescient/gse178325_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/prescient/gse178325_marker_fm_silver_C_hvg2000_formal
+        D: benchmark/results/prescient/gse178325_marker_fm_silver_D_pseudotime_formal
+        E: benchmark/results/prescient/gse178325_marker_fm_silver_E_pseudotime_formal
+        F: benchmark/results/prescient/gse178325_marker_fm_silver_F_pseudotime_formal
       scnode:
-        A: "benchmark/results/scnode/gse178325_marker_fm_silver_A_hvg2000_formal"
-        B: "benchmark/results/scnode/gse178325_marker_fm_silver_B_hvg2000_formal"
-        C: "benchmark/results/scnode/gse178325_marker_fm_silver_C_hvg2000_formal"
-
-  gse230659_marker_fm_transition_silver_hvg2000:
-    description: "GSE230659 official_silver benchmark on the marker-FM transition provider."
-    dataset_role: "primary_benchmark"
-    status: "reportable"
-    label_mode: "official_silver"
-    providers:
-      - "gse230659_marker_fm_transition_silver_v1"
-    scenarios: [A, B, C]
-    summary: "benchmark/reports/official_silver/official_silver_model_rankings.md"
-    result_dirs:
-      mioflow:
-        A: "benchmark/results/mioflow/gse230659_marker_fm_silver_A_hvg2000_formal"
-        B: "benchmark/results/mioflow/gse230659_marker_fm_silver_B_hvg2000_formal"
-        C: "benchmark/results/mioflow/gse230659_marker_fm_silver_C_hvg2000_formal"
-      prescient:
-        A: "benchmark/results/prescient/gse230659_marker_fm_silver_A_hvg2000_formal"
-        B: "benchmark/results/prescient/gse230659_marker_fm_silver_B_hvg2000_formal"
-        C: "benchmark/results/prescient/gse230659_marker_fm_silver_C_hvg2000_formal"
-      scnode:
-        A: "benchmark/results/scnode/gse230659_marker_fm_silver_A_hvg2000_formal"
-        B: "benchmark/results/scnode/gse230659_marker_fm_silver_B_hvg2000_formal"
-        C: "benchmark/results/scnode/gse230659_marker_fm_silver_C_hvg2000_formal"
+        A: benchmark/results/scnode/gse178325_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/scnode/gse178325_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/scnode/gse178325_marker_fm_silver_C_hvg2000_formal
+        D: benchmark/results/scnode/gse178325_marker_fm_silver_D_pseudotime_formal
+        E: benchmark/results/scnode/gse178325_marker_fm_silver_E_pseudotime_formal
+        F: benchmark/results/scnode/gse178325_marker_fm_silver_F_pseudotime_formal
       cellrank2:
-        A: "benchmark/results/cellrank2/gse230659_marker_fm_silver_A_hvg2000_formal"
+        A: benchmark/results/cellrank2/gse178325_marker_fm_silver_A_hvg2000_formal
+        D: benchmark/results/cellrank2/gse178325_marker_fm_silver_D_pseudotime_formal
       wot:
-        A: "benchmark/results/wot/gse230659_marker_fm_silver_A_hvg2000_formal"
-
-  gse242424_oskm_silver_hvg2000:
-    description: "GSE242424 OSKM official_silver benchmark on the author-cluster-matched HVG2000 subset."
-    dataset_role: "oskm_reprogramming_benchmark"
-    status: "reportable"
-    label_mode: "official_silver"
+        A: benchmark/results/wot/gse178325_marker_fm_silver_A_hvg2000_formal
+        D: benchmark/results/wot/gse178325_marker_fm_silver_D_pseudotime_formal
+  gse230659_marker_fm_transition_silver_hvg2000:
+    description: GSE230659 official_silver benchmark on the marker-FM transition provider.
+    dataset_role: primary_benchmark
+    status: reportable
+    label_mode: official_silver
     providers:
-      - "gse242424_oskm_reprogramming_silver_v1"
-    scenarios: [A, B, C]
-    summary: "benchmark/reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md"
+    - gse230659_marker_fm_transition_silver_v1
+    scenarios:
+    - A
+    - B
+    - C
+    - D
+    - E
+    - F
+    summary: benchmark/reports/official_silver/official_silver_model_rankings.md
     result_dirs:
       mioflow:
-        A: "benchmark/results/mioflow/gse242424_oskm_silver_A_hvg2000_formal"
-        B: "benchmark/results/mioflow/gse242424_oskm_silver_B_hvg2000_formal"
-        C: "benchmark/results/mioflow/gse242424_oskm_silver_C_hvg2000_formal"
+        A: benchmark/results/mioflow/gse230659_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/mioflow/gse230659_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/mioflow/gse230659_marker_fm_silver_C_hvg2000_formal
+        D: benchmark/results/mioflow/gse230659_marker_fm_silver_D_pseudotime_formal
+        E: benchmark/results/mioflow/gse230659_marker_fm_silver_E_pseudotime_formal
+        F: benchmark/results/mioflow/gse230659_marker_fm_silver_F_pseudotime_formal
       prescient:
-        A: "benchmark/results/prescient/gse242424_oskm_silver_A_hvg2000_formal"
-        B: "benchmark/results/prescient/gse242424_oskm_silver_B_hvg2000_formal"
-        C: "benchmark/results/prescient/gse242424_oskm_silver_C_hvg2000_formal"
+        A: benchmark/results/prescient/gse230659_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/prescient/gse230659_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/prescient/gse230659_marker_fm_silver_C_hvg2000_formal
+        D: benchmark/results/prescient/gse230659_marker_fm_silver_D_pseudotime_formal
+        E: benchmark/results/prescient/gse230659_marker_fm_silver_E_pseudotime_formal
+        F: benchmark/results/prescient/gse230659_marker_fm_silver_F_pseudotime_formal
       scnode:
-        A: "benchmark/results/scnode/gse242424_oskm_silver_A_hvg2000_formal"
-        B: "benchmark/results/scnode/gse242424_oskm_silver_B_hvg2000_formal"
-        C: "benchmark/results/scnode/gse242424_oskm_silver_C_hvg2000_formal"
+        A: benchmark/results/scnode/gse230659_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/scnode/gse230659_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/scnode/gse230659_marker_fm_silver_C_hvg2000_formal
+        D: benchmark/results/scnode/gse230659_marker_fm_silver_D_pseudotime_formal
+        E: benchmark/results/scnode/gse230659_marker_fm_silver_E_pseudotime_formal
+        F: benchmark/results/scnode/gse230659_marker_fm_silver_F_pseudotime_formal
+      cellrank2:
+        A: benchmark/results/cellrank2/gse230659_marker_fm_silver_A_hvg2000_formal
+        D: benchmark/results/cellrank2/gse230659_marker_fm_silver_D_pseudotime_formal
+      wot:
+        A: benchmark/results/wot/gse230659_marker_fm_silver_A_hvg2000_formal
+        D: benchmark/results/wot/gse230659_marker_fm_silver_D_pseudotime_formal
+  gse242424_oskm_ground_truth_hvg2000:
+    description: GSE242424 OSKM ground truth benchmark on the author-cluster-matched HVG2000 subset.
+    dataset_role: oskm_reprogramming_benchmark
+    status: reportable
+    label_mode: ground_truth
+    providers:
+    - gse242424_oskm_reprogramming_ground_truth_v1
+    scenarios:
+    - A
+    - B
+    - C
+    summary: benchmark/reports/gse242424_oskm_ground_truth/gse242424_oskm_ground_truth_report.md
+    result_dirs:
+      mioflow:
+        A: benchmark/results/mioflow/gse242424_oskm_ground_truth_A_hvg2000_formal
+        B: benchmark/results/mioflow/gse242424_oskm_ground_truth_B_hvg2000_formal
+        C: benchmark/results/mioflow/gse242424_oskm_ground_truth_C_hvg2000_formal
+      prescient:
+        A: benchmark/results/prescient/gse242424_oskm_ground_truth_A_hvg2000_formal
+        B: benchmark/results/prescient/gse242424_oskm_ground_truth_B_hvg2000_formal
+        C: benchmark/results/prescient/gse242424_oskm_ground_truth_C_hvg2000_formal
+      scnode:
+        A: benchmark/results/scnode/gse242424_oskm_ground_truth_A_hvg2000_formal
+        B: benchmark/results/scnode/gse242424_oskm_ground_truth_B_hvg2000_formal
+        C: benchmark/results/scnode/gse242424_oskm_ground_truth_C_hvg2000_formal
+  gse218855_marker_fm_transition_silver_hvg2000:
+    description: GSE218855 official_silver benchmark on the marker-FM transition provider
+      (mouse MEF->iPSC fast chemical reprogramming; cross-species validation).
+    dataset_role: cross_system_validation
+    status: reportable
+    label_mode: official_silver
+    providers:
+    - gse218855_marker_fm_transition_silver_v1
+    scenarios:
+    - A
+    - B
+    - C
+    summary: benchmark/reports/official_silver/official_silver_model_rankings.md
+    result_dirs:
+      mioflow:
+        A: benchmark/results/mioflow/gse218855_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/mioflow/gse218855_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/mioflow/gse218855_marker_fm_silver_C_hvg2000_formal
+      prescient:
+        A: benchmark/results/prescient/gse218855_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/prescient/gse218855_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/prescient/gse218855_marker_fm_silver_C_hvg2000_formal
+      scnode:
+        A: benchmark/results/scnode/gse218855_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/scnode/gse218855_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/scnode/gse218855_marker_fm_silver_C_hvg2000_formal
+      cellrank2:
+        A: benchmark/results/cellrank2/gse218855_marker_fm_silver_A_hvg2000_formal
+      wot:
+        A: benchmark/results/wot/gse218855_marker_fm_silver_A_hvg2000_formal
+  gse298212_marker_fm_transition_silver_hvg2000:
+    description: GSE298212 official_silver benchmark on the marker-FM transition provider
+      (human blood chemical reprogramming, Stage-1 time course; cross-system validation).
+    dataset_role: cross_system_validation
+    status: reportable
+    label_mode: official_silver
+    providers:
+    - gse298212_marker_fm_transition_silver_v1
+    scenarios:
+    - A
+    - B
+    - C
+    summary: benchmark/reports/official_silver/official_silver_model_rankings.md
+    result_dirs:
+      mioflow:
+        A: benchmark/results/mioflow/gse298212_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/mioflow/gse298212_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/mioflow/gse298212_marker_fm_silver_C_hvg2000_formal
+      prescient:
+        A: benchmark/results/prescient/gse298212_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/prescient/gse298212_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/prescient/gse298212_marker_fm_silver_C_hvg2000_formal
+      scnode:
+        A: benchmark/results/scnode/gse298212_marker_fm_silver_A_hvg2000_formal
+        B: benchmark/results/scnode/gse298212_marker_fm_silver_B_hvg2000_formal
+        C: benchmark/results/scnode/gse298212_marker_fm_silver_C_hvg2000_formal
+      cellrank2:
+        A: benchmark/results/cellrank2/gse298212_marker_fm_silver_A_hvg2000_formal
+      wot:
+        A: benchmark/results/wot/gse298212_marker_fm_silver_A_hvg2000_formal

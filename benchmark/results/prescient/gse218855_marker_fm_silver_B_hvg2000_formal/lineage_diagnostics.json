@@ -1,0 +1,10 @@
+{
+  "cell_state_key": "final_milestone_label_coarse",
+  "assignment_temperature": 1.0,
+  "source_transition_counts": {
+    "MEF": 9998,
+    "epithelial_like": 9290,
+    "iPSC": 4538,
+    "intermediate_plastic": 1646
+  }
+}

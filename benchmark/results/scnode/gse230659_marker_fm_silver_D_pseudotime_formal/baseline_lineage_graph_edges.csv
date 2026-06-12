@@ -1,0 +1,11 @@
+source_state,target_state,weight
+epithelial_like,hADSCs,0.22214298448921377
+epithelial_like,hCiPS,0.060795150650739885
+epithelial_like,intermediate_plastic,0.0026148451892791347
+hADSCs,epithelial_like,0.2608410182946847
+hADSCs,hCiPS,0.0046855880860715675
+hCiPS,epithelial_like,0.4700409378489021
+hCiPS,hADSCs,0.00297729810197246
+intermediate_plastic,epithelial_like,0.6271186440677966
+intermediate_plastic,hADSCs,0.21468926553672316
+intermediate_plastic,hCiPS,0.12429378531073447

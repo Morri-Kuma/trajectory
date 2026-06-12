@@ -38,7 +38,7 @@ Run a single config from the repository root:
 
 ```bash
 python benchmark/methods/MIOFlow/run.py \
-    --config benchmark/configs/mioflow_gse242424_oskm_silver_A_hvg2000_formal.yaml
+    --config benchmark/configs/mioflow_gse242424_oskm_ground_truth_A_hvg2000_formal.yaml
 ```
 
 Marker-FM transition silver runtime configs live under
@@ -50,11 +50,11 @@ python benchmark/methods/MIOFlow/run.py \
 ```
 
 Array-style benchmark runs are usually started from the project root with helper
-scripts such as:
+scripts under `jobs/shirokane/`, for example:
 
 ```bash
-bash run_marker_fm_transition_silver_primary_array.sh
-bash run_gse242424_oskm_silver_formal_array.sh
+bash jobs/shirokane/submit_silver_forecast_exact.sh
+bash jobs/shirokane/submit_silver_lineage_graphsim.sh
 ```
 
 ## Output Contract

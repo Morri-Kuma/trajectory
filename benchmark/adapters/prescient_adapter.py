@@ -39,7 +39,9 @@ class PRESCIENTAdapter(BaseAdapter):
     def _run_embedding_coherence_impl(self, scenario_id: str) -> dict:
         result = self._ensure_run(scenario_id)
         return {
+            "embedding": result["embedding"],
             "projected_embedding": result["projected_embedding"],
+            "next_timepoint_embedding": result["next_timepoint_embedding"],
             "embedding_metrics": result["embedding_metrics"],
             "projected_cluster_labels": result["projected_cluster_labels"],
         }
@@ -48,9 +50,15 @@ class PRESCIENTAdapter(BaseAdapter):
         if getattr(self, "_result", None) is not None:
             return self._result
         from benchmark.methods.PRESCIENT.run import run_pipeline
+        # Representation-aware input (Work-Plan Step 4): swap to a representation-
+        # input AnnData when the config enables an obsm representation; otherwise
+        # the original adata is returned unchanged (expression-space, default).
+        from benchmark.representations.model_input import representation_input_adata
+
+        run_adata = representation_input_adata(self.adata, self.scenario_config)
 
         self._result = run_pipeline(
-            adata=self.adata,
+            adata=run_adata,
             scenario_id=scenario_id,
             scenario_config=self.scenario_config,
             output_dir=self.output_dir,

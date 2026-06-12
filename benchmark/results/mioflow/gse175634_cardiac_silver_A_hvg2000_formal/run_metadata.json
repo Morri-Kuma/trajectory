@@ -1,0 +1,62 @@
+{
+  "method": "mioflow",
+  "dataset": "GSE175634",
+  "scenario": "A",
+  "result_class": "gse175634_cardiac_silver_formal",
+  "formal_benchmark": true,
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 111.87,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "final_milestone_label_coarse",
+  "mioflow_params": {
+    "pca_dims": 50,
+    "hidden_dim": 64,
+    "n_epochs": 40,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "lambda_ot": 1.0,
+    "use_density_loss": false,
+    "lambda_density": 5.0,
+    "lambda_energy": 0.01,
+    "energy_time_steps": 10,
+    "seed": 42,
+    "n_sim_cells": 2000,
+    "metric_sample_cells": 1000,
+    "use_cuda": true
+  },
+  "notes": "",
+  "ground_truth": {
+    "provider_id": "gse175634_cardiac_silver_v1",
+    "annotation_method": "author_annotation_direct",
+    "silver_standard_skipped": true,
+    "status": "frozen_silver_standard_milestone_provider",
+    "state_key": "final_milestone_label_coarse",
+    "label_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph_edges.csv",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": true,
+    "excluded_labels": [
+      "UNK"
+    ],
+    "n_states": 6,
+    "n_graph_edges": 5,
+    "n_cell_labels": null,
+    "source_h5ad": "benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad",
+    "label_mode": "official_silver",
+    "label_type": "frozen_silver_standard",
+    "analysis_role": "primary_report",
+    "coarse_label_key": "final_milestone_label_coarse",
+    "notes": "Official frozen silver provider for GSE175634 cardiac differentiation. Author 'type' labels used directly as final_milestone_label_coarse. Silver-standard annotation generation step is skipped because the dataset already has complete per-cell state labels. Reference graph: IPSC->MES->CMES->PROG->CM and PROG->CF (bifurcating). UNK cells are retained in the h5ad but excluded from official metrics."
+  }
+}

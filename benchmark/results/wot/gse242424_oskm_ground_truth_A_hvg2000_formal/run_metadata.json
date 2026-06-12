@@ -1,0 +1,48 @@
+{
+  "method": "wot",
+  "dataset": "GSE242424",
+  "scenario": "A",
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": false,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 618.56,
+  "status": "completed",
+  "time_key": "abs_day",
+  "cell_state_key": "final_milestone_label_coarse",
+  "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1",
+  "label_mode": "ground_truth",
+  "analysis_role": "primary_report",
+  "scenario_params": {},
+  "wot_params": {
+    "epsilon": 0.05,
+    "lambda1": 1.0,
+    "lambda2": 50.0,
+    "local_pca": 30,
+    "growth_iters": 3,
+    "ncells_subsample": null,
+    "growth_rate_source": "uniform"
+  },
+  "notes": "WOT adapter reused benchmark/methods/WOT/run.py core functions. Forecast Accuracy and Embedding Coherence explicitly skipped.",
+  "ground_truth": {
+    "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1",
+    "state_key": "final_milestone_label_coarse",
+    "label_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph_edges.csv",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false,
+    "status": "frozen_ground_truth_milestone_provider",
+    "n_states": 10,
+    "n_graph_edges": 9,
+    "source_h5ad": "benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad",
+    "annotation_method": "author_cluster_oskm_reprogramming_ground_truth_provider",
+    "notes": "Frozen ground truth milestone provider for GSE242424 OSKM reprogramming (author-cluster-matched subset, 59187 cells). state_key=final_milestone_label_coarse. Ten coarse ATAC/RNA cluster milestones covering two reprogramming arms plus stalled/off-target branches. Labels transferred from author ATAC cluster annotations via author_atac_to_rna_cluster_transfer. No cells are excluded from official metrics because this provider has no ambiguous or unknown labels.",
+    "label_mode": "ground_truth",
+    "analysis_role": "primary_report"
+  }
+}

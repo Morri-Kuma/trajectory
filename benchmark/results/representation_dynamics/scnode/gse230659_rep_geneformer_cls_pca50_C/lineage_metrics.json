@@ -1,0 +1,82 @@
+{
+  "metric_protocol": "sctimebench_graph_sim",
+  "graph_metrics": {
+    "single_step": {
+      "threshold": 0.1425984914819915,
+      "threshold_type": "prc",
+      "accuracy": 0.5,
+      "precision": 0.2727272727272727,
+      "recall": 1.0,
+      "f1": 0.42857142857142855,
+      "auc_roc": 0.5128205128205128,
+      "auc_prc": 0.2297979797979798,
+      "jaccard_similarity": 0.2727272727272727
+    },
+    "multi_step": {
+      "threshold": 0.1433823858468739,
+      "threshold_type": "prc",
+      "accuracy": 0.625,
+      "precision": 0.625,
+      "recall": 1.0,
+      "f1": 0.7692307692307693,
+      "auc_roc": 0.016666666666666663,
+      "auc_prc": 0.46045454545454545,
+      "jaccard_similarity": 0.625
+    }
+  },
+  "auroc": 0.5128205128205128,
+  "auprc": 0.2297979797979798,
+  "jaccard_similarity": 0.2727272727272727,
+  "single_step_recovery": 1.0,
+  "multi_step_recovery": 1.0,
+  "legacy_jaccard_similarity_topk": 0.12,
+  "baseline": {
+    "graph_metrics": {
+      "single_step": {
+        "threshold": 0.0,
+        "threshold_type": "prc",
+        "accuracy": 0.4375,
+        "precision": 0.25,
+        "recall": 1.0,
+        "f1": 0.4,
+        "auc_roc": 0.5384615384615383,
+        "auc_prc": 0.24027777777777776,
+        "jaccard_similarity": 0.25
+      },
+      "multi_step": {
+        "threshold": 0.0019157088122605363,
+        "threshold_type": "prc",
+        "accuracy": 0.625,
+        "precision": 0.625,
+        "recall": 1.0,
+        "f1": 0.7692307692307693,
+        "auc_roc": 0.25,
+        "auc_prc": 0.5142460317460317,
+        "jaccard_similarity": 0.625
+      }
+    },
+    "auroc": 0.5384615384615383,
+    "auprc": 0.24027777777777776,
+    "jaccard_similarity": 0.25,
+    "single_step_recovery": 1.0,
+    "multi_step_recovery": 1.0,
+    "method": "correlation_baseline",
+    "baseline_style": "sctimebench_correlation",
+    "correlation_method": "spearmanr",
+    "averaging_method": "maximum",
+    "cell_state_key": "final_milestone_label_coarse",
+    "time_key": "abs_day",
+    "n_states_used": 4,
+    "n_timepoint_pairs_used": 9,
+    "n_source_cell_votes": 45518,
+    "note": "scTimeBench-style cell-level Spearman correlation baseline with maximum target-state aggregation and row-normalized source-state votes. Evaluated with sctimebench_graph_sim metric protocol."
+  },
+  "status": "completed",
+  "edge_confidence_mode": "all",
+  "n_reference_edges": 3,
+  "cell_state_key": "final_milestone_label_coarse",
+  "time_key": null,
+  "ground_truth": {},
+  "reference_graph_path": "/home/xzy0723/projects/trajectory/benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json",
+  "compatibility_note": "label_mode and provider_id are promoted from ground_truth for Step 10 output naming compatibility. See smoke_metadata.json for full evaluation context."
+}

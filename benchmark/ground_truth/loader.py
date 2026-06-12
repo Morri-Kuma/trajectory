@@ -2,8 +2,8 @@
 Ground-truth provider loader.
 
 The benchmark treats cell-state labels and reference lineage graphs as a
-replaceable provider layer. Current reportable runs resolve to official silver
-providers registered in ``benchmark/ground_truth/registry.yaml`` or to a
+replaceable provider layer. Current reportable runs resolve to registered
+ground-truth providers in ``benchmark/ground_truth/registry.yaml`` or to a
 ``ground_truth`` block directly in a method config.
 """
 

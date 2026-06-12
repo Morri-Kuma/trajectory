@@ -1,0 +1,7 @@
+marker_silver,Fibroblast-like,Intermediate,Keratinocyte-like,Partially-reprogrammed,Pre-iPSC,hOSK,unknown_or_ood,xOSK
+ambiguous,0,0,0,21,1,1192,0,133
+epithelial_like,0,10,0,565,0,40508,15,673
+hADSCs,35,2,0,1355,0,34277,16,0
+hCiPS,0,2,1,0,4,1360,3,113
+intermediate_plastic,0,1,0,37,0,97,2,0
+xen_like,0,0,0,0,0,52,0,0

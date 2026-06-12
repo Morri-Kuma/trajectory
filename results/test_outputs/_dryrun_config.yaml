@@ -1,0 +1,105 @@
+annotation:
+  confidence_threshold: 0.5
+  correspondence_map:
+    Fibroblast: hADSCs
+    Fibroblast-like: hADSCs
+    Intermediate: epithelial_like
+    Keratinocyte-like: epithelial_like
+    Partially-reprogrammed: intermediate_plastic
+    Pre-iPSC: intermediate_plastic
+    iPSC: hCiPS
+  marker_silver_label_key: final_milestone_label_coarse
+  query_datasets:
+  - gse178325
+  - gse230659
+  reference_dataset: gse242424
+  reference_label_key: author_cluster_label
+  unlabeled_category: unknown
+markers:
+  epithelial_met:
+  - CDH1
+  - EPCAM
+  pluripotency:
+  - POU5F1
+  - SOX2
+  - NANOG
+  - LIN28A
+  stromal_fibroblast:
+  - COL1A2
+  - DCN
+  - LUM
+  xen:
+  - GATA6
+  - SOX17
+mode: server_dryrun
+project:
+  name: trajectory-annotation-robustness
+  random_seed: 0
+  root: .
+server:
+  device: cuda
+  max_cells_per_dataset: null
+  max_genes: null
+  paths:
+    models_dir: models/scanvi_reference_gse242424
+    output_dir: results/annotation_branch
+    query_h5ad:
+      gse178325: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+      gse230659: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    reference_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  scvi:
+    batch_key: sample_id
+    n_latent: 30
+    n_layers: 2
+    reference_recovery_min_accuracy: 0.9
+    scanvi_max_epochs: 50
+    scvi_max_epochs: 300
+    use_scvi: true
+  test_mode: false
+  trajectory:
+    n_neighbors: 30
+    n_pcs: 50
+  use_small_subset: false
+server_dryrun:
+  device: cpu
+  max_cells_per_dataset: 2000
+  max_genes: null
+  paths:
+    models_dir: results/test_outputs/models
+    output_dir: results/test_outputs/server_dryrun
+    query_h5ad:
+      gse178325: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+      gse230659: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    reference_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  scvi:
+    use_scvi: false
+  test_mode: true
+  trajectory:
+    n_neighbors: 15
+    n_pcs: 30
+  use_small_subset: true
+test:
+  device: cpu
+  max_cells_per_dataset: 2000
+  max_genes: 2000
+  paths:
+    models_dir: results/test_outputs/models
+    output_dir: results/test_outputs/annotation_branch
+    synthetic_dir: results/test_outputs/synthetic
+  scvi:
+    n_latent: 30
+    scanvi_max_epochs: 2
+    scvi_max_epochs: 2
+    use_scvi: false
+  test_mode: true
+  trajectory:
+    n_neighbors: 15
+    n_pcs: 30
+  use_small_subset: true
+trajectory:
+  methods:
+  - dpt
+  - paga
+  n_dcs: 15
+  paga_groups: final_milestone_label_coarse
+  root_state: hADSCs

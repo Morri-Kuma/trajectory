@@ -1,0 +1,13 @@
+source_state,target_state,weight
+blood_start,epithelial_like,0.7935213154733798
+blood_start,hCiPS,0.030503538253991776
+blood_start,intermediate_plastic,0.17597514627262845
+epithelial_like,epithelial_like,0.7570048050654288
+epithelial_like,hCiPS,0.029208383697594
+epithelial_like,intermediate_plastic,0.2137868112369771
+hCiPS,epithelial_like,0.7230596433622563
+hCiPS,hCiPS,0.045409601187866355
+hCiPS,intermediate_plastic,0.23153075544987733
+intermediate_plastic,epithelial_like,0.7323660226606452
+intermediate_plastic,hCiPS,0.029908381343830205
+intermediate_plastic,intermediate_plastic,0.23772559599552465

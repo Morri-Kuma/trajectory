@@ -1,7 +1,7 @@
 """
 future_model_adapter.py
 Template adapter for future generative / forecasting models.
-Framework reference: experimental framework v2.md §10.3
+Framework reference: docs/framework/experimental_framework_v2.md §10.3
 
 This template is for models that CAN generate projected cells at unseen future
 time points (e.g., neural ODE models, flow-based trajectory models, diffusion

@@ -1,0 +1,11 @@
+state_id	label	status	role	order	n_cells	notes
+fibroblast	fibroblast	confirmed	primary_milestone	0	10983	Starting fibroblast state; principal trajectory origin.
+fibroblast_like_stalled	fibroblast_like_stalled	confirmed	primary_milestone	1	16903	Stalled/off-target fibroblast-like branch; does not progress to iPSC.
+keratinocyte_like	keratinocyte_like	confirmed	primary_milestone	2	922	Off-target keratinocyte-like branch diverging from fibroblast.
+hOSK	hOSK	confirmed	primary_milestone	3	498	Early hOSK-transduced state; entry point of the main reprogramming arm.
+partial_intermediate	partial_intermediate	confirmed	primary_milestone	4	585	Partial intermediate on the hOSK->partially_reprogrammed arm.
+partially_reprogrammed	partially_reprogrammed	confirmed	primary_milestone	5	4445	Partially reprogrammed state; stalled on the hOSK arm.
+xOSK	xOSK	confirmed	primary_milestone	6	1678	Early xOSK-transduced state; entry point of the productive reprogramming arm.
+primary_intermediate	primary_intermediate	confirmed	primary_milestone	7	11637	Primary intermediate on the xOSK->pre_iPSC->iPSC arm.
+pre_iPSC	pre_iPSC	confirmed	primary_milestone	8	8411	Pre-iPSC state; immediate precursor to the iPSC endpoint.
+iPSC	iPSC	confirmed	primary_milestone	9	3125	iPSC endpoint; fully reprogrammed pluripotent state.

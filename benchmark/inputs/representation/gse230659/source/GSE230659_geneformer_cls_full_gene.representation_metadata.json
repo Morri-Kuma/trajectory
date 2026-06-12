@@ -1,0 +1,26 @@
+{
+  "geneformer": {
+    "model_name": "Geneformer",
+    "model_checkpoint": "/home/xzy0723/projects/trajectory/models/Geneformer-V2-104M",
+    "paper_reference": "https://www.nature.com/articles/s41586-023-06139-9",
+    "code_reference": "https://huggingface.co/ctheodoris/Geneformer",
+    "upstream_commit_or_release": "official_geneformer_v2_104m",
+    "tokenizer_or_gene_vocab": "geneformer.TranscriptomeTokenizer rank-value encoding; token_dictionary.pkl (Ensembl ID -> token), gene_median_dictionary.pkl",
+    "gene_vocabulary": "geneformer.TranscriptomeTokenizer rank-value encoding; token_dictionary.pkl (Ensembl ID -> token), gene_median_dictionary.pkl",
+    "input_gene_count": 27219,
+    "matched_gene_count": 17712,
+    "preprocessing": "Rank-value encoding per cell: counts normalized by each gene's non-zero median expression across Genecorpus, ranked, truncated to model input size. Requires raw counts in adata.X, Ensembl IDs in adata.var['ensembl_id'], and per-cell total counts in adata.obs['n_counts']. Performed by the official TranscriptomeTokenizer.",
+    "embedding_layer": "-1 (2nd-to-last hidden layer; EmbExtractor default)",
+    "embedding_dim": 768,
+    "pooling_or_cell_embedding_method": "CLS-token embedding (emb_mode='cls'): cell embedding read from the <cls> token prepended to the rank-value encoding",
+    "source_inspected": "geneformer.EmbExtractor (emb_mode='cls', cell_emb_style='mean_pool', emb_layer=-1, model_version='V2').extract_embs(...) and geneformer.TranscriptomeTokenizer; https://geneformer.readthedocs.io/en/latest/geneformer.emb_extractor.html",
+    "date_created": "2026-06-04T02:19:06.137707+00:00",
+    "code_version": "representation_dynamics_v1",
+    "emb_mode": "cls",
+    "emb_layer": -1,
+    "model_version": "V2",
+    "ensembl_col_source": "gene_ids",
+    "counts_col_source": "total_counts",
+    "matched_gene_count_basis": "ensembl_ids_in_official_token_dictionary"
+  }
+}

@@ -66,7 +66,11 @@ class ScNODEAdapter(BaseAdapter):
     def _run_embedding_coherence_impl(self, scenario_id: str) -> dict:
         self._ensure_run(scenario_id)
         return {
+            "embedding": str(self.output_dir / "embedding.npy"),
             "projected_embedding": str(self.output_dir / "projected_embedding.npy"),
+            "next_timepoint_embedding": str(
+                self.output_dir / "next_timepoint_embedding.npy"
+            ),
             "embedding_metrics": str(self.output_dir / "embedding_metrics.json"),
             "projected_cluster_labels": str(
                 self.output_dir / "projected_cluster_labels.csv"
@@ -106,7 +110,13 @@ class ScNODEAdapter(BaseAdapter):
                 train_or_load,
             )
 
-            full_adata = self.adata
+            # Representation-aware input (Work-Plan Step 4). When the method
+            # config enables an obsm representation, swap to a representation-
+            # input AnnData (X = obsm[obsm_key]) before training; otherwise this
+            # returns the original adata unchanged (expression-space, default).
+            from benchmark.representations.model_input import representation_input_adata
+
+            full_adata = representation_input_adata(self.adata, self.scenario_config)
             self._validate_inputs(full_adata, time_key, cell_state_key)
 
             train_adata = self._materialize_training_adata(

@@ -64,7 +64,7 @@ Current reportable summaries:
 - `reports/official_silver/official_silver_combined_method_summary_scnode_mioflow_prescient.csv`
 - `reports/official_silver/official_silver_embedding_method_summary.csv`
 - `reports/official_silver/official_silver_lineage_method_summary.csv`
-- `reports/gse242424_oskm_silver/gse242424_oskm_silver_report.md`
+- `reports/gse242424_oskm_ground_truth/gse242424_oskm_ground_truth_report.md`
 
 Per-run outputs usually include:
 
@@ -83,18 +83,18 @@ failed runs.
 
 ## Current Ground Truth
 
-Current reportable runs use frozen silver-standard providers under
+Current reportable runs use frozen ground-truth providers under
 `ground_truth/providers/`:
 
 | Provider | Dataset | Result class |
 |---|---|---|
 | `gse178325_marker_fm_transition_silver_v1` | GSE178325 | `marker_fm_transition_silver_formal` |
 | `gse230659_marker_fm_transition_silver_v1` | GSE230659 | `marker_fm_transition_silver_formal` |
-| `gse242424_oskm_reprogramming_silver_v1` | GSE242424 | `gse242424_oskm_silver_formal` |
+| `gse242424_oskm_reprogramming_ground_truth_v1` | GSE242424 | `gse242424_oskm_ground_truth_formal` |
 
 The GSE242424 provider is built from the 59,187-cell author-cluster-matched
 subset, not the full local 156,969-cell GSE242424 input. The active benchmark
-registry contains only these official silver providers.
+registry contains only these registered ground-truth providers.
 
 ## Running a Config
 
@@ -102,7 +102,7 @@ Representative configs are stored in `configs/` and `configs/runtime/`.
 
 ```bash
 python benchmark/methods/scNODE/run.py \
-    --config benchmark/configs/scnode_gse242424_oskm_silver_A_hvg2000_formal.yaml
+    --config benchmark/configs/scnode_gse242424_oskm_ground_truth_A_hvg2000_formal.yaml
 ```
 
 ```bash
@@ -110,11 +110,12 @@ python benchmark/methods/scNODE/run.py \
     --config benchmark/configs/runtime/scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml
 ```
 
-Root-level helper scripts are available for current official-silver checks, for example:
+From the project root, Shirokane helper scripts are available under
+`jobs/shirokane/`, for example:
 
 ```bash
-bash run_marker_fm_transition_silver_validate_configs_array.sh
-bash run_marker_fm_transition_silver_embedding_coherence_array.sh
+bash jobs/shirokane/run_marker_fm_transition_silver_validate_configs_array.sh
+bash jobs/shirokane/run_marker_fm_transition_silver_embedding_coherence_array.sh
 ```
 
 ## Capability Gating

@@ -1,0 +1,55 @@
+{
+  "method": "mioflow",
+  "dataset": "GSE230659",
+  "scenario": "E",
+  "result_class": "marker_fm_transition_silver_formal",
+  "formal_benchmark": true,
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 69.97,
+  "status": "completed",
+  "time_key": "dpt_pseudotime_bin_numeric",
+  "cell_state_key": "final_milestone_label_coarse",
+  "mioflow_params": {
+    "pca_dims": 50,
+    "hidden_dim": 64,
+    "n_epochs": 40,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "lambda_ot": 1.0,
+    "use_density_loss": false,
+    "lambda_density": 5.0,
+    "lambda_energy": 0.01,
+    "energy_time_steps": 10,
+    "seed": 42,
+    "n_sim_cells": 2000,
+    "metric_sample_cells": 1000,
+    "use_cuda": true
+  },
+  "notes": "",
+  "ground_truth": {
+    "provider_id": "gse230659_marker_fm_transition_silver_v1",
+    "state_key": "final_milestone_label_coarse",
+    "label_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph_edges.csv",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false,
+    "status": "frozen_silver_standard_milestone_provider",
+    "n_states": 4,
+    "n_graph_edges": 3,
+    "source_h5ad": "benchmark\\inputs\\gse230659_marker_fm_transition_silver_hvg2000\\GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+    "annotation_method": "marker_fm_transition_silver_provider",
+    "notes": "Official frozen silver-standard milestone provider for GSE230659. state_key=final_milestone_label_coarse. Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from official metrics: ambiguous, unknown_or_ood.",
+    "label_mode": "official_silver",
+    "analysis_role": "primary_report"
+  }
+}

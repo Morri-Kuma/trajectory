@@ -1,7 +1,7 @@
 """
 eval_dispatch.py
 Capability-gated benchmark dispatcher.
-Framework reference: experimental framework v2.md §14, Step 1
+Framework reference: docs/framework/experimental_framework_v2.md §14, Step 1
 
 This dispatcher routes each method to the correct evaluator(s) based on its
 declared capability flags. It prevents invalid evaluations by checking flags
@@ -37,6 +37,9 @@ METHOD_REGISTRY = {
     "scnode": "benchmark.adapters.scnode_adapter.ScNODEAdapter",
     "prescient": "benchmark.adapters.prescient_adapter.PRESCIENTAdapter",
     "mioflow": "benchmark.adapters.mioflow_adapter.MIOFlowAdapter",
+    "scimf": "benchmark.adapters.scimf_adapter.ScIMFAdapter",
+    "pisde": "benchmark.adapters.pisde_adapter.PISDEAdapter",
+    "squiddiff": "benchmark.adapters.squiddiff_adapter.SquidiffAdapter",
 }
 
 
@@ -197,7 +200,7 @@ def dispatch(method_id: str, scenario_id: str, adata_path: str,
                 f"using {embedding_metrics_path}"
             )
         else:
-            from benchmark.evaluation.eval_embedding import run_embedding_evaluation
+            from benchmark.evaluation.eval_embedding_generative_inactive import run_embedding_evaluation
             ec_metrics = run_embedding_evaluation(
                 projected_embedding_path=ec_result["projected_embedding"],
                 projected_cluster_labels_path=ec_result["projected_cluster_labels"],

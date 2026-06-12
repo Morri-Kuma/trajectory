@@ -1,0 +1,11 @@
+annotation,program,state,auroc,n_state
+final_milestone_label_coarse,pluripotency,ambiguous,0.9325294716055292,34
+final_milestone_label_coarse,pluripotency,epithelial_like,0.5302825264020833,1068
+final_milestone_label_coarse,pluripotency,hADSCs,0.40865742026664925,856
+final_milestone_label_coarse,pluripotency,hCiPS,0.9683442044162528,34
+final_milestone_label_coarse,pluripotency,intermediate_plastic,0.4427710843373494,8
+final_milestone_label_coarse,stromal_fibroblast,ambiguous,0.15664831548082103,34
+final_milestone_label_coarse,stromal_fibroblast,epithelial_like,0.1519576521836974,1068
+final_milestone_label_coarse,stromal_fibroblast,hADSCs,0.9065027408339325,856
+final_milestone_label_coarse,stromal_fibroblast,hCiPS,0.12557596792531867,34
+final_milestone_label_coarse,stromal_fibroblast,intermediate_plastic,0.2702371987951807,8

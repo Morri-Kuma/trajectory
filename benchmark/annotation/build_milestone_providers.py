@@ -58,7 +58,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 
-_VALID_DATASET_IDS = ("GSE178325", "GSE230659")
+_VALID_DATASET_IDS = ("GSE178325", "GSE230659", "GSE298212", "GSE218855")
 
 # Individual mode names
 _VALID_LABEL_MODES = (
@@ -72,6 +72,7 @@ _VALID_LABEL_MODE_ARGS = (
 _DEFAULT_MARKERS_YAML = "benchmark/annotation/milestone_markers.yaml"
 _DEFAULT_REGISTRY_YAML = "benchmark/ground_truth/registry.yaml"
 _DEFAULT_PROVIDER_ROOT = "benchmark/ground_truth/providers"
+_OFFICIAL_CELL_STATE_KEY = "final_milestone_label_coarse"
 
 # Per-mode configuration
 _MODE_CONFIG = {
@@ -95,6 +96,47 @@ _EXCLUDED_FROM_OFFICIAL_METRICS_DEFAULT = [
     "ambiguous",
     "unknown_or_ood",
 ]
+
+
+def _expanded_label_examples(labels: list[str]) -> list[str]:
+    return sorted({str(label) for label in labels if str(label).startswith("stage_")})[:20]
+
+
+def _validate_official_coarse_labels(
+    *,
+    state_labels_rows: list,
+    primary_milestones: list,
+    excluded_labels: list,
+    state_key: str,
+    tag: str,
+) -> None:
+    """Fail if an official provider would write expanded labels as state IDs."""
+    if state_key != _OFFICIAL_CELL_STATE_KEY:
+        raise ValueError(
+            "official_silver provider generation must use "
+            f"{_OFFICIAL_CELL_STATE_KEY!r}, got {state_key!r}."
+        )
+    labels = [str(row.get("state_id", "")) for row in state_labels_rows]
+    expanded = _expanded_label_examples(labels)
+    if expanded:
+        raise ValueError(
+            "official_silver state_labels.tsv would contain expanded/stage "
+            f"labels instead of {_OFFICIAL_CELL_STATE_KEY}: {expanded}"
+        )
+    allowed = {str(v) for v in primary_milestones}
+    allowed.update(str(v) for v in excluded_labels)
+    unexpected = sorted({label for label in labels if label and label not in allowed})
+    if unexpected:
+        raise ValueError(
+            "official_silver state_labels.tsv contains labels outside "
+            "primary_milestones plus excluded_from_official_metrics. "
+            f"Unexpected examples: {unexpected[:20]}"
+        )
+    if labels:
+        print(
+            f"{tag}   official_silver labels validated against "
+            f"{_OFFICIAL_CELL_STATE_KEY}: {len(set(labels))} observed state(s)."
+        )
 
 _ANNOTATION_VOTES_COLS_OFFICIAL_SILVER = [
     "cell_id",
@@ -480,6 +522,15 @@ def _build_one_provider(
             label_mode=label_mode,
             vote_cols=vote_cols,
             excluded_labels=excluded,
+            tag=tag,
+        )
+
+    if label_mode == "official_silver":
+        _validate_official_coarse_labels(
+            state_labels_rows=state_labels_rows,
+            primary_milestones=primary_milestones,
+            excluded_labels=excluded,
+            state_key=state_key,
             tag=tag,
         )
 

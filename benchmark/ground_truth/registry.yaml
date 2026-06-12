@@ -11,23 +11,20 @@ providers:
     confidence_mode: all
     exclude_uncertain_states: true
     excluded_labels:
-      - ambiguous
-      - unknown_or_ood
+    - ambiguous
+    - unknown_or_ood
     n_states: 5
     n_graph_edges: 4
     n_cell_labels: 80475
-    source_h5ad: benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    source_h5ad: benchmark\inputs\gse178325_marker_fm_transition_silver_hvg2000\GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     label_mode: official_silver
     label_type: frozen_silver_standard
     analysis_role: primary_report
     coarse_label_key: final_milestone_label_coarse
     expanded_label_key: final_milestone_label_expanded
-    notes: >-
-      Official frozen silver-standard milestone provider for GSE178325.
-      state_key=final_milestone_label_coarse. Frozen coarse labels from Stage 2
-      trajectory-aware annotation. Excluded from official metrics: ambiguous,
-      unknown_or_ood.
-
+    notes: 'Official frozen silver-standard milestone provider for GSE178325. state_key=final_milestone_label_coarse.
+      Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
+      official metrics: ambiguous, unknown_or_ood.'
   gse230659_marker_fm_transition_silver_v1:
     provider_id: gse230659_marker_fm_transition_silver_v1
     annotation_method: marker_fm_transition_silver_provider
@@ -40,32 +37,57 @@ providers:
     confidence_mode: all
     exclude_uncertain_states: true
     excluded_labels:
-      - ambiguous
-      - unknown_or_ood
+    - ambiguous
+    - unknown_or_ood
     n_states: 4
     n_graph_edges: 3
     n_cell_labels: 75194
-    source_h5ad: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    source_h5ad: benchmark\inputs\gse230659_marker_fm_transition_silver_hvg2000\GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     label_mode: official_silver
     label_type: frozen_silver_standard
     analysis_role: primary_report
     coarse_label_key: final_milestone_label_coarse
     expanded_label_key: final_milestone_label_expanded
-    notes: >-
-      Official frozen silver-standard milestone provider for GSE230659.
-      state_key=final_milestone_label_coarse. Frozen coarse labels from Stage 2
-      trajectory-aware annotation. Excluded from official metrics: ambiguous,
-      unknown_or_ood.
-
-  gse242424_oskm_reprogramming_silver_v1:
-    provider_id: gse242424_oskm_reprogramming_silver_v1
-    annotation_method: author_cluster_oskm_reprogramming_silver_provider
+    notes: 'Official frozen silver-standard milestone provider for GSE230659. state_key=final_milestone_label_coarse.
+      Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
+      official metrics: ambiguous, unknown_or_ood.'
+  gse175634_cardiac_silver_v1:
+    provider_id: gse175634_cardiac_silver_v1
+    annotation_method: author_annotation_direct
+    silver_standard_skipped: true
     status: frozen_silver_standard_milestone_provider
     state_key: final_milestone_label_coarse
-    label_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/state_labels.tsv
-    metadata_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/state_metadata.tsv
-    reference_graph_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/reference_graph.json
-    reference_edges_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_silver_v1/reference_graph_edges.csv
+    label_path: benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: true
+    excluded_labels:
+    - UNK
+    n_states: 6
+    n_graph_edges: 5
+    n_cell_labels: null
+    source_h5ad: benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad
+    label_mode: official_silver
+    label_type: frozen_silver_standard
+    analysis_role: primary_report
+    coarse_label_key: final_milestone_label_coarse
+    notes: 'Official frozen silver provider for GSE175634 cardiac differentiation.
+      Author ''type'' labels used directly as final_milestone_label_coarse. Silver-standard
+      annotation generation step is skipped because the dataset already has complete
+      per-cell state labels. Reference graph: IPSC->MES->CMES->PROG->CM and PROG->CF
+      (bifurcating). UNK cells are retained in the h5ad but excluded from official
+      metrics.'
+  gse242424_oskm_reprogramming_ground_truth_v1:
+    provider_id: gse242424_oskm_reprogramming_ground_truth_v1
+    annotation_method: author_cluster_oskm_reprogramming_ground_truth_provider
+    status: frozen_ground_truth_milestone_provider
+    state_key: final_milestone_label_coarse
+    label_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph_edges.csv
     confidence_mode: all
     exclude_uncertain_states: false
     excluded_labels: []
@@ -73,15 +95,65 @@ providers:
     n_graph_edges: 9
     n_cell_labels: 59187
     source_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+    label_mode: ground_truth
+    label_type: frozen_ground_truth
+    analysis_role: primary_report
+    coarse_label_key: final_milestone_label_coarse
+    notes: Frozen ground truth milestone provider for GSE242424 OSKM reprogramming
+      (author-cluster-matched subset, 59187 cells). state_key=final_milestone_label_coarse.
+      Ten coarse ATAC/RNA cluster milestones covering two reprogramming arms plus
+      stalled/off-target branches. Labels transferred from author ATAC cluster annotations
+      via author_atac_to_rna_cluster_transfer. No cells are excluded from official
+      metrics because this provider has no ambiguous or unknown labels.
+  gse298212_marker_fm_transition_silver_v1:
+    provider_id: gse298212_marker_fm_transition_silver_v1
+    annotation_method: marker_fm_transition_silver_provider
+    status: frozen_silver_standard_milestone_provider
+    state_key: final_milestone_label_coarse
+    label_path: benchmark/ground_truth/providers/gse298212_marker_fm_transition_silver_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse298212_marker_fm_transition_silver_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse298212_marker_fm_transition_silver_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse298212_marker_fm_transition_silver_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: true
+    excluded_labels:
+    - ambiguous
+    - unknown_or_ood
+    n_states: 4
+    n_graph_edges: 3
+    n_cell_labels: 38517
+    source_h5ad: benchmark/inputs/gse298212_marker_fm_transition_silver_hvg2000/GSE298212_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
     label_mode: official_silver
     label_type: frozen_silver_standard
     analysis_role: primary_report
     coarse_label_key: final_milestone_label_coarse
-    notes: >-
-      Official frozen silver-standard milestone provider for GSE242424 OSKM
-      reprogramming (author-cluster-matched subset, 59187 cells).
-      state_key=final_milestone_label_coarse. Ten coarse ATAC/RNA cluster
-      milestones covering two reprogramming arms plus stalled/off-target
-      branches. Labels transferred from author ATAC cluster annotations via
-      author_atac_to_rna_cluster_transfer. No cells are excluded from official
-      metrics because this provider has no ambiguous or unknown labels.
+    expanded_label_key: final_milestone_label_expanded
+    notes: 'Official frozen silver-standard milestone provider for GSE298212. state_key=final_milestone_label_coarse.
+      Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
+      official metrics: ambiguous, unknown_or_ood.'
+  gse218855_marker_fm_transition_silver_v1:
+    provider_id: gse218855_marker_fm_transition_silver_v1
+    annotation_method: marker_fm_transition_silver_provider
+    status: frozen_silver_standard_milestone_provider
+    state_key: final_milestone_label_coarse
+    label_path: benchmark/ground_truth/providers/gse218855_marker_fm_transition_silver_v1/state_labels.tsv
+    metadata_path: benchmark/ground_truth/providers/gse218855_marker_fm_transition_silver_v1/state_metadata.tsv
+    reference_graph_path: benchmark/ground_truth/providers/gse218855_marker_fm_transition_silver_v1/reference_graph.json
+    reference_edges_path: benchmark/ground_truth/providers/gse218855_marker_fm_transition_silver_v1/reference_graph_edges.csv
+    confidence_mode: all
+    exclude_uncertain_states: true
+    excluded_labels:
+    - ambiguous
+    - unknown_or_ood
+    n_states: 4
+    n_graph_edges: 3
+    n_cell_labels: 54380
+    source_h5ad: benchmark/inputs/gse218855_marker_fm_transition_silver_hvg2000/GSE218855_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+    label_mode: official_silver
+    label_type: frozen_silver_standard
+    analysis_role: primary_report
+    coarse_label_key: final_milestone_label_coarse
+    expanded_label_key: final_milestone_label_expanded
+    notes: 'Official frozen silver-standard milestone provider for GSE218855. state_key=final_milestone_label_coarse.
+      Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from
+      official metrics: ambiguous, unknown_or_ood.'

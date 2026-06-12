@@ -1,0 +1,108 @@
+{
+  "graph_similarity": {
+    "edge_jaccard": 0.11764705882352941,
+    "n_edges_a": 14,
+    "n_edges_b": 5,
+    "shared_edges": 2
+  },
+  "edges_marker_silver": [
+    [
+      "ambiguous",
+      "epithelial_like",
+      1.0
+    ],
+    [
+      "ambiguous",
+      "hADSCs",
+      0.08642957083754485
+    ],
+    [
+      "ambiguous",
+      "hCiPS",
+      1.0
+    ],
+    [
+      "ambiguous",
+      "intermediate_plastic",
+      1.0
+    ],
+    [
+      "ambiguous",
+      "xen_like",
+      1.0
+    ],
+    [
+      "epithelial_like",
+      "hADSCs",
+      0.2539346318348909
+    ],
+    [
+      "epithelial_like",
+      "hCiPS",
+      0.8491995308750261
+    ],
+    [
+      "epithelial_like",
+      "intermediate_plastic",
+      0.8437453637988288
+    ],
+    [
+      "epithelial_like",
+      "xen_like",
+      1.0
+    ],
+    [
+      "hADSCs",
+      "intermediate_plastic",
+      0.7633667563606538
+    ],
+    [
+      "hADSCs",
+      "xen_like",
+      0.18295754922882917
+    ],
+    [
+      "hCiPS",
+      "intermediate_plastic",
+      0.65602405116872
+    ],
+    [
+      "hCiPS",
+      "xen_like",
+      1.0
+    ],
+    [
+      "intermediate_plastic",
+      "xen_like",
+      1.0
+    ]
+  ],
+  "edges_scanvi_mapped": [
+    [
+      "epithelial_like",
+      "intermediate_plastic",
+      1.0
+    ],
+    [
+      "epithelial_like",
+      "unknown_or_ood",
+      0.7834643932222946
+    ],
+    [
+      "hADSCs",
+      "intermediate_plastic",
+      0.07246776168863915
+    ],
+    [
+      "hADSCs",
+      "unknown_or_ood",
+      0.7978341091666713
+    ],
+    [
+      "intermediate_plastic",
+      "unknown_or_ood",
+      0.5312602638805209
+    ]
+  ],
+  "backend": "scanpy"
+}

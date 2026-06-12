@@ -1,0 +1,22 @@
+task,kendalls_w,datasets,pair,spearman_rho
+Lineage AUROC,0.188,GSE178325;GSE230659;GSE218855;GSE298212,,
+Lineage AUROC,,,hADSC-1~hADSC-2,1.0
+Lineage AUROC,,,hADSC-1~mouse,-1.0
+Lineage AUROC,,,hADSC-1~blood,0.5
+Lineage AUROC,,,hADSC-2~mouse,-1.0
+Lineage AUROC,,,hADSC-2~blood,0.5
+Lineage AUROC,,,mouse~blood,-0.5
+Forecast WD,0.75,GSE178325;GSE230659;GSE218855;GSE298212,,
+Forecast WD,,,hADSC-1~hADSC-2,0.5
+Forecast WD,,,hADSC-1~mouse,1.0
+Forecast WD,,,hADSC-1~blood,0.5
+Forecast WD,,,hADSC-2~mouse,0.5
+Forecast WD,,,hADSC-2~blood,1.0
+Forecast WD,,,mouse~blood,0.5
+Embedding ARI,0.562,GSE178325;GSE230659;GSE218855;GSE298212,,
+Embedding ARI,,,hADSC-1~hADSC-2,0.5
+Embedding ARI,,,hADSC-1~mouse,1.0
+Embedding ARI,,,hADSC-1~blood,0.5
+Embedding ARI,,,hADSC-2~mouse,0.5
+Embedding ARI,,,hADSC-2~blood,-0.5
+Embedding ARI,,,mouse~blood,0.5

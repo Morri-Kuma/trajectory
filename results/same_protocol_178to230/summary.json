@@ -1,0 +1,26 @@
+{
+  "mode": "server",
+  "config_hash": "b9be9e6ab1",
+  "queries": {
+    "gse230659": {
+      "n_cells": 75194,
+      "n_genes_shared": 2000,
+      "annotation_method": "scanvi_scarches",
+      "overall_tv_composition": 0.19301359817834476,
+      "agreement_nmi": 0.38707510512934185,
+      "agreement_ari": 0.38103581431366784,
+      "correspondence_overall_agreement": 0.7574204711832823,
+      "pseudotime_spearman": 0.9999999999999998,
+      "graph_edge_jaccard": 0.18181818181818182,
+      "frac_unknown_ood": 0.0008511317392345134,
+      "n_disagreement_cells": 18289,
+      "figures": {
+        "composition": "results/same_protocol_178to230/gse230659/fig_composition.png",
+        "agreement": "results/same_protocol_178to230/gse230659/fig_agreement.png",
+        "embed_silver": "results/same_protocol_178to230/gse230659/fig_embed_marker_silver.png",
+        "embed_scanvi": "results/same_protocol_178to230/gse230659/fig_embed_scanvi.png",
+        "pseudotime": "results/same_protocol_178to230/gse230659/fig_pseudotime.png"
+      }
+    }
+  }
+}

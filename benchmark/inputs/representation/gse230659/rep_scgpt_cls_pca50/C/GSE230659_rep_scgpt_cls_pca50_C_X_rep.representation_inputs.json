@@ -1,0 +1,13 @@
+{
+  "representation_id": "rep_scgpt_cls_pca50",
+  "input_space": "scfm_embedding",
+  "output_space": "representation",
+  "preprocessing": "StandardScaler -> PCA",
+  "raw_embedding_dim": 512,
+  "n_components": 50,
+  "reducer_fit_scope": "train_only",
+  "n_train_cells_fit": 49820,
+  "n_total_cells": 75194,
+  "code_version": "representation_dynamics_v1",
+  "date_created": "2026-06-03T03:46:02.823066+00:00"
+}

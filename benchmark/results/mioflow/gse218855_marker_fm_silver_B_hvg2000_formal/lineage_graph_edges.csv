@@ -1,0 +1,17 @@
+source_state,target_state,weight
+MEF,MEF,0.44244585937427827
+MEF,epithelial_like,0.17696590438333354
+MEF,iPSC,0.2287880828791833
+MEF,intermediate_plastic,0.15180015336320415
+epithelial_like,MEF,0.002005857286380553
+epithelial_like,epithelial_like,0.4182261277988341
+epithelial_like,iPSC,0.3435456657300231
+epithelial_like,intermediate_plastic,0.23622234918476084
+iPSC,MEF,0.0022903715632552326
+iPSC,epithelial_like,0.37553085376293505
+iPSC,iPSC,0.3915092046521755
+iPSC,intermediate_plastic,0.2306695700216339
+intermediate_plastic,MEF,0.0018558388011837292
+intermediate_plastic,epithelial_like,0.38228038078010157
+intermediate_plastic,iPSC,0.3735959008614096
+intermediate_plastic,intermediate_plastic,0.24226787955730525

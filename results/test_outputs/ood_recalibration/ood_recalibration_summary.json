@@ -1,0 +1,18 @@
+{
+  "gse178325": {
+    "n_query": 10000,
+    "frac_ood_geometric": 0.3869,
+    "query_median_knn_dist": 18.096656481424965,
+    "ref_median_knn_dist": 4.994365040461222,
+    "ood_threshold_p95": 21.859136047363194,
+    "scanvi_frac_ood_from_run": 0.0004
+  },
+  "gse230659": {
+    "n_query": 10000,
+    "frac_ood_geometric": 0.4358,
+    "query_median_knn_dist": 19.86950085957845,
+    "ref_median_knn_dist": 4.994365040461222,
+    "ood_threshold_p95": 21.859136047363194,
+    "scanvi_frac_ood_from_run": 0.003
+  }
+}

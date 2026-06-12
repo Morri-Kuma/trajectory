@@ -1,0 +1,6 @@
+source,target,weight,confidence,edge_type
+IPSC,MES,1.0,high,author_annotation_cardiac_differentiation_milestone_order
+MES,CMES,1.0,high,author_annotation_cardiac_differentiation_milestone_order
+CMES,PROG,1.0,high,author_annotation_cardiac_differentiation_milestone_order
+PROG,CM,1.0,high,author_annotation_cardiac_differentiation_milestone_order
+PROG,CF,1.0,high,author_annotation_cardiac_differentiation_milestone_order

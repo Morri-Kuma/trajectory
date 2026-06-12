@@ -1,0 +1,156 @@
+{
+  "script": "build_marker_seed_labels",
+  "status": "completed",
+  "annotation_stage": "marker_seed_labels_step3",
+  "stage1_policy": {
+    "name": "marker_sample_time_stage1_v1",
+    "hadsc_assignment": "primary assignment by source sample/timepoint (obs columns); marker gene set is auxiliary somatic/fibroblast-like support only",
+    "hadsc_label": "blood_start",
+    "sample_key": "sample_id",
+    "time_key": "abs_day",
+    "hadsc_sample_values": [
+      "EPC",
+      "PBMC_EPC",
+      "pbmc_epc"
+    ],
+    "hadsc_time_values": [
+      "0",
+      "0.0"
+    ],
+    "sample_key_found": true,
+    "time_key_found": true,
+    "sample_time_used": true,
+    "primary_for_stage1": [
+      "epithelial_like",
+      "intermediate_plastic",
+      "hCiPS"
+    ],
+    "thresholds": {
+      "min_primary_score": 0.0,
+      "min_primary_margin": 0.0,
+      "ambiguous_label": "ambiguous"
+    }
+  },
+  "dataset_id": "GSE298212",
+  "markers_yaml": "benchmark/annotation/milestone_markers.yaml",
+  "primary_milestones": [
+    "blood_start",
+    "epithelial_like",
+    "intermediate_plastic",
+    "hCiPS"
+  ],
+  "min_marker_overlap": 2,
+  "min_top_score": 0.0,
+  "min_score_margin": 0.05,
+  "max_cells_used": null,
+  "marker_overlap_summary": {
+    "blood_start": {
+      "n_required": 15,
+      "n_matched": 15,
+      "matched_genes": [
+        "PTPRC",
+        "CD34",
+        "GYPA",
+        "HBB",
+        "HBA1",
+        "HBA2",
+        "ALAS2",
+        "TFRC",
+        "GATA1",
+        "KLF1",
+        "LYZ",
+        "S100A8",
+        "S100A9",
+        "CD36",
+        "GP9"
+      ],
+      "missing_genes": []
+    },
+    "epithelial_like": {
+      "n_required": 9,
+      "n_matched": 9,
+      "matched_genes": [
+        "KRT8",
+        "KRT18",
+        "KRT19",
+        "KRT7",
+        "EPCAM",
+        "CDH1",
+        "CLDN4",
+        "CLDN7",
+        "OCLN"
+      ],
+      "missing_genes": []
+    },
+    "intermediate_plastic": {
+      "n_required": 10,
+      "n_matched": 9,
+      "matched_genes": [
+        "LIN28A",
+        "LIN28B",
+        "SALL4",
+        "FBXO15",
+        "DPPA4",
+        "UTF1",
+        "DNMT3B",
+        "MYCN",
+        "SPP1"
+      ],
+      "missing_genes": [
+        "TDGF1"
+      ]
+    },
+    "hCiPS": {
+      "n_required": 13,
+      "n_matched": 12,
+      "matched_genes": [
+        "POU5F1",
+        "SOX2",
+        "NANOG",
+        "KLF4",
+        "ZFP42",
+        "DPPA2",
+        "DPPA3",
+        "DPPA4",
+        "DNMT3B",
+        "ZSCAN4",
+        "SALL4",
+        "PRDM14"
+      ],
+      "missing_genes": [
+        "TDGF1"
+      ]
+    }
+  },
+  "label_counts": {
+    "blood_start": 28658,
+    "ambiguous": 5018,
+    "epithelial_like": 3577,
+    "intermediate_plastic": 1192,
+    "hCiPS": 72
+  },
+  "stage1_label_counts": {
+    "epithelial_like": 23699,
+    "blood_start": 8892,
+    "intermediate_plastic": 5012,
+    "hCiPS": 914
+  },
+  "stage1_status_counts": {
+    "high_confidence": 38517
+  },
+  "stage1_source_counts": {
+    "marker_primary": 29625,
+    "sample_time": 8892
+  },
+  "stage1_summary": {
+    "n_cells": 38517,
+    "n_assigned_by_sample_time": 8892,
+    "frac_assigned_by_sample_time": 0.2309,
+    "n_high_confidence": 38517,
+    "frac_high_confidence": 1.0,
+    "n_ambiguous": 0,
+    "frac_ambiguous": 0.0
+  },
+  "n_cells": 38517,
+  "n_genes": 2025
+}

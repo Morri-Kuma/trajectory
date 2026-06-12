@@ -1,0 +1,92 @@
+[
+  {
+    "dataset_id": "GSE175634",
+    "run_id": "scnode_gse175634_cardiac_silver_A_hvg2000_formal",
+    "config_path": "benchmark\\configs\\runtime\\scnode_gse175634_cardiac_silver_A_hvg2000_formal.yaml",
+    "h5ad_path": "benchmark\\inputs\\gse175634_cardiac_author_hvg2000\\GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad",
+    "scnode_dir": "benchmark\\results\\scnode\\gse175634_cardiac_silver_A_hvg2000_formal",
+    "label_key": "final_milestone_label_coarse",
+    "n_original_plotted": 20000,
+    "n_scnode_plotted": 14000,
+    "original_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse175634_cardiac_silver_A_hvg2000_formal_original_cell_labels_umap.png",
+    "scnode_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse175634_cardiac_silver_A_hvg2000_formal_scnode_cell_labels_umap.png",
+    "labels": [
+      "CF",
+      "CM",
+      "CMES",
+      "IPSC",
+      "MES",
+      "PROG",
+      "UNK"
+    ]
+  },
+  {
+    "dataset_id": "GSE178325",
+    "run_id": "scnode_gse178325_marker_fm_silver_A_hvg2000_formal",
+    "config_path": "benchmark\\configs\\runtime\\scnode_gse178325_marker_fm_silver_A_hvg2000_formal.yaml",
+    "h5ad_path": "benchmark\\inputs\\gse178325_marker_fm_transition_silver_hvg2000\\GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+    "scnode_dir": "benchmark\\results\\scnode\\gse178325_marker_fm_silver_A_hvg2000_formal",
+    "label_key": "final_milestone_label_expanded",
+    "n_original_plotted": 20000,
+    "n_scnode_plotted": 20000,
+    "original_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse178325_marker_fm_silver_A_hvg2000_formal_original_cell_labels_umap.png",
+    "scnode_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse178325_marker_fm_silver_A_hvg2000_formal_scnode_cell_labels_umap.png",
+    "labels": [
+      "ambiguous",
+      "stage_00_hADSCs",
+      "stage_01_hADSCs_to_epithelial_like",
+      "stage_02_epithelial_like",
+      "stage_03_epithelial_like_to_intermediate_plastic",
+      "stage_04_intermediate_plastic",
+      "stage_06_xen_like",
+      "stage_07_xen_like_to_hCiPS",
+      "stage_08_hCiPS"
+    ]
+  },
+  {
+    "dataset_id": "GSE230659",
+    "run_id": "scnode_gse230659_marker_fm_silver_A_hvg2000_formal",
+    "config_path": "benchmark\\configs\\runtime\\scnode_gse230659_marker_fm_silver_A_hvg2000_formal.yaml",
+    "h5ad_path": "benchmark\\inputs\\gse230659_marker_fm_transition_silver_hvg2000\\GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+    "scnode_dir": "benchmark\\results\\scnode\\gse230659_marker_fm_silver_A_hvg2000_formal",
+    "label_key": "final_milestone_label_expanded",
+    "n_original_plotted": 20000,
+    "n_scnode_plotted": 20000,
+    "original_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse230659_marker_fm_silver_A_hvg2000_formal_original_cell_labels_umap.png",
+    "scnode_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse230659_marker_fm_silver_A_hvg2000_formal_scnode_cell_labels_umap.png",
+    "labels": [
+      "ambiguous",
+      "stage_00_hADSCs",
+      "stage_01_hADSCs_to_epithelial_like",
+      "stage_02_epithelial_like",
+      "stage_03_epithelial_like_to_intermediate_plastic",
+      "stage_04_intermediate_plastic",
+      "stage_05_intermediate_plastic_to_hCiPS",
+      "stage_06_hCiPS"
+    ]
+  },
+  {
+    "dataset_id": "GSE242424",
+    "run_id": "scnode_gse242424_oskm_ground_truth_A_hvg2000_formal",
+    "config_path": "benchmark\\configs\\scnode_gse242424_oskm_ground_truth_A_hvg2000_formal.yaml",
+    "h5ad_path": "benchmark\\inputs\\gse242424_author_cluster_matched\\GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad",
+    "scnode_dir": "benchmark\\results\\scnode\\gse242424_oskm_ground_truth_A_hvg2000_formal",
+    "label_key": "final_milestone_label_coarse",
+    "n_original_plotted": 20000,
+    "n_scnode_plotted": 18000,
+    "original_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse242424_oskm_ground_truth_A_hvg2000_formal_original_cell_labels_umap.png",
+    "scnode_png": "benchmark\\reports\\visualizations\\scnode_vs_original\\scnode_gse242424_oskm_ground_truth_A_hvg2000_formal_scnode_cell_labels_umap.png",
+    "labels": [
+      "fibroblast",
+      "fibroblast_like_stalled",
+      "hOSK",
+      "iPSC",
+      "keratinocyte_like",
+      "partial_intermediate",
+      "partially_reprogrammed",
+      "pre_iPSC",
+      "primary_intermediate",
+      "xOSK"
+    ]
+  }
+]

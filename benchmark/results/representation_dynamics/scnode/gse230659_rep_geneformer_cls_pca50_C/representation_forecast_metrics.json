@@ -1,0 +1,62 @@
+{
+  "rep_wasserstein_distance": 15.280951556738746,
+  "rep_gaussian_mmd": 0.00014278014086975636,
+  "rep_energy_distance_mmd": 0.2745632856141117,
+  "rep_hausdorff_loss": 59.687655770473796,
+  "n_eval_timepoints": 5,
+  "eval_timepoints": [
+    4.0,
+    12.0,
+    20.0,
+    28.0,
+    30.0
+  ],
+  "aggregate": "mean",
+  "metric_space": "representation",
+  "metric_backend": "numpy_exact",
+  "metric_definitions": {
+    "rep_wasserstein_distance": "debiased entropic 2-Wasserstein / n_dims",
+    "rep_gaussian_mmd": "unbiased gaussian MMD^2 (blur=1.0) / n_dims",
+    "rep_energy_distance_mmd": "energy distance / n_dims",
+    "rep_hausdorff_loss": "bidirectional Hausdorff (not normalized)"
+  },
+  "representation_metadata": {
+    "code_version": "representation_dynamics_v1",
+    "date_created": "2026-06-04T03:21:48.246159+00:00",
+    "input_space": "scfm_embedding",
+    "n_components": 50,
+    "n_total_cells": 75194,
+    "n_train_cells_fit": 49820,
+    "output_space": "representation",
+    "preprocessing": "StandardScaler -> PCA",
+    "raw_embedding_dim": 768,
+    "reducer_fit_scope": "train_only",
+    "representation_id": "rep_geneformer_cls_pca50",
+    "scfm": {
+      "code_reference": "https://huggingface.co/ctheodoris/Geneformer",
+      "code_version": "representation_dynamics_v1",
+      "counts_col_source": "total_counts",
+      "date_created": "2026-06-04T02:19:06.137707+00:00",
+      "emb_layer": -1,
+      "emb_mode": "cls",
+      "embedding_dim": 768,
+      "embedding_layer": "-1 (2nd-to-last hidden layer; EmbExtractor default)",
+      "ensembl_col_source": "gene_ids",
+      "gene_vocabulary": "geneformer.TranscriptomeTokenizer rank-value encoding; token_dictionary.pkl (Ensembl ID -> token), gene_median_dictionary.pkl",
+      "input_gene_count": 27219,
+      "matched_gene_count": 17712,
+      "matched_gene_count_basis": "ensembl_ids_in_official_token_dictionary",
+      "model_checkpoint": "/home/xzy0723/projects/trajectory/models/Geneformer-V2-104M",
+      "model_name": "Geneformer",
+      "model_version": "V2",
+      "paper_reference": "https://www.nature.com/articles/s41586-023-06139-9",
+      "pooling_or_cell_embedding_method": "CLS-token embedding (emb_mode='cls'): cell embedding read from the <cls> token prepended to the rank-value encoding",
+      "preprocessing": "Rank-value encoding per cell: counts normalized by each gene's non-zero median expression across Genecorpus, ranked, truncated to model input size. Requires raw counts in adata.X, Ensembl IDs in adata.var['ensembl_id'], and per-cell total counts in adata.obs['n_counts']. Performed by the official TranscriptomeTokenizer.",
+      "source_inspected": "geneformer.EmbExtractor (emb_mode='cls', cell_emb_style='mean_pool', emb_layer=-1, model_version='V2').extract_embs(...) and geneformer.TranscriptomeTokenizer; https://geneformer.readthedocs.io/en/latest/geneformer.emb_extractor.html",
+      "tokenizer_or_gene_vocab": "geneformer.TranscriptomeTokenizer rank-value encoding; token_dictionary.pkl (Ensembl ID -> token), gene_median_dictionary.pkl",
+      "upstream_commit_or_release": "official_geneformer_v2_104m",
+      "model_key": "geneformer"
+    }
+  },
+  "status": "completed"
+}

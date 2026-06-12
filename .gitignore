@@ -37,6 +37,9 @@ models/
 *.pt
 
 # Benchmark-heavy intermediates. Keep lightweight metrics/reports trackable.
+benchmark/**/_rerun_backup/
+benchmark/results/**/_repair_backup/
+benchmark/archive/rerun_backups/
 benchmark/results/**/tmaps/
 benchmark/results/**/tmaps_cr2/
 benchmark/results/**/prescient_internal/
@@ -76,3 +79,21 @@ benchmark/methods/scNODE/scNODE_module/model_illustration.jpg
 benchmark/methods/scNODE/scNODE_module/model_validation/
 benchmark/methods/scNODE/scNODE_module/optim/
 benchmark/methods/scNODE/scNODE_module/plotting/
+
+# ── Release hygiene: large REGENERABLE derived-data artifacts ──────────────────
+# These are produced by the pipeline / providers and are reconstructable from the
+# documented recipes; keeping them out of git keeps the release lightweight.
+# (Small traceable artifacts — metrics JSON/CSV, *_ci.csv, manifests, reference
+#  graphs, *_metadata.json — are intentionally NOT matched here.)
+**/annotation_votes.tsv
+**/state_labels.tsv
+**/trajectory_aware_annotation_qc.csv
+**/projected_milestone_labels.csv
+**/disagreement_cells.csv
+**/ood_scanvi_latent.csv
+**/*_author_cluster_matched_cells.tsv
+benchmark/reports/**/pca_annotation_comparison/*.png
+**/[TEMP]*.ipynb
+
+# Literature PDFs (not code; archive separately, e.g. Zenodo)
+reference/**/*.pdf

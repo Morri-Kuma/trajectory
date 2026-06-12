@@ -1,0 +1,16 @@
+{
+  "unsupported_source_states": [],
+  "n_unsupported_source_states": 0,
+  "source_transition_counts": {
+    "CF": 35246,
+    "CM": 16247,
+    "CMES": 18973,
+    "IPSC": 38489,
+    "MES": 53662,
+    "PROG": 31758,
+    "UNK": 12100
+  },
+  "soft_assignment_nearest_fallback_count": 0,
+  "soft_assignment_skipped_count": 0,
+  "note": "States with zero source_transition_counts are written as all-zero STM rows because no valid source-cell transitions were available for those states in the training timepoint pairs."
+}

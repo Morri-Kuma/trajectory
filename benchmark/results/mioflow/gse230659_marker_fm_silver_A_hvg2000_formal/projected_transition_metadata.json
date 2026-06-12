@@ -1,0 +1,143 @@
+{
+  "dataset_id": "GSE230659",
+  "projected_labels_csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\projected_milestone_labels.csv",
+  "output_dir": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal",
+  "label_mode": "official_silver",
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "cell_state_key": "final_milestone_label_coarse",
+  "excluded_labels": [
+    "ambiguous",
+    "unknown_or_ood"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "transition_policy": "aggregate_frequency_consecutive_timepoints",
+  "transition_policy_note": "For each consecutive timepoint pair (t1, t2), the transition probability from source state s1 to target state s2 equals the frequency of s2 at t2, weighted by the frequency of s1 at t1. Row-normalized. This is a smoke bridge without single-cell tracking.",
+  "smoke_test": true,
+  "formal_benchmark": false,
+  "all_timepoint_pairs": false,
+  "timestamp": "2026-06-07T11:53:52.419662+00:00",
+  "mode_specific_outputs": {
+    "state_transition_matrix_official_silver.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\state_transition_matrix_official_silver.csv",
+    "lineage_graph_edges_official_silver.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\lineage_graph_edges_official_silver.csv",
+    "lineage_metrics_official_silver.json": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\lineage_metrics_official_silver.json"
+  },
+  "generic_compatibility_outputs": {
+    "state_transition_matrix.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\state_transition_matrix.csv",
+    "lineage_graph_edges.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\lineage_graph_edges.csv",
+    "projected_transition_metadata.json": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_A_hvg2000_formal\\projected_transition_metadata.json"
+  },
+  "compatibility_note": "generic_compatibility_outputs are kept for stable filenames. mode_specific_outputs are the preferred files for official silver reports.",
+  "n_timepoints": 15,
+  "unique_timepoints": [
+    "0.5",
+    "2.0",
+    "4.0",
+    "8.0",
+    "12.0",
+    "16.0",
+    "16.33",
+    "16.67",
+    "17.0",
+    "18.0",
+    "20.0",
+    "22.0",
+    "24.0",
+    "28.0",
+    "30.0"
+  ],
+  "n_pairs_used": 14,
+  "n_cells_total": 30000,
+  "n_cells_valid": 28633,
+  "states": [
+    "epithelial_like",
+    "hADSCs",
+    "hCiPS",
+    "intermediate_plastic"
+  ],
+  "n_states": 4,
+  "tp_label_counts": {
+    "0.5": {
+      "hADSCs": 1386,
+      "epithelial_like": 318,
+      "intermediate_plastic": 32,
+      "hCiPS": 21
+    },
+    "2.0": {
+      "hADSCs": 1351,
+      "epithelial_like": 596,
+      "hCiPS": 1
+    },
+    "4.0": {
+      "epithelial_like": 1301,
+      "hADSCs": 600,
+      "intermediate_plastic": 2
+    },
+    "8.0": {
+      "epithelial_like": 1747,
+      "hADSCs": 155,
+      "intermediate_plastic": 8
+    },
+    "12.0": {
+      "epithelial_like": 1798,
+      "hADSCs": 118,
+      "intermediate_plastic": 1
+    },
+    "16.0": {
+      "epithelial_like": 1637,
+      "hADSCs": 237,
+      "hCiPS": 2
+    },
+    "16.33": {
+      "hADSCs": 524,
+      "epithelial_like": 1338,
+      "hCiPS": 2,
+      "intermediate_plastic": 1
+    },
+    "16.67": {
+      "epithelial_like": 1153,
+      "hADSCs": 741,
+      "intermediate_plastic": 4
+    },
+    "17.0": {
+      "epithelial_like": 1063,
+      "hADSCs": 854,
+      "intermediate_plastic": 3
+    },
+    "18.0": {
+      "epithelial_like": 1173,
+      "hADSCs": 752,
+      "hCiPS": 1,
+      "intermediate_plastic": 2
+    },
+    "20.0": {
+      "epithelial_like": 1339,
+      "hADSCs": 600,
+      "hCiPS": 1,
+      "intermediate_plastic": 1
+    },
+    "22.0": {
+      "epithelial_like": 1500,
+      "hADSCs": 447,
+      "hCiPS": 2,
+      "intermediate_plastic": 1
+    },
+    "24.0": {
+      "hADSCs": 309,
+      "epithelial_like": 1628,
+      "intermediate_plastic": 3,
+      "hCiPS": 1
+    },
+    "28.0": {
+      "hADSCs": 240,
+      "epithelial_like": 1712,
+      "hCiPS": 2,
+      "intermediate_plastic": 1
+    },
+    "30.0": {
+      "hADSCs": 164,
+      "epithelial_like": 1755,
+      "hCiPS": 3,
+      "intermediate_plastic": 2
+    }
+  }
+}

@@ -1,12 +1,15 @@
 {
-  "unsupported_source_states": [],
-  "n_unsupported_source_states": 0,
+  "unsupported_source_states": [
+    "hCiPS"
+  ],
+  "n_unsupported_source_states": 1,
   "source_transition_counts": {
-    "epithelial_like": 20764,
-    "hADSCs": 5706,
-    "hCiPS": 124,
-    "intermediate_plastic": 4158,
-    "xen_like": 61
+    "ambiguous": 30,
+    "epithelial_like": 6542,
+    "hADSCs": 24188,
+    "hCiPS": 0,
+    "intermediate_plastic": 47,
+    "xen_like": 6
   },
   "soft_assignment_nearest_fallback_count": 0,
   "soft_assignment_skipped_count": 0,

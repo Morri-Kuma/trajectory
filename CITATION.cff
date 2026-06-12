@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "Annotation-robustness of single-cell reference mapping for human reprogramming trajectories"
+authors:
+  - family-names: Kuma
+    affiliation: "Graduate School of Frontier Sciences, The University of Tokyo"
+    email: morri0723@gmail.com
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # TODO
+date-released: "2026-06-09"
+license: MIT
+keywords: [single-cell, trajectory inference, scANVI, reference mapping, reprogramming, out-of-distribution]
+abstract: >
+  Code and analysis for testing whether cross-protocol single-cell reference
+  mapping (scANVI/scArches) is a trustworthy annotation strategy for human
+  chemical-reprogramming trajectories, including a geometric out-of-distribution
+  score that recovers the cross-protocol mismatch scANVI confidence misses.

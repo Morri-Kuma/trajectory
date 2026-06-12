@@ -1,0 +1,27 @@
+{
+  "dataset_id": "GSE298212",
+  "n_cells": 38517,
+  "n_vars": 2025,
+  "abs_day_counts": {
+    "0.0": 8892,
+    "1.0": 3508,
+    "3.0": 16770,
+    "6.0": 4219,
+    "8.0": 5128
+  },
+  "sample_counts": {
+    "s1d3": 16770,
+    "pbmc_epc": 8892,
+    "s1d8": 5128,
+    "s1d6": 4219,
+    "s1d1": 3508
+  },
+  "qc_params": {
+    "min_genes_per_cell": 200,
+    "max_genes_per_cell": 10000,
+    "min_counts_per_cell": 500,
+    "max_pct_mito": 25.0,
+    "min_cells_per_gene": 3
+  },
+  "runtime_s": 79.6
+}

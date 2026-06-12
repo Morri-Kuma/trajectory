@@ -1,0 +1,125 @@
+{
+  "_meta": {
+    "provider_id": "gse175634_cardiac_silver_v1",
+    "dataset_id": "GSE175634",
+    "label_mode": "official_silver",
+    "label_type": "frozen_silver_standard",
+    "state_key": "final_milestone_label_coarse",
+    "graph_type": "author_annotation_cardiac_differentiation_milestone_graph",
+    "version": "v1",
+    "generated_by": "scripts/build_gse175634_cardiac_author_provider.py",
+    "analysis_role": "primary_report",
+    "deprecated": false,
+    "n_states": 6,
+    "n_edges": 5,
+    "silver_standard_skipped": true,
+    "silver_standard_note": "GSE175634 uses author-provided cell-state annotations (type column). No marker-seed or trajectory-aware annotation generation was performed.",
+    "policy": [
+      "Official frozen silver provider for GSE175634 cardiac differentiation.",
+      "Labels taken directly from the author 'type' column; no annotation generation step.",
+      "Nodes: IPSC, MES, CMES, PROG (bifurcation), CM, CF (two terminal branches).",
+      "Graph topology: linear IPSC\u2192MES\u2192CMES\u2192PROG with bifurcation to CM and CF.",
+      "UNK cells are retained in the h5ad but excluded from official metrics.",
+      "Source: benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad"
+    ],
+    "n_cells_per_state": {
+      "IPSC": 38510,
+      "MES": 53711,
+      "CMES": 18976,
+      "PROG": 34078,
+      "CM": 21368,
+      "CF": 44629
+    }
+  },
+  "nodes": [
+    {
+      "id": "IPSC",
+      "label": "IPSC",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 0
+    },
+    {
+      "id": "MES",
+      "label": "MES",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 1
+    },
+    {
+      "id": "CMES",
+      "label": "CMES",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 2
+    },
+    {
+      "id": "PROG",
+      "label": "PROG",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 3
+    },
+    {
+      "id": "CM",
+      "label": "CM",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 4
+    },
+    {
+      "id": "CF",
+      "label": "CF",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 5
+    }
+  ],
+  "edges": [
+    {
+      "source": "IPSC",
+      "target": "MES",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_annotation_cardiac_differentiation_milestone_order"
+    },
+    {
+      "source": "MES",
+      "target": "CMES",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_annotation_cardiac_differentiation_milestone_order"
+    },
+    {
+      "source": "CMES",
+      "target": "PROG",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_annotation_cardiac_differentiation_milestone_order"
+    },
+    {
+      "source": "PROG",
+      "target": "CM",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_annotation_cardiac_differentiation_milestone_order"
+    },
+    {
+      "source": "PROG",
+      "target": "CF",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_annotation_cardiac_differentiation_milestone_order"
+    }
+  ]
+}

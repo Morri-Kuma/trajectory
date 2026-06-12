@@ -9,13 +9,16 @@ Checks per output directory
   3.  formal_benchmark == false.
   4.  lineage_metrics.json exists and parses cleanly.
   5.  status == "completed".
-  6.  AUROC, AUPRC, jaccard_similarity_topk are finite floats.
-  7.  state_transition_matrix.csv exists with expected GSE230659 milestone states.
-  8.  Expected states present: epithelial_like, intermediate_plastic, hCiPS.
-  9.  Graph edge count == 2 (n_reference_edges in metadata).
-  10. label_mode and analysis_role are non-empty strings.
-  11. lineage_graph_edges.csv exists.
-  12. provider_id matches gse230659_milestone_* pattern.
+  6.  metric_protocol == "sctimebench_graph_sim".
+  7.  graph_metrics.single_step: auc_roc, auc_prc, jaccard_similarity are finite.
+  8.  graph_metrics.multi_step:  auc_roc, auc_prc, jaccard_similarity are finite.
+  9.  lineage metrics use final_milestone_label_coarse from the provider contract.
+  10. state_transition_matrix.csv uses coarse labels; missing coarse states are
+      zero-filled by the evaluator and recorded in prediction_label_report.
+  11. Graph edge count == 2 (n_reference_edges in metadata).
+  12. label_mode and analysis_role are non-empty strings.
+  13. lineage_graph_edges.csv exists.
+  14. provider_id matches gse230659_milestone_* pattern.
 
 Usage
 -----
@@ -33,9 +36,19 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+from benchmark.evaluation.lineage_graphsim_sctimebench import (
+    PREDICTION_LABEL_SOURCE_SCTIMEBENCH_ZERO_FILL,
+)
+
 
 EXPECTED_STATES = {"epithelial_like", "intermediate_plastic", "hCiPS"}
+EXPECTED_STATE_KEY = "final_milestone_label_coarse"
 EXPECTED_N_EDGES = 2
+REQUIRED_LINEAGE_PROTOCOL = "sctimebench_graph_sim"
+REQUIRED_PREDICTION_LABEL_SOURCE = PREDICTION_LABEL_SOURCE_SCTIMEBENCH_ZERO_FILL
+
+# Fields required to be finite floats under graph_metrics.{criterion}
+_REQUIRED_GRAPH_METRIC_FIELDS = ("auc_roc", "auc_prc", "jaccard_similarity")
 
 
 def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
@@ -93,15 +106,55 @@ def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
     else:
         note(f"status: {status}")
 
-    # 6. Core metrics are finite floats
-    for metric_key in ("auroc", "auprc", "jaccard_similarity_topk"):
-        val = metrics.get(metric_key)
-        if val is None or not isinstance(val, (int, float)) or not math.isfinite(float(val)):
-            errors.append(f"{metric_key} is not a finite float: {val!r}")
-        else:
-            note(f"{metric_key}: {float(val):.4f}")
+    # 6. metric_protocol must be sctimebench_graph_sim
+    protocol = metrics.get("metric_protocol")
+    if protocol != REQUIRED_LINEAGE_PROTOCOL:
+        errors.append(
+            f"metric_protocol={protocol!r}, expected {REQUIRED_LINEAGE_PROTOCOL!r}. "
+            "Re-run eval_lineage.py to generate scTimeBench graph-sim metrics."
+        )
+    else:
+        note(f"metric_protocol: {protocol!r} OK")
 
-    # 7 & 8. state_transition_matrix.csv with expected states
+    # 7 & 8. graph_metrics.{single_step,multi_step} must have finite AUC/Jaccard
+    gm = metrics.get("graph_metrics") or {}
+    for criterion_key, label in (("single_step", "simple"), ("multi_step", "all_paths")):
+        criterion = gm.get(criterion_key) or {}
+        for field in _REQUIRED_GRAPH_METRIC_FIELDS:
+            val = criterion.get(field)
+            if val is None or not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                errors.append(
+                    f"graph_metrics.{criterion_key}.{field} is not a finite float: {val!r}"
+                )
+            else:
+                note(f"graph_metrics.{criterion_key}.{field}: {float(val):.4f}")
+
+    # 9. State-key contract: official labels are canonical, not STM-derived.
+    metrics_state_key = (
+        (metrics.get("ground_truth") or {}).get("state_key")
+        or metrics.get("cell_state_key")
+    )
+    prediction_state_key = metrics.get("prediction_state_key")
+    if metrics_state_key != EXPECTED_STATE_KEY:
+        errors.append(
+            f"lineage state_key={metrics_state_key!r}, expected {EXPECTED_STATE_KEY!r}"
+        )
+    else:
+        note(f"lineage state_key: {metrics_state_key!r} OK")
+    if prediction_state_key not in (None, EXPECTED_STATE_KEY):
+        errors.append(
+            f"prediction_state_key={prediction_state_key!r}, expected "
+            f"{EXPECTED_STATE_KEY!r}"
+        )
+    label_source = metrics.get("prediction_label_source")
+    if label_source not in (None, REQUIRED_PREDICTION_LABEL_SOURCE):
+        errors.append(
+            "prediction_label_source is not scTimeBench zero-fill/coarse: "
+            f"{label_source!r}"
+        )
+
+    # 10. state_transition_matrix.csv exists and uses coarse states.  Missing
+    # reference nodes are allowed only because the evaluator zero-fills them.
     stm_path = out_dir / "state_transition_matrix.csv"
     if not stm_path.exists():
         errors.append("state_transition_matrix.csv missing")
@@ -109,24 +162,40 @@ def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
         try:
             first_line = stm_path.read_text(encoding="utf-8").splitlines()[0]
             cols = {c.strip() for c in first_line.split(",")[1:] if c.strip()}
+            expanded_cols = sorted(c for c in cols if c.startswith("stage_"))
+            if expanded_cols:
+                errors.append(
+                    "state_transition_matrix.csv uses expanded/stage labels: "
+                    f"{expanded_cols[:20]}"
+                )
             missing_states = EXPECTED_STATES - cols
             if missing_states:
-                errors.append(
-                    f"state_transition_matrix.csv missing states: {missing_states}"
-                )
+                report = metrics.get("prediction_label_report") or {}
+                reported_missing = set(report.get("missing_reference_nodes") or [])
+                if not missing_states <= reported_missing:
+                    errors.append(
+                        "state_transition_matrix.csv missing states but "
+                        "prediction_label_report does not record matching "
+                        f"zero-filled reference nodes: {sorted(missing_states)}"
+                    )
+                else:
+                    note(
+                        "Missing STM states zero-filled by evaluator: "
+                        f"{sorted(missing_states)}"
+                    )
             else:
                 note(f"All expected states in STM: {sorted(EXPECTED_STATES)}")
         except Exception as exc:
             errors.append(f"state_transition_matrix.csv read error: {exc}")
 
-    # 9. n_reference_edges == 2
+    # 11. n_reference_edges == 2
     n_edges = meta.get("n_reference_edges")
     if n_edges != EXPECTED_N_EDGES:
         errors.append(f"n_reference_edges is {n_edges!r}, expected {EXPECTED_N_EDGES}")
     else:
         note(f"n_reference_edges: {n_edges} OK")
 
-    # 10. label_mode and analysis_role non-empty
+    # 12. label_mode and analysis_role non-empty
     for field in ("label_mode", "analysis_role"):
         val = meta.get(field, "")
         if not val:
@@ -134,14 +203,14 @@ def _check_dir(out_dir: Path, verbose: bool) -> Tuple[List[str], List[str]]:
         else:
             note(f"{field}: {val!r}")
 
-    # 11. lineage_graph_edges.csv exists
+    # 13. lineage_graph_edges.csv exists (diagnostic artifact, not metric source)
     edges_path = out_dir / "lineage_graph_edges.csv"
     if not edges_path.exists():
         errors.append("lineage_graph_edges.csv missing")
     else:
         note(f"lineage_graph_edges.csv present ({edges_path.stat().st_size} bytes)")
 
-    # 12. provider_id pattern
+    # 14. provider_id pattern
     pid = meta.get("provider_id", "")
     if not pid.startswith("gse230659_milestone_"):
         warnings.append(

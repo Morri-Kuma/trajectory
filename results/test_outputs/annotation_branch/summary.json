@@ -1,0 +1,52 @@
+{
+  "mode": "test",
+  "config_hash": "06f65fc32c",
+  "queries": {
+    "gse178325": {
+      "n_cells": 1200,
+      "n_genes_shared": 60,
+      "annotation_method": "knn_surrogate",
+      "overall_tv_composition": 0.7063488006788636,
+      "agreement_nmi": 0.22856484945255834,
+      "agreement_ari": 0.08047297323396935,
+      "correspondence_overall_agreement": 0.6557734204793029,
+      "pseudotime_spearman": 0.8039706448562102,
+      "graph_edge_jaccard": 0.07142857142857142,
+      "frac_unknown_ood": 0.6175,
+      "frac_ood_geometric": 0.06333333333333334,
+      "ood_gate_decision": "accept",
+      "ood_enrichment_vs_ref": 1.2666666666666657,
+      "n_disagreement_cells": 899,
+      "figures": {
+        "composition": "results/test_outputs/annotation_branch/gse178325/fig_composition.png",
+        "agreement": "results/test_outputs/annotation_branch/gse178325/fig_agreement.png",
+        "embed_silver": "results/test_outputs/annotation_branch/gse178325/fig_embed_marker_silver.png",
+        "embed_scanvi": "results/test_outputs/annotation_branch/gse178325/fig_embed_scanvi.png",
+        "pseudotime": "results/test_outputs/annotation_branch/gse178325/fig_pseudotime.png"
+      }
+    },
+    "gse230659": {
+      "n_cells": 1100,
+      "n_genes_shared": 60,
+      "annotation_method": "knn_surrogate",
+      "overall_tv_composition": 0.7166226218550092,
+      "agreement_nmi": 0.2389253349307077,
+      "agreement_ari": 0.1292052613768425,
+      "correspondence_overall_agreement": 0.6822916666666666,
+      "pseudotime_spearman": 0.8221228133173252,
+      "graph_edge_jaccard": 0.1,
+      "frac_unknown_ood": 0.6509090909090909,
+      "frac_ood_geometric": 0.05818181818181818,
+      "ood_gate_decision": "accept",
+      "ood_enrichment_vs_ref": 1.1636363636363627,
+      "n_disagreement_cells": 838,
+      "figures": {
+        "composition": "results/test_outputs/annotation_branch/gse230659/fig_composition.png",
+        "agreement": "results/test_outputs/annotation_branch/gse230659/fig_agreement.png",
+        "embed_silver": "results/test_outputs/annotation_branch/gse230659/fig_embed_marker_silver.png",
+        "embed_scanvi": "results/test_outputs/annotation_branch/gse230659/fig_embed_scanvi.png",
+        "pseudotime": "results/test_outputs/annotation_branch/gse230659/fig_pseudotime.png"
+      }
+    }
+  }
+}

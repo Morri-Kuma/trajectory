@@ -1,0 +1,38 @@
+{
+  "method": "scnode",
+  "run_id": "scnode_gse230659_rep_geneformer_cls_pca50_C",
+  "dataset": "GSE230659",
+  "scenario": "C",
+  "capability_flags": {
+    "supports_unseen_timepoint_projection": true,
+    "supports_lineage_inference": true
+  },
+  "dimensions_executed": [
+    "forecast_accuracy",
+    "embedding_coherence",
+    "lineage_fidelity"
+  ],
+  "runtime_seconds": 773.49,
+  "status": "completed",
+  "train_times": [
+    0.5,
+    2.0,
+    8.0,
+    16.0,
+    16.33,
+    16.67,
+    17.0,
+    18.0,
+    22.0,
+    24.0
+  ],
+  "heldout_times": [
+    4.0,
+    12.0,
+    20.0,
+    28.0,
+    30.0
+  ],
+  "n_sim_cells": 2000,
+  "notes": ""
+}

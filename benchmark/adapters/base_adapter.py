@@ -1,7 +1,7 @@
 """
 base_adapter.py
 Base class for all method adapters in the scTimeBench-aligned benchmark.
-Framework reference: experimental framework v2.md §6
+Framework reference: docs/framework/experimental_framework_v2.md §6
 
 Each method adapter must:
   1. Declare capability flags explicitly.

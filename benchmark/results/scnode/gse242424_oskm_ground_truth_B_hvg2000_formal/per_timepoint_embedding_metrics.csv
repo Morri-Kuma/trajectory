@@ -1,0 +1,4 @@
+timepoint,adjusted_rand_index,n_projected_cells,n_observed_reference_cells
+12.0,0.12756441580511685,2000,7189
+14.0,0.14002266771940136,2000,7534
+16.0,0.0,2000,3125

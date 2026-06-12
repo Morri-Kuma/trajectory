@@ -1,0 +1,18 @@
+{
+  "latent": "PCA-latent proxy (local CPU stand-in for server scANVI latent)",
+  "reject_rule": "enrichment_vs_ref > 3x",
+  "by_dataset": {
+    "gse178325": {
+      "n_settings": 12,
+      "unanimous_decision": "MIXED",
+      "enrichment_min": 0.65,
+      "enrichment_max": 8.6
+    },
+    "gse230659": {
+      "n_settings": 12,
+      "unanimous_decision": "MIXED",
+      "enrichment_min": 0.87,
+      "enrichment_max": 9.66
+    }
+  }
+}

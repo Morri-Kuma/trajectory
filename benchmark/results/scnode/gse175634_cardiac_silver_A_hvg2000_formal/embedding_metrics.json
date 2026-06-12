@@ -1,0 +1,18 @@
+{
+  "adjusted_rand_index": 0.09844422197082915,
+  "avg_normalized_classifier_entropy": 0.382306830401553,
+  "projected_latent_dim": 50,
+  "n_eval_timepoints": 7,
+  "eval_timepoints": [
+    0.0,
+    1.0,
+    3.0,
+    5.0,
+    7.0,
+    11.0,
+    15.0
+  ],
+  "status": "completed",
+  "ari_reference": "nearest observed cell at the same evaluation timepoint in scNODE VAE latent space",
+  "entropy_reference": "balanced logistic regression trained on observed scNODE VAE latent embeddings and provider state labels"
+}

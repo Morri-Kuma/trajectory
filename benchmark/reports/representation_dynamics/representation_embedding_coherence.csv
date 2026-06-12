@@ -1,0 +1,10 @@
+method,dataset,representation,scenario,state_centroid_separation,state_silhouette_score
+mioflow,gse230659,rep_geneformer_cls_pca50,A,13.885305365524644,0.032217279443530616
+mioflow,gse230659,rep_geneformer_cls_pca50,B,15.22139811526051,0.02924734144794944
+mioflow,gse230659,rep_geneformer_cls_pca50,C,14.287669717775634,0.03050105622293457
+prescient,gse230659,rep_geneformer_cls_pca50,A,13.885305365524644,0.032217279443530616
+prescient,gse230659,rep_geneformer_cls_pca50,B,15.22139811526051,0.02924734144794944
+prescient,gse230659,rep_geneformer_cls_pca50,C,14.287669717775634,0.03050105622293457
+scnode,gse230659,rep_geneformer_cls_pca50,A,13.885305365524644,0.032217279443530616
+scnode,gse230659,rep_geneformer_cls_pca50,B,15.22139811526051,0.02924734144794944
+scnode,gse230659,rep_geneformer_cls_pca50,C,14.287669717775634,0.03050105622293457

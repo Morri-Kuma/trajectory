@@ -1,0 +1,54 @@
+run_id: cellrank2_gse242424_oskm_ground_truth_A_hvg2000_formal
+method: cellrank2
+scenario: A
+scenario_name: GSE242424 OSKM ground truth Scenario A formal CellRank2 run (HVG2000, author-cluster-matched)
+framework_version: v2
+result_class: gse242424_oskm_ground_truth_formal
+formal_benchmark: true
+label_mode: ground_truth
+provider_id: gse242424_oskm_reprogramming_ground_truth_v1
+state_system:
+  version: gse242424_oskm_reprogramming_ground_truth_v1
+  status: frozen_ground_truth_milestone_provider
+  n_states: 10
+  n_graph_edges: 9
+  source_h5ad: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  note: Frozen author-cluster OSKM reprogramming ground truth labels; official metrics use final_milestone_label_coarse.
+ground_truth:
+  provider_id: gse242424_oskm_reprogramming_ground_truth_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE242424
+  h5ad_path: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+output:
+  base_dir: benchmark/results/cellrank2/gse242424_oskm_ground_truth_A_hvg2000_formal
+cellrank2_params:
+  kernel: RealTimeKernel
+  time_key: abs_day
+  wot_params:
+    epsilon: 0.05
+    lambda1: 1.0
+    lambda2: 50.0
+    local_pca: 30
+    growth_iters: 3
+  gpcca_params:
+    n_macrostates: 10
+    use_state_labels: true
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse242424_oskm_reprogramming_ground_truth_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse242424_oskm_reprogramming_ground_truth_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: active
+  primary_dimensions:
+  - lineage_fidelity
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day

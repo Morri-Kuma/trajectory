@@ -1,0 +1,15 @@
+{
+  "nmi": 0.5323202401372386,
+  "ari": 0.598979021648467,
+  "n_cells": 80475,
+  "correspondence_recall_per_state": {
+    "ambiguous": 0.49072011878247956,
+    "epithelial_like": 0.9526226329271504,
+    "hADSCs": 0.7910606697491943,
+    "hCiPS": 0.46325016857720835,
+    "intermediate_plastic": 0.0,
+    "xen_like": 0.0
+  },
+  "correspondence_recall_macro": 0.4496089316726721,
+  "correspondence_overall_agreement": 0.8632709442978744
+}

@@ -56,6 +56,23 @@ def _to_dense_float32(X) -> np.ndarray:
     return np.asarray(X, dtype=np.float32)
 
 
+def _model_input_dense(adata, scenario_config) -> np.ndarray:
+    """Dense model-input matrix, honoring an optional representation config.
+
+    When ``scenario_config['representation']`` enables obsm input, returns the
+    pre-built representation (e.g. ``adata.obsm['X_rep']``); otherwise returns
+    the dense expression matrix ``adata.X`` unchanged. This is the Work-Plan
+    Step 4 hook; expression-space behaviour is byte-identical when the
+    representation block is absent or disabled.
+    """
+    try:
+        from benchmark.representations.model_input import get_model_input_matrix
+    except Exception:
+        # Representation module not importable -> preserve expression behaviour.
+        return _to_dense_float32(adata.X)
+    return _to_dense_float32(get_model_input_matrix(adata, scenario_config or {}))
+
+
 def _materialize(adata):
     return adata.to_memory() if getattr(adata, "isbacked", False) else adata
 
@@ -163,7 +180,7 @@ class MIOFlowBenchmarkModel:
 
 
 def train_or_load(adata_train, full_times: list[float], time_key: str, cfg: dict,
-                  output_dir: Path) -> MIOFlowBenchmarkModel:
+                  output_dir: Path, scenario_config: dict | None = None) -> MIOFlowBenchmarkModel:
     seed = int(cfg.get("seed", 0))
     random.seed(seed)
     np.random.seed(seed)
@@ -191,7 +208,7 @@ def train_or_load(adata_train, full_times: list[float], time_key: str, cfg: dict
             device=device,
         )
 
-    X_train = _to_dense_float32(adata_train.X)
+    X_train = _model_input_dense(adata_train, scenario_config)
     n_components = min(int(cfg.get("pca_dims", 50)), X_train.shape[0] - 1, X_train.shape[1])
     if n_components < 2:
         raise ValueError(f"Not enough data/features for PCA: n_components={n_components}")
@@ -246,14 +263,15 @@ def train_or_load(adata_train, full_times: list[float], time_key: str, cfg: dict
 
 def run_outputs(model: MIOFlowBenchmarkModel, adata_full, adata_train, time_key: str,
                 cell_state_key: str, full_times: list[float], train_times: list[float],
-                heldout_times: list[float], cfg: dict, output_dir: Path) -> dict:
+                heldout_times: list[float], cfg: dict, output_dir: Path,
+                scenario_config: dict | None = None) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
     n_sim_cells = int(cfg.get("n_sim_cells", 2000))
     metric_sample_cells = int(cfg.get("metric_sample_cells", 1000))
     rng = np.random.default_rng(int(cfg.get("seed", 0)))
 
-    X_full = _to_dense_float32(adata_full.X)
-    X_train = _to_dense_float32(adata_train.X)
+    X_full = _model_input_dense(adata_full, scenario_config)
+    X_train = _model_input_dense(adata_train, scenario_config)
     X_full_pca = model.pca.transform(X_full).astype(np.float32)
     X_train_pca = model.pca.transform(X_train).astype(np.float32)
     tps_full = adata_full.obs[time_key].astype(float).to_numpy()
@@ -301,8 +319,12 @@ def run_outputs(model: MIOFlowBenchmarkModel, adata_full, adata_train, time_key:
     proj_emb = np.vstack(pred_pca_blocks) if pred_pca_blocks else np.array([])
     projected_expression_path = output_dir / "projected_expression.npy"
     projected_embedding_path = output_dir / "projected_embedding.npy"
+    observed_embedding_path = output_dir / "embedding.npy"
+    next_timepoint_embedding_path = output_dir / "next_timepoint_embedding.npy"
     np.save(projected_expression_path, proj_expr)
     np.save(projected_embedding_path, proj_emb)
+    np.save(observed_embedding_path, X_full_pca)
+    np.save(next_timepoint_embedding_path, proj_emb)
 
     per_tp_df = pd.DataFrame(per_tp_rows)
     per_tp_forecast_path = output_dir / "per_timepoint_forecast_metrics.csv"
@@ -435,7 +457,9 @@ def run_outputs(model: MIOFlowBenchmarkModel, adata_full, adata_train, time_key:
 
     return {
         "projected_expression": str(projected_expression_path),
+        "embedding": str(observed_embedding_path),
         "projected_embedding": str(projected_embedding_path),
+        "next_timepoint_embedding": str(next_timepoint_embedding_path),
         "projected_cluster_labels": str(labels_path),
         "forecast_metrics": str(forecast_metrics_path),
         "per_timepoint_forecast_metrics": str(per_tp_forecast_path),
@@ -494,7 +518,10 @@ def run_pipeline(adata, scenario_id: str, scenario_config: dict, output_dir) -> 
             f"[MIOFlow] train_cells={adata_train.n_obs}, full_cells={adata_full.n_obs}, "
             f"train_times={train_times}, heldout_times={heldout_times}"
         )
-        model = train_or_load(adata_train, all_times, time_key, cfg, output_dir)
+        model = train_or_load(
+            adata_train, all_times, time_key, cfg, output_dir,
+            scenario_config=scenario_config,
+        )
         result = run_outputs(
             model=model,
             adata_full=adata_full,
@@ -506,6 +533,7 @@ def run_pipeline(adata, scenario_id: str, scenario_config: dict, output_dir) -> 
             heldout_times=heldout_times,
             cfg=cfg,
             output_dir=output_dir,
+            scenario_config=scenario_config,
         )
         status = "completed"
         return result

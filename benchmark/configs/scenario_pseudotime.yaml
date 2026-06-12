@@ -1,6 +1,6 @@
 # scenario_pseudotime.yaml
 # Pseudotime scenario definitions.
-# Framework reference: experimental framework v2.md §4.2
+# Framework reference: docs/framework/experimental_framework_v2.md §4.2
 #
 # These scenarios replace the observed day labels with pseudotime bins
 # as the benchmark time axis.

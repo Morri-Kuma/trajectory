@@ -1,0 +1,2 @@
+sample_id,time_label,abs_day,n_barcodes_raw,nnz_raw,n_pass_qc,pass_qc_fraction,median_total_counts_pass,median_n_genes_pass,median_pct_mt_pass
+GSM7763420_D2,D2,2.0,2468344,29112449,3804,0.001541,24928.0,4956.5,5.1558

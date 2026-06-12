@@ -1,0 +1,88 @@
+run_id: prescient_gse230659_marker_fm_silver_C_hvg2000_seed505
+method: prescient
+scenario: C
+scenario_name: GSE230659 prescient scenario C official_silver marker_fm_transition
+framework_version: v2
+result_class: marker_fm_transition_silver_formal
+formal_benchmark: true
+ground_truth:
+  provider_id: gse230659_marker_fm_transition_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE230659
+  h5ad_path: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times:
+  - 0.5
+  - 2.0
+  - 8.0
+  - 16.0
+  - 16.33
+  - 16.67
+  - 17.0
+  - 18.0
+  - 22.0
+  - 24.0
+  heldout_times:
+  - 4.0
+  - 12.0
+  - 20.0
+  - 28.0
+  - 30.0
+  heldout_interpolation:
+  - 4.0
+  - 12.0
+  - 20.0
+  heldout_extrapolation:
+  - 28.0
+  - 30.0
+output:
+  base_dir: benchmark/results/prescient/gse230659_marker_fm_silver_C_hvg2000_seed505
+prescient_params:
+  num_pcs: 30
+  k_dim: 100
+  layers: 1
+  activation: softplus
+  pretrain_epochs: 25
+  train_epochs: 100
+  train_lr: 0.01
+  train_dt: 0.1
+  train_sd: 0.5
+  train_tau: 1.0e-06
+  train_batch: 0.03
+  train_clip: 0.25
+  save: 100
+  seed: 505
+  weight_name: uniform
+  n_sim_cells: 2000
+  metric_sample_cells: 1000
+  assignment_temperature: 1.0
+  use_cuda: true
+  training_protocol: full_formal_hvg2000
+  memory_note: 'Full formal PRESCIENT configuration: no per-timepoint training subsampling
+    and no embedding reference-cell cap. use_cuda=true enables GPU when the job requests
+    one; the runner falls back to CPU if CUDA is unavailable.'
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse230659_marker_fm_transition_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: formal
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day
+state_system:
+  version: gse230659_marker_fm_transition_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 4
+  n_graph_edges: 3
+  source_h5ad: benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+  note: Frozen marker+foundation-model transition silver labels; official metrics
+    use final_milestone_label_coarse.

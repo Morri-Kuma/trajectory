@@ -1,0 +1,3 @@
+timepoint,source_timepoint,wasserstein_distance,gaussian_mmd,energy_distance_mmd,hausdorff_loss,n_pred_cells,n_obs_cells,metric_sample_pred_cells,metric_sample_obs_cells
+1.0,0.0,0.0957045919497776,0.16817979759996837,4.627079010009766,24.04242706298828,2000,3508,1000,1000
+6.0,3.0,0.0678867294364208,0.120919465848353,2.653874397277832,17.996360778808594,2000,4219,1000,1000

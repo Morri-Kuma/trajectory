@@ -1,0 +1,6 @@
+source_state,epithelial_like,hADSCs,hCiPS,intermediate_plastic,xen_like
+epithelial_like,0.691864,0.0,0.231713,0.0,0.076423
+hADSCs,0.0,0.825042,0.0,0.174825,0.000133
+hCiPS,0.0,0.0,0.990244,0.0,0.009756
+intermediate_plastic,0.239082,0.003936,0.0,0.658606,0.098376
+xen_like,0.732216,0.0,0.163598,0.008666,0.09552

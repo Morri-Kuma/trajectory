@@ -1,7 +1,7 @@
 """
 cellrank2_adapter.py
 CellRank2 method adapter for the scTimeBench-aligned benchmark.
-Framework reference: experimental framework v2.md §10.2
+Framework reference: docs/framework/experimental_framework_v2.md §10.2
 
 CellRank2 capability flags (per v2 §6):
   supports_unseen_timepoint_projection = False
@@ -272,6 +272,17 @@ class CellRank2Adapter(BaseAdapter):
                 f"Available obs columns: {list(adata.obs.columns)}"
             )
 
+        ncells_subsample = wot_params.get("ncells_subsample")
+        if ncells_subsample:
+            adata = self._subsample_per_timepoint(
+                adata=adata,
+                time_key=time_key,
+                max_cells=int(ncells_subsample),
+                seed=int(wot_params.get("subsample_seed", 42)),
+                stratify_key=cell_state_key,
+            )
+            self.adata = adata
+
         try:
             # -----------------------------------------------------------
             # Auxiliary integer time key
@@ -465,6 +476,105 @@ class CellRank2Adapter(BaseAdapter):
             "state_transition_matrix": str(stm_path),
             "lineage_graph_edges": str(edges_path),
         }
+
+    @staticmethod
+    def _subsample_per_timepoint(
+        adata,
+        time_key: str,
+        max_cells: int,
+        seed: int,
+        stratify_key: str | None = None,
+    ):
+        """Deterministically cap cells per timepoint before dense WOT maps."""
+        if max_cells <= 0:
+            return adata
+
+        rng = np.random.default_rng(seed)
+        obs = adata.obs
+        selected: list = []
+        summaries: list[str] = []
+
+        for time_value, time_idx in obs.groupby(time_key, observed=True).groups.items():
+            time_idx = pd.Index(time_idx)
+            n_cells = len(time_idx)
+            if n_cells <= max_cells:
+                selected.extend(time_idx.tolist())
+                summaries.append(f"{time_value}: kept {n_cells}")
+                continue
+
+            if stratify_key and stratify_key in obs.columns:
+                chosen = CellRank2Adapter._stratified_sample_index(
+                    obs=obs.loc[time_idx],
+                    stratify_key=stratify_key,
+                    max_cells=max_cells,
+                    rng=rng,
+                )
+            else:
+                chosen = rng.choice(time_idx.to_numpy(), size=max_cells, replace=False)
+
+            selected.extend(pd.Index(chosen).tolist())
+            summaries.append(f"{time_value}: {n_cells} -> {max_cells}")
+
+        selected_set = set(selected)
+        mask = obs.index.isin(selected_set)
+        subset = adata[mask]
+        filtered = (
+            subset.to_memory()
+            if getattr(subset, "isbacked", False)
+            else subset.copy()
+        )
+        print(
+            "[CellRank2Adapter] ncells_subsample applied per timepoint "
+            f"(max={max_cells}, seed={seed}, stratify_key={stratify_key!r}): "
+            + "; ".join(summaries)
+        )
+        print(
+            f"[CellRank2Adapter] Subsampled cell count: {adata.n_obs} -> {filtered.n_obs}"
+        )
+        return filtered
+
+    @staticmethod
+    def _stratified_sample_index(
+        obs: pd.DataFrame,
+        stratify_key: str,
+        max_cells: int,
+        rng: np.random.Generator,
+    ) -> pd.Index:
+        groups = [
+            pd.Index(group_idx)
+            for _, group_idx in obs.groupby(stratify_key, observed=True).groups.items()
+        ]
+        counts = np.array([len(idx) for idx in groups], dtype=float)
+
+        if len(groups) > max_cells:
+            keep_groups = np.argsort(counts)[::-1][:max_cells]
+            return pd.Index([rng.choice(groups[i].to_numpy()) for i in keep_groups])
+
+        raw = counts / counts.sum() * max_cells
+        alloc = np.maximum(1, np.floor(raw).astype(int))
+        alloc = np.minimum(alloc, counts.astype(int))
+
+        while alloc.sum() < max_cells:
+            capacity = counts.astype(int) - alloc
+            if capacity.max() <= 0:
+                break
+            residual = raw - np.floor(raw)
+            scores = np.where(capacity > 0, residual, -1.0)
+            i = int(np.argmax(scores))
+            alloc[i] += 1
+
+        while alloc.sum() > max_cells:
+            candidates = np.where(alloc > 1)[0]
+            if len(candidates) == 0:
+                break
+            residual = raw[candidates] - np.floor(raw[candidates])
+            i = int(candidates[np.argmin(residual)])
+            alloc[i] -= 1
+
+        chosen = []
+        for idx, n_take in zip(groups, alloc):
+            chosen.extend(rng.choice(idx.to_numpy(), size=int(n_take), replace=False))
+        return pd.Index(chosen)
 
     # ------------------------------------------------------------------
     # Scaffold fallback

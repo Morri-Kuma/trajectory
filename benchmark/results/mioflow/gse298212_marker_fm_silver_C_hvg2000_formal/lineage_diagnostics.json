@@ -1,0 +1,9 @@
+{
+  "source_transition_counts": {
+    "blood_start": 8892,
+    "epithelial_like": 13825,
+    "hCiPS": 566,
+    "intermediate_plastic": 2379
+  },
+  "latent_space": "PCA"
+}

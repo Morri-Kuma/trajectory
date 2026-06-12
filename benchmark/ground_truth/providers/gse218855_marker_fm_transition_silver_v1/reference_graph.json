@@ -1,0 +1,98 @@
+{
+  "_meta": {
+    "provider_id": "gse218855_marker_fm_transition_silver_v1",
+    "dataset_id": "GSE218855",
+    "label_mode": "official_silver",
+    "label_type": "frozen_silver_standard",
+    "state_key": "final_milestone_label_coarse",
+    "expanded_state_key": "final_milestone_label_expanded",
+    "graph_type": "marker_defined_coarse_milestone_graph",
+    "version": "v1",
+    "generated_by": "benchmark/annotation/build_milestone_providers.py",
+    "source_markers_yaml": "benchmark/annotation/milestone_markers_mouse.yaml",
+    "analysis_role": "primary_report",
+    "deprecated": false,
+    "n_states": 4,
+    "n_edges": 3,
+    "expanded_trajectory_order": [
+      "stage_00_MEF",
+      "stage_01_MEF_to_epithelial_like",
+      "stage_02_epithelial_like",
+      "stage_03_epithelial_like_to_intermediate_plastic",
+      "stage_04_intermediate_plastic",
+      "stage_05_intermediate_plastic_to_iPSC",
+      "stage_06_iPSC"
+    ],
+    "excluded_from_official_metrics": [
+      "ambiguous",
+      "unknown_or_ood"
+    ],
+    "policy": [
+      "Official frozen silver-standard coarse milestone reference graph.",
+      "Nodes are primary_milestones only.",
+      "Transition labels are in final_milestone_label_expanded (supplementary) and are NOT graph nodes.",
+      "All edges have confidence=high; all nodes have status=confirmed.",
+      "Excluded from official metrics: ambiguous, unknown_or_ood.",
+      "Provenance: Liuyang et al. 2023 DOI 10.1016/j.stem.2023.02.008; Guan et al. 2022 DOI 10.1038/s41586-022-04593-5; companion code https://github.com/sajuukLyu/CSC_2023"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "MEF",
+      "label": "MEF",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 0
+    },
+    {
+      "id": "epithelial_like",
+      "label": "epithelial_like",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 1
+    },
+    {
+      "id": "intermediate_plastic",
+      "label": "intermediate_plastic",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 2
+    },
+    {
+      "id": "iPSC",
+      "label": "iPSC",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 3
+    }
+  ],
+  "edges": [
+    {
+      "source": "MEF",
+      "target": "epithelial_like",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "marker_defined_milestone_order"
+    },
+    {
+      "source": "epithelial_like",
+      "target": "intermediate_plastic",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "marker_defined_milestone_order"
+    },
+    {
+      "source": "intermediate_plastic",
+      "target": "iPSC",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "marker_defined_milestone_order"
+    }
+  ]
+}

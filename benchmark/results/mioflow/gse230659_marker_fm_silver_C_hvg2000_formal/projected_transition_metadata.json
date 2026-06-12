@@ -1,0 +1,80 @@
+{
+  "dataset_id": "GSE230659",
+  "projected_labels_csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\projected_milestone_labels.csv",
+  "output_dir": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal",
+  "label_mode": "official_silver",
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "cell_state_key": "final_milestone_label_coarse",
+  "excluded_labels": [
+    "ambiguous",
+    "unknown_or_ood"
+  ],
+  "exclusion_reason": "label not present in marker-defined milestone graph",
+  "transition_policy": "aggregate_frequency_consecutive_timepoints",
+  "transition_policy_note": "For each consecutive timepoint pair (t1, t2), the transition probability from source state s1 to target state s2 equals the frequency of s2 at t2, weighted by the frequency of s1 at t1. Row-normalized. This is a smoke bridge without single-cell tracking.",
+  "smoke_test": true,
+  "formal_benchmark": false,
+  "all_timepoint_pairs": false,
+  "timestamp": "2026-06-07T11:53:52.820871+00:00",
+  "mode_specific_outputs": {
+    "state_transition_matrix_official_silver.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\state_transition_matrix_official_silver.csv",
+    "lineage_graph_edges_official_silver.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\lineage_graph_edges_official_silver.csv",
+    "lineage_metrics_official_silver.json": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\lineage_metrics_official_silver.json"
+  },
+  "generic_compatibility_outputs": {
+    "state_transition_matrix.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\state_transition_matrix.csv",
+    "lineage_graph_edges.csv": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\lineage_graph_edges.csv",
+    "projected_transition_metadata.json": "C:\\Users\\37620\\trajectory\\benchmark\\results\\mioflow\\gse230659_marker_fm_silver_C_hvg2000_formal\\projected_transition_metadata.json"
+  },
+  "compatibility_note": "generic_compatibility_outputs are kept for stable filenames. mode_specific_outputs are the preferred files for official silver reports.",
+  "n_timepoints": 5,
+  "unique_timepoints": [
+    "4.0",
+    "12.0",
+    "20.0",
+    "28.0",
+    "30.0"
+  ],
+  "n_pairs_used": 4,
+  "n_cells_total": 10000,
+  "n_cells_valid": 7369,
+  "states": [
+    "epithelial_like",
+    "hADSCs",
+    "hCiPS",
+    "intermediate_plastic"
+  ],
+  "n_states": 4,
+  "tp_label_counts": {
+    "4.0": {
+      "epithelial_like": 1174,
+      "hADSCs": 465,
+      "intermediate_plastic": 37,
+      "hCiPS": 12
+    },
+    "12.0": {
+      "epithelial_like": 852,
+      "intermediate_plastic": 409,
+      "hADSCs": 45,
+      "hCiPS": 3
+    },
+    "20.0": {
+      "hADSCs": 1014,
+      "epithelial_like": 104,
+      "intermediate_plastic": 79,
+      "hCiPS": 2
+    },
+    "28.0": {
+      "hADSCs": 693,
+      "epithelial_like": 787,
+      "hCiPS": 76,
+      "intermediate_plastic": 12
+    },
+    "30.0": {
+      "hADSCs": 797,
+      "epithelial_like": 749,
+      "hCiPS": 56,
+      "intermediate_plastic": 3
+    }
+  }
+}

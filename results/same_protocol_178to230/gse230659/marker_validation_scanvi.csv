@@ -1,0 +1,13 @@
+annotation,program,state,auroc,n_state
+scanvi_label,pluripotency,ambiguous,0.9437866871975175,552
+scanvi_label,pluripotency,epithelial_like,0.6954259329906203,39618
+scanvi_label,pluripotency,hADSCs,0.29025340879140776,34960
+scanvi_label,pluripotency,unknown_or_ood,0.7698135731398911,64
+scanvi_label,stromal_fibroblast,ambiguous,0.18017416176695017,552
+scanvi_label,stromal_fibroblast,epithelial_like,0.23166954479649893,39618
+scanvi_label,stromal_fibroblast,hADSCs,0.7792222641426374,34960
+scanvi_label,stromal_fibroblast,unknown_or_ood,0.2145172326301078,64
+scanvi_label,epithelial_met,ambiguous,0.716106330157983,552
+scanvi_label,epithelial_met,epithelial_like,0.6666027122858466,39618
+scanvi_label,epithelial_met,hADSCs,0.3267775969815708,34960
+scanvi_label,epithelial_met,unknown_or_ood,0.48523288799414344,64

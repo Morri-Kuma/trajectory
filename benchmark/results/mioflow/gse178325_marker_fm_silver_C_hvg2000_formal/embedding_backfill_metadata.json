@@ -1,0 +1,23 @@
+{
+  "status": "completed",
+  "created_at": "2026-05-30T03:19:34.877163+00:00",
+  "config": "benchmark/configs/runtime/mioflow_gse178325_marker_fm_silver_C_hvg2000_formal.yaml",
+  "method": "mioflow",
+  "h5ad_path": "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/inputs/gse178325_marker_fm_transition_silver_hvg2000/GSE178325_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+  "output_dir": "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/results/mioflow/gse178325_marker_fm_silver_C_hvg2000_formal",
+  "embedding_path": "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/results/mioflow/gse178325_marker_fm_silver_C_hvg2000_formal/embedding.npy",
+  "embedding_shape": [
+    80475,
+    50
+  ],
+  "next_timepoint_embedding_path": "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/results/mioflow/gse178325_marker_fm_silver_C_hvg2000_formal/next_timepoint_embedding.npy",
+  "next_timepoint_embedding_shape": [
+    16000,
+    50
+  ],
+  "projected_embedding_path": "/hshare1/ZETTAI_path_WA_slash_home_KARA/home/xzy0723/projects/trajectory/benchmark/results/mioflow/gse178325_marker_fm_silver_C_hvg2000_formal/projected_embedding.npy",
+  "actions": [
+    "wrote_embedding",
+    "copied_projected_to_next_timepoint"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "cell_state_key": "final_milestone_label_coarse",
+  "assignment_temperature": 1.0,
+  "source_transition_counts": {
+    "CF": 35246,
+    "CM": 16247,
+    "CMES": 18973,
+    "IPSC": 38489,
+    "MES": 53662,
+    "PROG": 31758,
+    "UNK": 12100
+  }
+}

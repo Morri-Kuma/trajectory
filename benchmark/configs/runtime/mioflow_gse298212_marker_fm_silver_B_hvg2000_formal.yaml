@@ -1,0 +1,61 @@
+run_id: mioflow_gse298212_marker_fm_silver_B_hvg2000_formal
+method: mioflow
+scenario: B
+scenario_name: GSE298212 mioflow scenario B official_silver marker_fm_transition (hvg2000)
+framework_version: v2.1
+result_class: marker_fm_transition_silver_formal
+formal_benchmark: true
+ground_truth:
+  provider_id: gse298212_marker_fm_transition_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE298212
+  h5ad_path: benchmark/inputs/gse298212_marker_fm_transition_silver_hvg2000/GSE298212_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+output:
+  base_dir: benchmark/results/mioflow/gse298212_marker_fm_silver_B_hvg2000_formal
+mioflow_params:
+  pca_dims: 50
+  hidden_dim: 64
+  n_epochs: 40
+  batch_size: 64
+  learning_rate: 0.001
+  lambda_ot: 1.0
+  use_density_loss: false
+  lambda_density: 5.0
+  lambda_energy: 0.01
+  energy_time_steps: 10
+  seed: 42
+  n_sim_cells: 2000
+  metric_sample_cells: 1000
+  use_cuda: true
+scenario_params:
+  train_times:
+  - 0.0
+  - 1.0
+  - 3.0
+  heldout_times:
+  - 6.0
+  - 8.0
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse298212_marker_fm_transition_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse298212_marker_fm_transition_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: formal
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day
+state_system:
+  version: gse298212_marker_fm_transition_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 4
+  n_graph_edges: 3
+  source_h5ad: benchmark/inputs/gse298212_marker_fm_transition_silver_hvg2000/GSE298212_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad
+  note: Frozen marker+foundation-model milestone provider; official metrics use final_milestone_label_coarse.

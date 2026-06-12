@@ -1,23 +1,32 @@
 """
 eval_lineage.py
 Lineage Fidelity evaluator — the first active core evaluator.
-Framework reference: experimental framework v2.md §9, §14 Step 2
+Framework reference: docs/framework/experimental_framework_v2.md §9, §14 Step 2
 
 Lineage Fidelity is the ONLY active benchmark dimension for the current
 WOT vs CellRank2 stage. This evaluator is called by eval_dispatch.py
 after each method's adapter produces state_transition_matrix.csv
 and lineage_graph_edges.csv.
 
-Metrics (per v2 §9.5):
-  - AUROC
-  - AUPRC
-  - Jaccard Similarity
-  - Single-step lineage recovery
-  - Multi-step lineage recovery
+Metric protocol (v2 §9.5, updated to scTimeBench graph similarity):
+  Metrics are computed by lineage_graphsim_sctimebench.py using two
+  threshold criteria that mirror scTimeBench's graph_sim module:
+    - simple    (single_step): direct weighted adjacency vs binary reference
+    - all_paths (multi_step):  Floyd-Warshall reachability vs transitive closure
+
+  Each criterion produces:
+    threshold, threshold_type, accuracy, precision, recall, f1,
+    auc_roc, auc_prc, jaccard_similarity
+
+  Defaults match scTimeBench:
+    threshold_criteria: ["simple", "all_paths"]
+    auto_threshold: True
+    edge_threshold: 0.1
+    prc_threshold: True
 
 Baseline (per v2 §9.6):
-  A correlation-based baseline analogous to scTimeBench's lineage baseline
-  is included so that results are judged relative to a non-trivial baseline.
+  scTimeBench-style Spearman maximum-vote correlation baseline evaluated
+  with the same graph-sim metric functions.
 
 Reference requirement (per v2 §9.3):
   A formal Lineage Fidelity benchmark requires a defined cell-state system
@@ -29,6 +38,18 @@ Reference graph format:
   Each edge carries: source, target, weight, confidence, source_status,
   target_status. edge_confidence_mode controls which edges are used as
   ground truth (see load_reference_graph() for details).
+
+lineage_metrics.json schema (metric_protocol: "sctimebench_graph_sim"):
+  graph_metrics.single_step.*   ← simple criterion
+  graph_metrics.multi_step.*    ← all_paths criterion
+  Backward-compat top-level aliases:
+    auroc                 = graph_metrics.single_step.auc_roc
+    auprc                 = graph_metrics.single_step.auc_prc
+    jaccard_similarity    = graph_metrics.single_step.jaccard_similarity
+    single_step_recovery  = graph_metrics.single_step.recall
+    multi_step_recovery   = graph_metrics.multi_step.recall
+  Legacy (diagnostic only, not used for ranking):
+    legacy_jaccard_similarity_topk
 """
 
 import json
@@ -38,6 +59,16 @@ from pathlib import Path
 from typing import Optional, Tuple, List
 from scipy.sparse import issparse
 from scipy.stats import rankdata
+
+from benchmark.evaluation.lineage_graphsim_sctimebench import (
+    PREDICTION_LABEL_SOURCE_SCTIMEBENCH_ZERO_FILL,
+    compute_graph_sim_metrics,
+    graph_sim_from_baseline_df,
+    validate_predicted_label_space,
+)
+
+
+OFFICIAL_CELL_STATE_KEY = "final_milestone_label_coarse"
 
 
 def _mark_run_metadata_lineage_failed(out_dir: Path, reason: str) -> None:
@@ -104,6 +135,65 @@ def _nonfinite_matrix_message(matrix: pd.DataFrame, matrix_name: str) -> str:
         "states with no valid source-cell transitions, write an all-zero row "
         "and record the unsupported states in diagnostics."
     )
+
+
+def _load_reference_graph_meta(reference_graph_path: str) -> dict:
+    with open(reference_graph_path, encoding="utf-8") as f:
+        graph = json.load(f)
+    meta = graph.get("_meta") or {}
+    return meta if isinstance(meta, dict) else {}
+
+
+def _is_official_silver_contract(reference_meta: dict, ground_truth: dict) -> bool:
+    return (
+        reference_meta.get("label_mode") == "official_silver"
+        or ground_truth.get("label_mode") == "official_silver"
+        or reference_meta.get("label_type") == "frozen_silver_standard"
+        or ground_truth.get("label_type") == "frozen_silver_standard"
+    )
+
+
+def _validate_reference_state_key(
+    *,
+    reference_meta: dict,
+    ground_truth: dict,
+    cell_state_key: Optional[str],
+) -> str:
+    """Resolve and validate the canonical cell-state key for lineage metrics."""
+    reference_state_key = (
+        reference_meta.get("state_key")
+        or ground_truth.get("state_key")
+        or cell_state_key
+    )
+    if not reference_state_key:
+        raise ValueError(
+            "Lineage evaluation requires a cell_state_key from the reference "
+            "graph or ground-truth provider."
+        )
+    if cell_state_key and cell_state_key != reference_state_key:
+        raise ValueError(
+            f"cell_state_key={cell_state_key!r} does not match reference graph "
+            f"state_key={reference_state_key!r}."
+        )
+    if (
+        _is_official_silver_contract(reference_meta, ground_truth)
+        and reference_state_key != OFFICIAL_CELL_STATE_KEY
+    ):
+        raise ValueError(
+            f"official_silver lineage evaluation must use "
+            f"{OFFICIAL_CELL_STATE_KEY!r}, got {reference_state_key!r}."
+        )
+    return str(reference_state_key)
+
+
+def _expanded_edge_labels(predicted_edges: set) -> list:
+    labels = {
+        str(label)
+        for edge in predicted_edges
+        for label in edge
+        if str(label).startswith("stage_")
+    }
+    return sorted(labels)[:20]
 
 
 # ------------------------------------------------------------------
@@ -215,7 +305,7 @@ def load_reference_graph(
 
 
 # ------------------------------------------------------------------
-# Metric functions
+# Legacy metric helpers (kept for backward compat / diagnostic use)
 # ------------------------------------------------------------------
 
 def compute_auroc(y_true: np.ndarray, y_score: np.ndarray) -> float:
@@ -241,43 +331,6 @@ def compute_jaccard(predicted_edges: set, reference_edges: set) -> float:
     intersection = len(predicted_edges & reference_edges)
     union = len(predicted_edges | reference_edges)
     return float(intersection / union) if union > 0 else float("nan")
-
-
-def compute_single_step_recovery(predicted_matrix: pd.DataFrame,
-                                  reference_matrix: pd.DataFrame) -> float:
-    """
-    Single-step lineage recovery: fraction of reference edges in the top-k
-    predicted edges (where k = number of reference edges).
-    """
-    if reference_matrix.empty or predicted_matrix.empty:
-        return float("nan")
-    ref_edges = set(zip(*np.where(reference_matrix.values > 0)))
-    n_ref = len(ref_edges)
-    if n_ref == 0:
-        return float("nan")
-    flat_pred = predicted_matrix.values.flatten()
-    threshold = np.sort(flat_pred)[-n_ref] if n_ref <= len(flat_pred) else 0
-    pred_edges = set(zip(*np.where(predicted_matrix.values >= threshold)))
-    recovery = len(ref_edges & pred_edges) / n_ref
-    return float(recovery)
-
-
-def compute_multi_step_recovery(predicted_matrix: pd.DataFrame,
-                                 reference_matrix: pd.DataFrame,
-                                 steps: int = 2) -> float:
-    """
-    Multi-step lineage recovery: same as single-step but evaluated on
-    multi-hop paths through the reference lineage.
-    """
-    if reference_matrix.empty or predicted_matrix.empty:
-        return float("nan")
-    # Multi-step reference graph via matrix exponentiation.
-    ref_vals = reference_matrix.values
-    multi_step_ref = np.linalg.matrix_power(ref_vals > 0, steps).astype(float)
-    multi_step_ref_df = pd.DataFrame(multi_step_ref,
-                                      index=reference_matrix.index,
-                                      columns=reference_matrix.columns)
-    return compute_single_step_recovery(predicted_matrix, multi_step_ref_df)
 
 
 # ------------------------------------------------------------------
@@ -317,9 +370,7 @@ def _state_mean_expression(adata, cell_state_key: str,
             chunk_dense = chunk.toarray()
         else:
             chunk_dense = np.asarray(chunk)
-        # Group-sum by state within this chunk.
         chunk_states = cell_states[start:end]
-        # Precompute per-state masks via unique for speed.
         for s_str, i in state_to_idx.items():
             mask = chunk_states == s_str
             if not mask.any():
@@ -327,168 +378,11 @@ def _state_mean_expression(adata, cell_state_key: str,
             sums[i] += chunk_dense[mask].sum(axis=0)
             counts[i] += int(mask.sum())
 
-    # Safe per-state mean.
     means = np.zeros_like(sums)
     nonzero = counts > 0
     means[nonzero] = sums[nonzero] / counts[nonzero, None]
 
     return pd.DataFrame(means, index=list(states))
-
-
-def _build_baseline_edges(corr_df: pd.DataFrame,
-                           n_top: int) -> Tuple[pd.DataFrame, set]:
-    """
-    Binarize the correlation "transition" matrix into a sparse edge list by
-    selecting the top-N off-diagonal entries (matching the single-step rule).
-
-    This gives the baseline a predicted-edges set comparable to what the
-    method adapters emit, so the edge-based Jaccard is not trivially 1.0
-    for the full dense matrix.
-    """
-    flat = corr_df.values.copy()
-    # Mask diagonal so self-correlation (1.0) is not treated as an edge.
-    np.fill_diagonal(flat, -np.inf)
-    n = flat.size
-    if n_top <= 0 or n_top > n:
-        n_top = max(1, min(n_top, n))
-    threshold = np.sort(flat.flatten())[-n_top]
-    edge_rows: list = []
-    edges: set = set()
-    states = list(corr_df.index)
-    for i, src in enumerate(states):
-        for j, tgt in enumerate(corr_df.columns):
-            v = flat[i, j]
-            if v >= threshold and np.isfinite(v):
-                edge_rows.append({"source_state": src,
-                                  "target_state": tgt,
-                                  "weight": float(corr_df.iloc[i, j])})
-                edges.add((src, tgt))
-    edges_df = pd.DataFrame(
-        edge_rows if edge_rows else [],
-        columns=["source_state", "target_state", "weight"],
-    )
-    return edges_df, edges
-
-
-def compute_state_mean_pearson_baseline(adata,
-                                         reference_matrix: pd.DataFrame,
-                                         reference_edges: set,
-                                         cell_state_key: Optional[str] = None,
-                                         output_dir: Optional[str] = None) -> dict:
-    """
-    Correlation-based baseline for Lineage Fidelity (per v2 §9.6).
-
-    Legacy diagnostic only: uses pairwise Pearson
-    correlation between per-state mean gene expression vectors as a naive
-    predictor of lineage connectivity, then evaluates the resulting
-    (symmetric) score matrix against the reference lineage using the same
-    metrics as the main evaluator.
-
-    Notes on interpretation
-    -----------------------
-    The baseline is intentionally naïve and **undirected**: correlation is
-    symmetric, so the baseline cannot distinguish A→B from B→A.  That is the
-    point — a non-trivial method must beat a direction-agnostic similarity
-    signal to demonstrate real lineage inference value.  Diagonal entries
-    are masked out so self-correlation (=1.0) does not dominate the
-    predicted-edges list.
-
-    Traceability
-    ------------
-    If ``output_dir`` is provided, the baseline writes two side files so the
-    baseline is fully reproducible from disk:
-      - ``baseline_state_transition_matrix.csv`` (the correlation matrix)
-      - ``baseline_lineage_graph_edges.csv`` (top-N correlation edges)
-    """
-    none_result = {
-        "auroc": None, "auprc": None, "jaccard_similarity": None,
-        "single_step_recovery": None, "multi_step_recovery": None,
-    }
-
-    if adata is None:
-        return {**none_result,
-                "note": "Correlation baseline skipped: no AnnData was passed to the evaluator."}
-    if reference_matrix is None or reference_matrix.empty:
-        return {**none_result,
-                "note": "Correlation baseline skipped: reference matrix is empty under the current edge_confidence_mode."}
-    if cell_state_key is None:
-        return {**none_result,
-                "note": "Correlation baseline skipped: cell_state_key was not supplied to the evaluator."}
-    if cell_state_key not in adata.obs.columns:
-        return {**none_result,
-                "note": f"Correlation baseline skipped: adata.obs does not contain {cell_state_key!r}."}
-
-    # Align state list with the reference matrix so predicted and reference
-    # matrices have identical index/columns when metrics are computed.
-    states = list(reference_matrix.index)
-
-    # Per-state mean expression.
-    try:
-        means_df = _state_mean_expression(adata, cell_state_key, states)
-    except Exception as exc:  # pragma: no cover — defensive
-        return {**none_result,
-                "note": f"Correlation baseline failed during mean-expression computation: {exc!s}"}
-
-    # States present in adata (non-zero mean vector).
-    row_norms = np.linalg.norm(means_df.values, axis=1)
-    present_mask = row_norms > 0
-
-    if present_mask.sum() < 2:
-        return {**none_result,
-                "note": (
-                    "Correlation baseline skipped: fewer than 2 reference states "
-                    f"are represented in adata under {cell_state_key!r}."
-                )}
-
-    # Pearson correlation across states. Clip NaN rows (zero-variance) to 0.
-    corr = np.corrcoef(means_df.values)
-    corr = np.nan_to_num(corr, nan=0.0, posinf=0.0, neginf=0.0)
-    # Shift from [-1, 1] → [0, 1] so it behaves like a probability score for
-    # AUROC/AUPRC (the sklearn implementations care about ranking, so the
-    # shift is metric-preserving, but it keeps the score non-negative for
-    # downstream consistency with the WOT/CR2 STM conventions).
-    score = (corr + 1.0) / 2.0
-    corr_df = pd.DataFrame(score, index=states, columns=states, dtype=float)
-
-    # Metrics — aligned with the main evaluator so numbers are directly
-    # comparable across method vs baseline rows in the summary.
-    y_true = reference_matrix.values.flatten().astype(int)
-    y_score = corr_df.values.flatten().astype(float)
-    metrics = {
-        "auroc": compute_auroc(y_true, y_score),
-        "auprc": compute_auprc(y_true, y_score),
-    }
-
-    # Edge-based metrics require a sparse predicted-edges set.
-    n_ref = int(reference_matrix.values.sum())
-    edges_df, edges_set = _build_baseline_edges(corr_df, n_top=n_ref)
-    metrics["jaccard_similarity"] = compute_jaccard(edges_set, reference_edges)
-    metrics["single_step_recovery"] = compute_single_step_recovery(
-        corr_df, reference_matrix
-    )
-    metrics["multi_step_recovery"] = compute_multi_step_recovery(
-        corr_df, reference_matrix
-    )
-
-    # Provenance fields so the baseline row is traceable in the summary.
-    metrics["method"] = "state_mean_pearson_baseline"
-    metrics["baseline_style"] = "legacy_state_mean_pearson"
-    metrics["cell_state_key"] = cell_state_key
-    metrics["n_states_used"] = int(present_mask.sum())
-    metrics["n_predicted_edges_topk"] = len(edges_set)
-    metrics["note"] = (
-        "Per-state mean-expression Pearson correlation (symmetric), "
-        f"top-{n_ref} off-diagonal entries as predicted lineage edges."
-    )
-
-    # Optional on-disk traceability artifacts.
-    if output_dir is not None:
-        out = Path(output_dir)
-        out.mkdir(parents=True, exist_ok=True)
-        corr_df.to_csv(out / "baseline_state_transition_matrix.csv")
-        edges_df.to_csv(out / "baseline_lineage_graph_edges.csv", index=False)
-
-    return metrics
 
 
 def _resolve_time_key(adata, time_key: Optional[str]) -> Optional[str]:
@@ -583,6 +477,7 @@ def _build_pr_threshold_edges(score_df: pd.DataFrame,
 def compute_correlation_baseline(adata,
                                   reference_matrix: pd.DataFrame,
                                   reference_edges: set,
+                                  ref_node_ids: list,
                                   cell_state_key: Optional[str] = None,
                                   output_dir: Optional[str] = None,
                                   time_key: Optional[str] = None,
@@ -595,8 +490,12 @@ def compute_correlation_baseline(adata,
     adjacent timepoint pairs, cell-level Spearman correlation, maximum score
     per target state, one best-target vote per source cell, then row-normalized
     source-state by target-state votes.
+
+    The resulting score matrix is evaluated using the same scTimeBench
+    graph-sim metric functions as method outputs.
     """
     none_result = {
+        "graph_metrics": None,
         "auroc": None, "auprc": None, "jaccard_similarity": None,
         "single_step_recovery": None, "multi_step_recovery": None,
     }
@@ -702,85 +601,53 @@ def compute_correlation_baseline(adata,
     score[nonzero_rows] = votes[nonzero_rows] / row_sums[nonzero_rows]
     baseline_df = pd.DataFrame(score, index=states, columns=states, dtype=float)
 
-    y_true = reference_matrix.values.flatten().astype(int)
-    y_score = baseline_df.values.flatten().astype(float)
+    # Evaluate with scTimeBench graph-sim metrics (same as method outputs)
+    graph_metrics = graph_sim_from_baseline_df(
+        baseline_df=baseline_df,
+        reference_matrix=reference_matrix,
+        ref_node_ids=ref_node_ids,
+    )
+    single = graph_metrics.get("single_step", {}) or {}
+    multi  = graph_metrics.get("multi_step",  {}) or {}
+
     metrics = {
-        "auroc": compute_auroc(y_true, y_score),
-        "auprc": compute_auprc(y_true, y_score),
+        "graph_metrics": graph_metrics,
+        # backward-compat aliases
+        "auroc":               single.get("auc_roc"),
+        "auprc":               single.get("auc_prc"),
+        "jaccard_similarity":  single.get("jaccard_similarity"),
+        "single_step_recovery": single.get("recall"),
+        "multi_step_recovery":  multi.get("recall"),
+        "method": "correlation_baseline",
+        "baseline_style": "sctimebench_correlation",
+        "correlation_method": "spearmanr",
+        "averaging_method": "maximum",
+        "cell_state_key": cell_state_key,
+        "time_key": resolved_time_key,
+        "n_states_used": int(nonzero_rows.sum()),
+        "n_timepoint_pairs_used": int(n_pairs_used),
+        "n_source_cell_votes": int(n_source_cell_votes),
+        "note": (
+            "scTimeBench-style cell-level Spearman correlation baseline with "
+            "maximum target-state aggregation and row-normalized source-state votes. "
+            "Evaluated with sctimebench_graph_sim metric protocol."
+        ),
     }
-
-    edges_df, edges_set, graph_threshold = _build_pr_threshold_edges(
-        baseline_df, reference_edges
-    )
-    metrics["jaccard_similarity"] = compute_jaccard(edges_set, reference_edges)
-    metrics["single_step_recovery"] = compute_single_step_recovery(
-        baseline_df, reference_matrix
-    )
-    metrics["multi_step_recovery"] = compute_multi_step_recovery(
-        baseline_df, reference_matrix
-    )
-
-    metrics["method"] = "correlation_baseline"
-    metrics["baseline_style"] = "sctimebench_correlation"
-    metrics["correlation_method"] = "spearmanr"
-    metrics["averaging_method"] = "maximum"
-    metrics["cell_state_key"] = cell_state_key
-    metrics["time_key"] = resolved_time_key
-    metrics["n_states_used"] = int(nonzero_rows.sum())
-    metrics["n_timepoint_pairs_used"] = int(n_pairs_used)
-    metrics["n_source_cell_votes"] = int(n_source_cell_votes)
-    metrics["n_predicted_edges_thresholded"] = len(edges_set)
-    metrics["graph_threshold"] = graph_threshold
-    metrics["note"] = (
-        "scTimeBench-style cell-level Spearman correlation baseline with "
-        "maximum target-state aggregation and row-normalized source-state votes."
-    )
 
     if output_dir is not None:
         out = Path(output_dir)
         out.mkdir(parents=True, exist_ok=True)
         baseline_df.to_csv(out / "baseline_state_transition_matrix.csv")
+        # Build and save a threshold-based edge list for traceability
+        edges_df, _, _ = _build_pr_threshold_edges(baseline_df, reference_edges)
         edges_df.to_csv(out / "baseline_lineage_graph_edges.csv", index=False)
 
     return metrics
 
 
 # ------------------------------------------------------------------
-# Main evaluation function
+# Compatibility fields  (Step 10 output naming)
 # ------------------------------------------------------------------
-
-def _topk_predicted_edges(predicted_matrix: pd.DataFrame, k: int) -> set:
-    """
-    Build a top-k predicted-edges set from a (possibly dense) state-transition
-    matrix by selecting the k off-diagonal entries with the largest weight.
-
-    This mirrors the rule used by ``compute_single_step_recovery`` so that the
-    edge-based Jaccard is computed on a *sparse, comparable* edge list rather
-    than on whatever the adapter happened to dump into ``lineage_graph_edges.csv``
-    (WOT and CellRank2 currently emit fully dense 14×14 = 196 edges, which
-    forces the raw-edge Jaccard to collapse to ``n_ref / 196`` for any method
-    whose STM is dense — see benchmark/docs/jaccard_singlestep_diagnosis.md).
-    Self-loops are excluded.
-    """
-    if predicted_matrix.empty or k <= 0:
-        return set()
-    vals = predicted_matrix.values.copy().astype(float)
-    np.fill_diagonal(vals, -np.inf)
-    flat = vals.flatten()
-    finite = flat[np.isfinite(flat)]
-    if finite.size == 0:
-        return set()
-    k = min(k, finite.size)
-    threshold = np.sort(finite)[-k]
-    edges: set = set()
-    states_idx = list(predicted_matrix.index)
-    states_col = list(predicted_matrix.columns)
-    for i, src in enumerate(states_idx):
-        for j, tgt in enumerate(states_col):
-            if np.isfinite(vals[i, j]) and vals[i, j] >= threshold:
-                edges.add((src, tgt))
-    return edges
-
 
 def _enrich_lineage_metrics_compat(
     metrics: dict,
@@ -815,6 +682,48 @@ def _enrich_lineage_metrics_compat(
     return metrics
 
 
+def _write_failed_lineage_metrics(
+    *,
+    out_dir: Path,
+    status: str,
+    edge_confidence_mode: str,
+    n_reference_edges: Optional[int],
+    cell_state_key: Optional[str],
+    time_key: Optional[str],
+    ground_truth: dict,
+    reference_graph_path: Optional[str],
+    reason_for_metadata: str,
+) -> dict:
+    metrics = {
+        "metric_protocol": "sctimebench_graph_sim",
+        "graph_metrics": None,
+        "auroc": None,
+        "auprc": None,
+        "jaccard_similarity": None,
+        "single_step_recovery": None,
+        "multi_step_recovery": None,
+        "legacy_jaccard_similarity_topk": None,
+        "baseline": None,
+        "status": status,
+        "edge_confidence_mode": edge_confidence_mode,
+        "n_reference_edges": n_reference_edges,
+        "cell_state_key": cell_state_key,
+        "prediction_state_key": cell_state_key,
+        "prediction_label_source": "invalid_or_unvalidated",
+        "time_key": time_key,
+        "ground_truth": ground_truth,
+    }
+    _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
+    with open(out_dir / "lineage_metrics.json", "w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+    _mark_run_metadata_lineage_failed(out_dir, reason_for_metadata)
+    return metrics
+
+
+# ------------------------------------------------------------------
+# Main evaluation function
+# ------------------------------------------------------------------
+
 def run_lineage_evaluation(
     state_transition_matrix_path: str,
     lineage_graph_edges_path: str,
@@ -836,40 +745,34 @@ def run_lineage_evaluation(
         Path to state_transition_matrix.csv produced by the method adapter.
     lineage_graph_edges_path : str
         Path to lineage_graph_edges.csv produced by the method adapter.
+        Retained as a diagnostic artifact; no longer the primary metric source.
     output_dir : str
         Directory where lineage_metrics.json will be written.
     reference_graph_path : str, optional
-        Path to the reference lineage graph JSON (_meta,
-        nodes, edges with confidence field). If None, metric computation is
-        deferred and a status note is recorded (backward-compatible default).
+        Path to the reference lineage graph JSON (_meta, nodes, edges with
+        confidence field). If None, metric computation is deferred.
     adata : AnnData, optional
         Required for the correlation baseline computation.
     edge_confidence_mode : str
         Controls which reference graph edges count as ground-truth positives.
         Options: "all", "medium_and_above" (recommended), "high_only".
-        See load_reference_graph() for full documentation.
-        Defaults to "all" when configs do not set this field.
     exclude_uncertain_states : bool
         If True, exclude edges involving uncertain-status nodes from the
-        reference. See load_reference_graph() for details. Default False.
+        reference. Default False.
     cell_state_key : str, optional
-        Name of the obs column that holds the cell-state label used by the
-        method (e.g. ``"final_milestone_label_coarse"``). Required by the
-        correlation baseline; if absent the baseline reports a clear "skipped"
-        status instead of returning silently empty values.
+        Name of the obs column holding the cell-state label.
     time_key : str, optional
-        Name of the obs column that holds the temporal coordinate used by the
-        scTimeBench-style correlation baseline. If absent, common names such as
-        ``timepoint``, ``abs_day``, and ``time_label`` are tried in order.
+        Name of the obs column holding the temporal coordinate.
     ground_truth : dict, optional
         Provider metadata for the annotation/reference graph used by this run.
-        Stored in lineage_metrics.json for downstream sensitivity analysis.
 
     Returns
     -------
-    dict with keys: auroc, auprc, jaccard_similarity, jaccard_similarity_topk,
-                    single_step_recovery, multi_step_recovery, baseline,
-                    status, edge_confidence_mode, n_reference_edges
+    dict — lineage_metrics.json content, with keys:
+        metric_protocol, graph_metrics, status, edge_confidence_mode,
+        n_reference_edges, baseline, ground_truth, cell_state_key, time_key,
+        and top-level backward-compat aliases (auroc, auprc, jaccard_similarity,
+        single_step_recovery, multi_step_recovery).
     """
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -877,11 +780,11 @@ def run_lineage_evaluation(
     _mark_run_metadata_ground_truth(out_dir, ground_truth)
 
     # Load predicted outputs
-    stm_path = Path(state_transition_matrix_path)
+    stm_path   = Path(state_transition_matrix_path)
     edges_path = Path(lineage_graph_edges_path)
 
     predicted_matrix = pd.DataFrame()
-    predicted_edges = set()
+    predicted_edges  = set()   # diagnostic only (lineage_graph_edges.csv)
 
     if stm_path.exists() and stm_path.stat().st_size > 0:
         predicted_matrix = pd.read_csv(stm_path, index_col=0)
@@ -893,7 +796,7 @@ def run_lineage_evaluation(
                 zip(edges_df["source_state"], edges_df["target_state"])
             )
 
-    # Check reference availability
+    # ── No reference graph: defer ─────────────────────────────────────────────
     if reference_graph_path is None:
         status = (
             "deferred: reference lineage graph not yet provided. "
@@ -901,12 +804,13 @@ def run_lineage_evaluation(
             "Lineage Fidelity metrics can be computed."
         )
         metrics = {
-            "auroc": None,
-            "auprc": None,
+            "metric_protocol": "sctimebench_graph_sim",
+            "graph_metrics": None,
+            # backward-compat aliases
+            "auroc": None, "auprc": None,
             "jaccard_similarity": None,
-            "jaccard_similarity_topk": None,
-            "single_step_recovery": None,
-            "multi_step_recovery": None,
+            "single_step_recovery": None, "multi_step_recovery": None,
+            "legacy_jaccard_similarity_topk": None,
             "baseline": None,
             "status": status,
             "edge_confidence_mode": edge_confidence_mode,
@@ -916,109 +820,141 @@ def run_lineage_evaluation(
             "ground_truth": ground_truth,
         }
         _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
-        metrics_path = out_dir / "lineage_metrics.json"
-        with open(metrics_path, "w") as f:
+        with open(out_dir / "lineage_metrics.json", "w") as f:
             json.dump(metrics, f, indent=2)
         print(f"[eval_lineage] {status}")
         return metrics
 
-    # Load and parse reference graph.
-    # load_reference_graph() handles confidence filtering and returns a
-    # binary adjacency DataFrame indexed by state IDs.
+    # ── Load reference ────────────────────────────────────────────────────────
     reference_matrix, reference_edges, ref_node_ids = load_reference_graph(
         reference_graph_path,
         edge_confidence_mode=edge_confidence_mode,
         exclude_uncertain_states=exclude_uncertain_states,
     )
+    reference_meta = _load_reference_graph_meta(reference_graph_path)
+    try:
+        cell_state_key = _validate_reference_state_key(
+            reference_meta=reference_meta,
+            ground_truth=ground_truth,
+            cell_state_key=cell_state_key,
+        )
+    except ValueError as exc:
+        reason = str(exc)
+        _write_failed_lineage_metrics(
+            out_dir=out_dir,
+            status=f"failed_reference_state_key: {reason}",
+            edge_confidence_mode=edge_confidence_mode,
+            n_reference_edges=len(reference_edges),
+            cell_state_key=cell_state_key,
+            time_key=time_key,
+            ground_truth=ground_truth,
+            reference_graph_path=reference_graph_path,
+            reason_for_metadata=reason,
+        )
+        raise
     print(
         f"[eval_lineage] Reference graph loaded: {len(ref_node_ids)} nodes, "
         f"{len(reference_edges)} edges "
-        f"(mode={edge_confidence_mode!r})"
+        f"(mode={edge_confidence_mode!r}, state_key={cell_state_key!r})"
     )
 
-    # Determine whether the method produced real predictions.
-    # predicted_matrix is empty when the adapter wrote scaffold/placeholder outputs
-    # (e.g. WOT failed and called _write_scaffold_outputs(), or CellRank2 is
-    # scaffold-only). In that case the metrics are all None and we must NOT call
-    # this run "completed" — that would hide the fact that no real predictions
-    # were made.
     has_predictions = not predicted_matrix.empty or bool(predicted_edges)
+    prediction_label_report: dict = {}
 
-    # Compute metrics
-    metrics = {}
+    # ── Compute graph-sim metrics ─────────────────────────────────────────────
+    graph_metrics = None
+    single_step   = {}
+    multi_step    = {}
 
     if has_predictions and not reference_matrix.empty:
-        # Both method output and reference are available — compute real metrics.
-        all_states = sorted(set(predicted_matrix.index) | set(reference_matrix.index))
-        pred_aligned = predicted_matrix.reindex(
-            index=all_states, columns=all_states, fill_value=0.0
-        )
-        ref_aligned = reference_matrix.reindex(
-            index=all_states, columns=all_states, fill_value=0
-        )
-        y_true = ref_aligned.values.flatten().astype(int)
-        y_score = pred_aligned.values.flatten().astype(float)
-        if not np.isfinite(y_score).all():
-            reason = _nonfinite_matrix_message(
-                pred_aligned, "state_transition_matrix.csv"
+        expanded_edges = _expanded_edge_labels(predicted_edges)
+        if expanded_edges:
+            reason = (
+                "lineage_graph_edges.csv uses expanded/stage labels, but "
+                "official lineage evaluation requires "
+                f"{OFFICIAL_CELL_STATE_KEY} labels. Examples: {expanded_edges}"
             )
-            metrics.update({
-                "auroc": None,
-                "auprc": None,
+            _write_failed_lineage_metrics(
+                out_dir=out_dir,
+                status=f"failed_prediction_label_space: {reason}",
+                edge_confidence_mode=edge_confidence_mode,
+                n_reference_edges=len(reference_edges),
+                cell_state_key=cell_state_key,
+                time_key=time_key,
+                ground_truth=ground_truth,
+                reference_graph_path=reference_graph_path,
+                reason_for_metadata=reason,
+            )
+            raise ValueError(f"[eval_lineage] {reason}")
+
+        try:
+            prediction_label_report = validate_predicted_label_space(
+                predicted_matrix,
+                ref_node_ids,
+                matrix_name="state_transition_matrix.csv",
+            )
+        except ValueError as exc:
+            reason = str(exc)
+            _write_failed_lineage_metrics(
+                out_dir=out_dir,
+                status=f"failed_prediction_label_space: {reason}",
+                edge_confidence_mode=edge_confidence_mode,
+                n_reference_edges=len(reference_edges),
+                cell_state_key=cell_state_key,
+                time_key=time_key,
+                ground_truth=ground_truth,
+                reference_graph_path=reference_graph_path,
+                reason_for_metadata=reason,
+            )
+            raise
+
+        # Validate finiteness before handing to graph-sim
+        if not np.isfinite(predicted_matrix.values.astype(float)).all():
+            reason = _nonfinite_matrix_message(
+                predicted_matrix, "state_transition_matrix.csv"
+            )
+            metrics = {
+                "metric_protocol": "sctimebench_graph_sim",
+                "graph_metrics": None,
+                "auroc": None, "auprc": None,
                 "jaccard_similarity": None,
-                "jaccard_similarity_topk": None,
-                "single_step_recovery": None,
-                "multi_step_recovery": None,
+                "single_step_recovery": None, "multi_step_recovery": None,
+                "legacy_jaccard_similarity_topk": None,
                 "baseline": None,
                 "status": f"failed_nonfinite_predictions: {reason}",
                 "edge_confidence_mode": edge_confidence_mode,
                 "n_reference_edges": len(reference_edges),
                 "cell_state_key": cell_state_key,
+                "prediction_state_key": cell_state_key,
+                "prediction_label_source": "invalid_or_unvalidated",
                 "time_key": time_key,
                 "ground_truth": ground_truth,
-            })
+            }
             _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
-            metrics_path = out_dir / "lineage_metrics.json"
-            with open(metrics_path, "w", encoding="utf-8") as f:
+            with open(out_dir / "lineage_metrics.json", "w", encoding="utf-8") as f:
                 json.dump(metrics, f, indent=2)
             _mark_run_metadata_lineage_failed(out_dir, reason)
             raise ValueError(f"[eval_lineage] {reason}")
 
-        metrics["auroc"] = compute_auroc(y_true, y_score)
-        metrics["auprc"] = compute_auprc(y_true, y_score)
-        # Raw edge Jaccard — treats every nonzero entry in
-        # lineage_graph_edges.csv as a predicted edge.  This is the
-        # scTimeBench-style set-Jaccard.  For current adapters it collapses
-        # to n_ref / 196 because WOT/CR2 emit dense 14×14 edge lists.
-        metrics["jaccard_similarity"] = compute_jaccard(predicted_edges, reference_edges)
-        # Top-k edge Jaccard — restricts the predicted edge set to the
-        # top n_ref off-diagonal entries of the STM (same rule as
-        # single_step_recovery). This is the method-discriminating
-        # Jaccard used for ranking; see jaccard_singlestep_diagnosis.md.
-        ref_set_for_topk = {
-            (src, tgt) for src, tgt in reference_edges
-            if src in pred_aligned.index and tgt in pred_aligned.columns
-        }
-        topk_edges = _topk_predicted_edges(pred_aligned, len(ref_set_for_topk))
-        metrics["jaccard_similarity_topk"] = compute_jaccard(
-            topk_edges, ref_set_for_topk
+        graph_metrics = compute_graph_sim_metrics(
+            predicted_matrix=predicted_matrix,
+            reference_matrix=reference_matrix,
+            ref_node_ids=ref_node_ids,
         )
-        metrics["single_step_recovery"] = compute_single_step_recovery(
-            pred_aligned, ref_aligned
-        )
-        metrics["multi_step_recovery"] = compute_multi_step_recovery(
-            pred_aligned, ref_aligned
-        )
+        single_step = graph_metrics.get("single_step", {}) or {}
+        multi_step  = graph_metrics.get("multi_step",  {}) or {}
         completion_status = "completed"
+
+        # Legacy diagnostic: raw-edge Jaccard from lineage_graph_edges.csv
+        # (dense adapter outputs make this near-zero; kept for traceability)
+        ref_set_for_diag = {
+            (src, tgt) for src, tgt in reference_edges
+            if src in predicted_matrix.index and tgt in predicted_matrix.columns
+        }
+        legacy_topk_jaccard = compute_jaccard(predicted_edges, ref_set_for_diag)
+
     else:
-        # Either the method wrote no predictions (scaffold/failure path) or the
-        # reference matrix is empty.  All metrics are None, but we clearly label
-        # WHY so the status is not mistaken for a successful evaluation.
-        metrics.update({
-            "auroc": None, "auprc": None,
-            "jaccard_similarity": None, "jaccard_similarity_topk": None,
-            "single_step_recovery": None, "multi_step_recovery": None,
-        })
+        legacy_topk_jaccard = None
         if not has_predictions:
             completion_status = (
                 "completed_with_empty_predictions: "
@@ -1027,33 +963,48 @@ def run_lineage_evaluation(
                 "Check run_metadata.json for the method execution status."
             )
         else:
-            # has_predictions but reference_matrix is empty — should not happen
-            # with a valid reference graph, but guard defensively.
             completion_status = (
                 "completed_with_empty_reference: "
                 "method predictions exist but reference matrix is empty after "
                 "applying the current edge_confidence_mode filter."
             )
 
-    # Correlation baseline (per v2 §9.6).
-    # Uses the same scTimeBench Correlation policy as spearman_max.yaml:
-    # adjacent-time cell-level Spearman, maximum target-state score, and
-    # row-normalized source-state votes. It is evaluated against the SAME
-    # reference graph with the SAME metric functions as method outputs.
-    metrics["baseline"] = compute_correlation_baseline(
+    # ── Correlation baseline ──────────────────────────────────────────────────
+    baseline = compute_correlation_baseline(
         adata=adata,
         reference_matrix=reference_matrix,
         reference_edges=reference_edges,
+        ref_node_ids=ref_node_ids,
         cell_state_key=cell_state_key,
         time_key=time_key,
         output_dir=str(out_dir),
     )
-    metrics["status"] = completion_status
-    metrics["edge_confidence_mode"] = edge_confidence_mode
-    metrics["n_reference_edges"] = len(reference_edges)
-    metrics["cell_state_key"] = cell_state_key
-    metrics["time_key"] = time_key
-    metrics["ground_truth"] = ground_truth
+
+    # ── Assemble lineage_metrics.json ─────────────────────────────────────────
+    metrics = {
+        "metric_protocol": "sctimebench_graph_sim",
+        "graph_metrics": graph_metrics,
+        # Top-level backward-compat aliases (required by eval_dispatch, summary scripts)
+        "auroc":               single_step.get("auc_roc"),
+        "auprc":               single_step.get("auc_prc"),
+        "jaccard_similarity":  single_step.get("jaccard_similarity"),
+        "single_step_recovery": single_step.get("recall"),
+        "multi_step_recovery":  multi_step.get("recall"),
+        # Legacy diagnostic: raw-edge Jaccard from lineage_graph_edges.csv.
+        # NOT used for official ranking.  Dense adapter outputs produce values
+        # near n_ref/n_total rather than method-discriminating scores.
+        "legacy_jaccard_similarity_topk": legacy_topk_jaccard,
+        "baseline": baseline,
+        "status": completion_status,
+        "edge_confidence_mode": edge_confidence_mode,
+        "n_reference_edges": len(reference_edges),
+        "cell_state_key": cell_state_key,
+        "prediction_state_key": cell_state_key,
+        "prediction_label_source": PREDICTION_LABEL_SOURCE_SCTIMEBENCH_ZERO_FILL,
+        "prediction_label_report": prediction_label_report,
+        "time_key": time_key,
+        "ground_truth": ground_truth,
+    }
     _enrich_lineage_metrics_compat(metrics, ground_truth, reference_graph_path)
 
     metrics_path = out_dir / "lineage_metrics.json"

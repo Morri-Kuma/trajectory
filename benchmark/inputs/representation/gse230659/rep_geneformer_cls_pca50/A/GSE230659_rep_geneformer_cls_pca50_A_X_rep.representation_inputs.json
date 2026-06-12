@@ -1,0 +1,13 @@
+{
+  "representation_id": "rep_geneformer_cls_pca50",
+  "input_space": "scfm_embedding",
+  "output_space": "representation",
+  "preprocessing": "StandardScaler -> PCA",
+  "raw_embedding_dim": 768,
+  "n_components": 50,
+  "reducer_fit_scope": "train_only",
+  "n_train_cells_fit": 75194,
+  "n_total_cells": 75194,
+  "code_version": "representation_dynamics_v1",
+  "date_created": "2026-06-04T03:21:45.161150+00:00"
+}

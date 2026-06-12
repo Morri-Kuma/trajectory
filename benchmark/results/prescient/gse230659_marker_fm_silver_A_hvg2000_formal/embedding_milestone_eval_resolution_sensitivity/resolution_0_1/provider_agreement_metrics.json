@@ -1,0 +1,14 @@
+{
+  "dataset_id": "GSE230659",
+  "input_h5ad": "benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+  "provider_ids": [
+    "gse230659_marker_fm_transition_silver_v1"
+  ],
+  "label_modes": [
+    "official_silver"
+  ],
+  "state_keys": [
+    "final_milestone_label_expanded"
+  ],
+  "status": "skipped: fewer than two label modes requested"
+}

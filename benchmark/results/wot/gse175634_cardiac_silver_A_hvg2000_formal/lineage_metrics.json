@@ -1,0 +1,108 @@
+{
+  "metric_protocol": "sctimebench_graph_sim",
+  "graph_metrics": {
+    "single_step": {
+      "threshold": 0.1828987992746024,
+      "threshold_type": "prc",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "auc_roc": 1.0,
+      "auc_prc": 1.0,
+      "jaccard_similarity": 1.0
+    },
+    "multi_step": {
+      "threshold": 0.1828987992746024,
+      "threshold_type": "prc",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "auc_roc": 0.5249999999999999,
+      "auc_prc": 0.7057443504917931,
+      "jaccard_similarity": 1.0
+    }
+  },
+  "auroc": 1.0,
+  "auprc": 1.0,
+  "jaccard_similarity": 1.0,
+  "single_step_recovery": 1.0,
+  "multi_step_recovery": 1.0,
+  "legacy_jaccard_similarity_topk": 0.10204081632653061,
+  "baseline": {
+    "graph_metrics": {
+      "single_step": {
+        "threshold": 0.0323133688643733,
+        "threshold_type": "prc",
+        "accuracy": 0.8055555555555556,
+        "precision": 0.4166666666666667,
+        "recall": 1.0,
+        "f1": 0.5882352941176471,
+        "auc_roc": 0.9419354838709677,
+        "auc_prc": 0.7933333333333332,
+        "jaccard_similarity": 0.4166666666666667
+      },
+      "multi_step": {
+        "threshold": 0.0323133688643733,
+        "threshold_type": "prc",
+        "accuracy": 0.5555555555555556,
+        "precision": 0.5555555555555556,
+        "recall": 1.0,
+        "f1": 0.7142857142857143,
+        "auc_roc": 0.36875,
+        "auc_prc": 0.5761296245551362,
+        "jaccard_similarity": 0.5555555555555556
+      }
+    },
+    "auroc": 0.9419354838709677,
+    "auprc": 0.7933333333333332,
+    "jaccard_similarity": 0.4166666666666667,
+    "single_step_recovery": 1.0,
+    "multi_step_recovery": 1.0,
+    "method": "correlation_baseline",
+    "baseline_style": "sctimebench_correlation",
+    "correlation_method": "spearmanr",
+    "averaging_method": "maximum",
+    "cell_state_key": "final_milestone_label_coarse",
+    "time_key": "abs_day",
+    "n_states_used": 6,
+    "n_timepoint_pairs_used": 6,
+    "n_source_cell_votes": 194375,
+    "note": "scTimeBench-style cell-level Spearman correlation baseline with maximum target-state aggregation and row-normalized source-state votes. Evaluated with sctimebench_graph_sim metric protocol."
+  },
+  "status": "completed",
+  "edge_confidence_mode": "all",
+  "n_reference_edges": 5,
+  "cell_state_key": "final_milestone_label_coarse",
+  "time_key": "abs_day",
+  "ground_truth": {
+    "provider_id": "gse175634_cardiac_silver_v1",
+    "annotation_method": "author_annotation_direct",
+    "silver_standard_skipped": true,
+    "status": "frozen_silver_standard_milestone_provider",
+    "state_key": "final_milestone_label_coarse",
+    "label_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph_edges.csv",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": true,
+    "excluded_labels": [
+      "UNK"
+    ],
+    "n_states": 6,
+    "n_graph_edges": 5,
+    "n_cell_labels": null,
+    "source_h5ad": "benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad",
+    "label_mode": "official_silver",
+    "label_type": "frozen_silver_standard",
+    "analysis_role": "primary_report",
+    "coarse_label_key": "final_milestone_label_coarse",
+    "notes": "Official frozen silver provider for GSE175634 cardiac differentiation. Author 'type' labels used directly as final_milestone_label_coarse. Silver-standard annotation generation step is skipped because the dataset already has complete per-cell state labels. Reference graph: IPSC->MES->CMES->PROG->CM and PROG->CF (bifurcating). UNK cells are retained in the h5ad but excluded from official metrics."
+  },
+  "label_mode": "official_silver",
+  "provider_id": "gse175634_cardiac_silver_v1",
+  "reference_graph_path": "benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph.json",
+  "compatibility_note": "label_mode and provider_id are promoted from ground_truth for Step 10 output naming compatibility. See smoke_metadata.json for full evaluation context."
+}

@@ -1,0 +1,57 @@
+run_id: cellrank2_gse175634_cardiac_silver_A_hvg2000_formal
+method: cellrank2
+scenario: A
+scenario_name: GSE175634 cardiac cellrank2 scenario A official_silver author_annotation
+framework_version: v2
+result_class: gse175634_cardiac_silver_formal
+formal_benchmark: true
+label_mode: official_silver
+silver_standard_skipped: true
+provider_id: gse175634_cardiac_silver_v1
+state_system:
+  version: gse175634_cardiac_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 6
+  n_graph_edges: 5
+  source_h5ad: benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad
+  note: >-
+    Frozen author-annotation cardiac silver labels; official metrics use
+    final_milestone_label_coarse. UNK cells excluded from official metrics.
+ground_truth:
+  provider_id: gse175634_cardiac_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: true
+dataset:
+  id: GSE175634
+  h5ad_path: benchmark/inputs/gse175634_cardiac_author_hvg2000/GSE175634_cardiac_author_HVG2000_benchmark_input.h5ad
+  time_key: abs_day
+output:
+  base_dir: benchmark/results/cellrank2/gse175634_cardiac_silver_A_hvg2000_formal
+cellrank2_params:
+  kernel: RealTimeKernel
+  time_key: abs_day
+  wot_params:
+    epsilon: 0.05
+    lambda1: 1.0
+    lambda2: 50.0
+    local_pca: 30
+    growth_iters: 3
+    ncells_subsample: 5000
+    subsample_seed: 42
+  gpcca_params:
+    n_macrostates: 14
+    use_state_labels: true
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse175634_cardiac_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse175634_cardiac_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: true
+evaluation:
+  run_eval_lineage: true
+  eval_script: benchmark/evaluation/eval_lineage.py
+  status: formal
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day

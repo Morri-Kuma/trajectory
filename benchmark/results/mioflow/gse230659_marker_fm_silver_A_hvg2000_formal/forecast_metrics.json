@@ -1,8 +1,8 @@
 {
-  "wasserstein_distance": 163.38976807283535,
-  "gaussian_mmd": 5.562951473603212e-07,
-  "energy_distance_mmd": 0.12811406474638923,
-  "hausdorff_loss": 3013.9738715510666,
+  "wasserstein_distance": 160.68604246896388,
+  "gaussian_mmd": 2.4472123312937513e-07,
+  "energy_distance_mmd": 0.12809216231087492,
+  "hausdorff_loss": 3641.407390498268,
   "n_eval_timepoints": 15,
   "eval_timepoints": [
     0.5,
@@ -22,10 +22,15 @@
     30.0
   ],
   "scenario_type": "reconstruction",
-  "max_cells_per_timepoint": 1000,
-  "metric_backend": "scTimeBench_geomloss",
+  "metric_backend": "scTimeBench_exact",
+  "metric_protocol": "sctimebench_gex_prediction_otloss",
+  "lognorm": false,
+  "aggregate": "mean",
+  "exact_cell_usage": true,
+  "max_cells_per_timepoint": null,
   "metric_definitions": {
     "wasserstein_distance": {
+      "class": "WassersteinOTLoss",
       "loss": "sinkhorn",
       "p": 2,
       "blur": 0.05,
@@ -35,6 +40,7 @@
       "normalize_by_n_genes": true
     },
     "gaussian_mmd": {
+      "class": "MMDLoss",
       "loss": "gaussian",
       "blur": 1.0,
       "debias": true,
@@ -42,6 +48,7 @@
       "normalize_by_n_genes": true
     },
     "energy_distance_mmd": {
+      "class": "EnergyDistanceLoss",
       "loss": "energy",
       "blur": 1.0,
       "debias": true,
@@ -49,22 +56,10 @@
       "normalize_by_n_genes": true
     },
     "hausdorff_loss": {
-      "implementation": "torch.cdist_bidirectional_hausdorff",
+      "class": "HausdorffLoss",
+      "implementation": "torch.cdist(x_true,x_pred,p=2)_bidirectional",
       "normalize_by_n_genes": false
     }
   },
-  "aggregation": "mean_over_eval_timepoints",
-  "status": "completed",
-  "result_class": "marker_fm_transition_silver_formal",
-  "formal_benchmark": true,
-  "method_config": "benchmark/configs/runtime/mioflow_gse230659_marker_fm_silver_A_hvg2000_formal.yaml",
-  "label_mode": "official_silver",
-  "provider_id": "gse230659_marker_fm_transition_silver_v1",
-  "cell_state_key": "final_milestone_label_coarse",
-  "ground_truth": {
-    "provider_id": "gse230659_marker_fm_transition_silver_v1",
-    "label_mode": "official_silver",
-    "state_key": "final_milestone_label_coarse",
-    "source_h5ad": "benchmark/inputs/gse230659_marker_fm_transition_silver_hvg2000/GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad"
-  }
+  "status": "completed"
 }

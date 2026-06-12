@@ -1,0 +1,7 @@
+state_id	label	order	role	status	marker_genes	n_marker_genes	notes
+hADSCs	hADSCs	0	primary_milestone	confirmed	COL1A1;COL1A2;COL5A1;COL6A2;PRRX1;VIM;ZEB1;MMP3	8	"hADSCs (human adult adipose-derived mesenchymal stromal cells) are the trajectory starting point. PRIMARY ASSIGNMENT: source sample identity / time == 0 (ADSC starting sample), following the treatment in Liuyang et al. 2023 (Cell Stem Cell, DOI: 10.1016/j.stem.2023.02.008). This gene set is an AUXILIARY somatic/fibroblast-like support score only; do not use it as the primary classifier. Generic MSC surface markers (THY1, NT5E, ENG) are intentionally excluded from this set.
+"
+epithelial_like	epithelial_like	1	primary_milestone	confirmed	KRT8;KRT18;KRT19;EPCAM;LIN28A	5	Stage-I epithelial-like milestone; LIN28A is also shared with reprogramming/pluripotency programs.
+intermediate_plastic	intermediate_plastic	2	primary_milestone	confirmed	LIN28A;SALL4;MSX1;MSX2;HOXB9	5	Intermediate plastic / IPC-like milestone.
+xen_like	xen_like	3	primary_milestone	confirmed	SOX17;HNF1B;FOXA2;EPCAM	4	XEN-like milestone in the original four-stage process.
+hCiPS	hCiPS	4	primary_milestone	confirmed	POU5F1;SOX2;NANOG;KLF4;DPPA4;LIN28A	6	Naive pluripotency / hCiPS endpoint.

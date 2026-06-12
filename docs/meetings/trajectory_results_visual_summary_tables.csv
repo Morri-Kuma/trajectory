@@ -1,0 +1,15 @@
+﻿Method,Emb+Lin rank,Embedding rank,Lineage rank,Forecast rank,Embedding ARI,Lineage AUROC,Forecast WD,Table,Rank,AUROC,AUPRC,Jaccard,ARI,Median ARI,Entropy,WD,Energy MMD,Hausdorff
+MIOFlow,1,2,1,3,0.100,0.702,86.9,Projection-capable combined,,,,,,,,,,
+PRESCIENT,2,1,2,1,0.156,0.655,52.6,Projection-capable combined,,,,,,,,,,
+scNODE,3,3,3,2,0.085,0.651,68.3,Projection-capable combined,,,,,,,,,,
+MIOFlow,,,,,,,,Lineage Fidelity,1,0.702,0.321,0.277,,,,,,
+PRESCIENT,,,,,,,,Lineage Fidelity,2,0.655,0.277,0.230,,,,,,
+scNODE,,,,,,,,Lineage Fidelity,3,0.651,0.267,0.231,,,,,,
+WOT,,,,,,,,Lineage Fidelity,4,0.686,0.322,0.311,,,,,,
+CellRank2,,,,,,,,Lineage Fidelity,5,0.694,0.325,0.295,,,,,,
+PRESCIENT,,,,,,,,Embedding Coherence,1,,,,0.156,0.138,0.375,,,
+MIOFlow,,,,,,,,Embedding Coherence,2,,,,0.100,0.095,0.350,,,
+scNODE,,,,,,,,Embedding Coherence,3,,,,0.085,0.058,0.400,,,
+PRESCIENT,,,,,,,,Forecast Accuracy,1,,,,,,,52.6,0.024,1281.1
+scNODE,,,,,,,,Forecast Accuracy,2,,,,,,,68.3,0.027,1286.2
+MIOFlow,,,,,,,,Forecast Accuracy,3,,,,,,,86.9,0.053,1396.8

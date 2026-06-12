@@ -1,11 +1,9 @@
 # Framework Design Summary
 
 scTimeBench-aligned benchmark for human chemical reprogramming to iPSCs.
-Source of truth: `experimental framework v2.md` in the repository root.
+Source of truth: `docs/framework/experimental_framework_v2.md`.
 
 ## Core principle
-
-This benchmark follows the **same method-eligibility rule as scTimeBench**:
 
 - Methods that can generate unseen future-timepoint cells → evaluate on all three dimensions.
 - Methods that cannot generate unseen future-timepoint cells → evaluate on **Lineage Fidelity only**.
@@ -15,7 +13,7 @@ that infer lineage structure without projecting cells to new time points.
 
 ## Three core dimensions
 
-### 1. Forecast Accuracy (inactive — current stage)
+### 1. Forecast Accuracy
 Evaluates whether a method can project cells from time `t` to unseen time `t+1`
 with gene expression aligned to the observed cells at `t+1`.
 
@@ -23,14 +21,14 @@ with gene expression aligned to the observed cells at `t+1`.
 
 Metrics: Wasserstein Distance, Gaussian MMD, Energy Distance MMD, Hausdorff Loss.
 
-### 2. Embedding Coherence (inactive — current stage)
+### 2. Embedding Coherence
 Evaluates whether projected cells preserve biologically meaningful cellular structure.
 
 **Not applicable to WOT or CellRank2.** Will be activated for future generative models.
 
 Metrics: Adjusted Rand Index, average normalized classifier entropy.
 
-### 3. Lineage Fidelity (active)
+### 3. Lineage Fidelity
 Evaluates whether a method recovers a cell-state transition structure consistent
 with a benchmark reference lineage.
 

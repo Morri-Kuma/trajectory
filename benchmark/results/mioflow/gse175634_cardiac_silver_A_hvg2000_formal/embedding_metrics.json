@@ -1,0 +1,17 @@
+{
+  "adjusted_rand_index": 0.21852247666382588,
+  "avg_normalized_classifier_entropy": 0.48124547730042744,
+  "projected_latent_dim": 50,
+  "n_eval_timepoints": 7,
+  "eval_timepoints": [
+    0.0,
+    1.0,
+    3.0,
+    5.0,
+    7.0,
+    11.0,
+    15.0
+  ],
+  "status": "completed",
+  "latent_space": "PCA"
+}

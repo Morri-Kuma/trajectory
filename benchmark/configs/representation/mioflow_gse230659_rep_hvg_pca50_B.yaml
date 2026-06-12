@@ -1,0 +1,87 @@
+run_id: mioflow_gse230659_rep_hvg_pca50_B
+method: mioflow
+scenario: B
+scenario_name: GSE230659 mioflow scenario B representation-dynamics rep_hvg_pca50
+  (supplementary)
+framework_version: v2
+result_class: representation_dynamics_supplementary
+formal_benchmark: false
+ground_truth:
+  provider_id: gse230659_marker_fm_transition_silver_v1
+  state_key: final_milestone_label_coarse
+  confidence_mode: all
+  exclude_uncertain_states: false
+dataset:
+  id: GSE230659
+  h5ad_path: benchmark/inputs/representation/gse230659/rep_hvg_pca50/B/GSE230659_rep_hvg_pca50_B_X_rep.h5ad
+  time_key: abs_day
+scenario_params:
+  train_times:
+  - 0.5
+  - 2.0
+  - 4.0
+  - 8.0
+  - 12.0
+  - 16.0
+  heldout_times:
+  - 16.33
+  - 16.67
+  - 17.0
+  - 18.0
+  - 20.0
+  - 22.0
+  - 24.0
+  - 28.0
+  - 30.0
+output:
+  base_dir: benchmark/results/representation_dynamics/mioflow/gse230659_rep_hvg_pca50_B
+mioflow_params:
+  pca_dims: 50
+  hidden_dim: 64
+  n_epochs: 40
+  batch_size: 64
+  learning_rate: 0.001
+  lambda_ot: 1.0
+  use_density_loss: false
+  lambda_density: 5.0
+  lambda_energy: 0.01
+  energy_time_steps: 10
+  seed: 42
+  n_sim_cells: 2000
+  metric_sample_cells: 1000
+  use_cuda: true
+lineage:
+  cell_state_key: final_milestone_label_coarse
+  cell_state_annotation_is_proxy: false
+  state_system_version: gse230659_marker_fm_transition_silver_v1
+  reference_graph_path: benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json
+  edge_confidence_mode: all
+  exclude_uncertain_states: false
+evaluation:
+  mode: representation
+  run_eval_lineage: false
+  forecast_eval_script: benchmark/evaluation/eval_representation_forecast.py
+  temporal_signal_eval_script: benchmark/evaluation/eval_representation_temporal_signal.py
+  status: supplementary
+  note: Representation-space forecast (Mode A). Outputs are representation forecasts,
+    not gene-expression forecasts. Score with the representation evaluators; do not
+    feed projected outputs to the official gene-expression eval_forecast.
+cell_state_key: final_milestone_label_coarse
+time_key: abs_day
+state_system:
+  version: gse230659_marker_fm_transition_silver_v1
+  status: frozen_silver_standard_milestone_provider
+  n_states: 4
+  n_graph_edges: 3
+  source_h5ad: benchmark/inputs/representation/gse230659/rep_hvg_pca50/B/GSE230659_rep_hvg_pca50_B_X_rep.h5ad
+  note: Frozen marker+foundation-model transition silver labels; official metrics
+    use final_milestone_label_coarse.
+representation:
+  enabled: true
+  input_mode: obsm
+  obsm_key: X_rep
+  representation_id: rep_hvg_pca50
+  input_space: expression_pca
+  output_space: representation
+  final_dim: 50
+  reducer_fit_scope: train_only

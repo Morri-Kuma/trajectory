@@ -154,3 +154,56 @@ GSE230659:
     hADSCs are the ADSC starting sample (time == 0) and form the trajectory
     root. expanded_trajectory_order provides transition-stage labels for
     supplementary analyses; coarse primary_milestones drive official metrics.
+
+GSE298212:
+  primary_milestones:
+    - blood_start
+    - epithelial_like
+    - intermediate_plastic
+    - hCiPS
+  marker_sets:
+    blood_start:
+      genes: [PTPRC, CD34, GYPA, HBB, HBA1, HBA2, ALAS2, TFRC, GATA1, KLF1, LYZ, S100A8, S100A9, CD36, GP9]
+      role: primary
+      notes: >
+        Human peripheral/cord blood starting population (PBMC / erythroid-progenitor
+        EPC; trajectory root). PRIMARY ASSIGNMENT: source sample identity /
+        abs_day == 0, following the framework hADSCs convention. This hematopoietic/
+        erythroid gene set is an AUXILIARY support score only.
+    epithelial_like:
+      genes: [KRT8, KRT18, KRT19, KRT7, EPCAM, CDH1, CLDN4, CLDN7, OCLN]
+      role: primary
+      notes: "Epithelial-like reprogramming milestone (conserved across chemical protocols)."
+    intermediate_plastic:
+      genes: [LIN28A, LIN28B, SALL4, FBXO15, DPPA4, UTF1, DNMT3B, MYCN, TDGF1, SPP1]
+      role: primary
+      notes: "Intermediate plastic / IPC-like milestone (early-pluripotency factors; conserved chemical-reprogramming intermediate)."
+    hCiPS:
+      genes: [POU5F1, SOX2, NANOG, KLF4, ZFP42, DPPA2, DPPA3, DPPA4, DNMT3B, ZSCAN4, SALL4, PRDM14, TDGF1]
+      role: primary
+      notes: >
+        hCiPS / pluripotency endpoint. NOTE: the deposited GSE298212 samples cover
+        Stage-1 (S1D1-S1D8) only, so the terminal hCiPS state may be sparse or absent;
+        annotation assigns whichever milestones are present.
+  reference_graph_edges:
+    - [blood_start, epithelial_like]
+    - [epithelial_like, intermediate_plastic]
+    - [intermediate_plastic, hCiPS]
+  expanded_trajectory_order:
+    - stage_00_blood_start
+    - stage_01_blood_start_to_epithelial_like
+    - stage_02_epithelial_like
+    - stage_03_epithelial_like_to_intermediate_plastic
+    - stage_04_intermediate_plastic
+    - stage_05_intermediate_plastic_to_hCiPS
+    - stage_06_hCiPS
+  excluded_from_official_metrics:
+    - ambiguous
+    - unknown_or_ood
+  notes: >
+    Human blood chemical reprogramming, Stage-1 time course (Peng et al. 2025, Cell
+    Stem Cell, doi:10.1016/j.stem.2025.07.003). Second human chemical-reprogramming
+    system (different starting cell type) for cross-system generalization. Provisional
+    marker-defined milestones reusing the conserved chemical intermediates with a
+    blood start (assigned by abs_day == 0); refine against author annotations if
+    available.

@@ -1,0 +1,66 @@
+mode: server
+project:
+  name: same_protocol_178to230
+  root: .
+  random_seed: 0
+annotation:
+  reference_dataset: gse178325
+  query_datasets:
+  - gse230659
+  reference_label_key: final_milestone_label_coarse
+  marker_silver_label_key: final_milestone_label_coarse
+  confidence_threshold: 0.5
+  unlabeled_category: unknown
+  correspondence_map:
+    hADSCs: hADSCs
+    epithelial_like: epithelial_like
+    intermediate_plastic: intermediate_plastic
+    hCiPS: hCiPS
+    xen_like: xen_like
+    ambiguous: ambiguous
+trajectory:
+  methods:
+  - dpt
+  - paga
+  root_state: hADSCs
+  n_dcs: 15
+  paga_groups: final_milestone_label_coarse
+markers:
+  pluripotency:
+  - POU5F1
+  - SOX2
+  - NANOG
+  - LIN28A
+  stromal_fibroblast:
+  - COL1A2
+  - DCN
+  - LUM
+  epithelial_met:
+  - CDH1
+  - EPCAM
+  xen:
+  - GATA6
+  - SOX17
+server:
+  test_mode: false
+  use_small_subset: false
+  max_cells_per_dataset: null
+  max_genes: null
+  device: cuda
+  paths:
+    reference_h5ad: results/annotation_branch/inputs/gse178325_query_fullgene_labelled.h5ad
+    query_h5ad:
+      gse230659: results/annotation_branch/inputs/gse230659_query_fullgene_labelled.h5ad
+    output_dir: results/same_protocol_178to230
+    models_dir: models/scanvi_ref_gse178325
+  scvi:
+    use_scvi: true
+    batch_key: sample_id
+    n_latent: 30
+    n_layers: 2
+    scvi_max_epochs: 300
+    scanvi_max_epochs: 50
+    reference_recovery_min_accuracy: 0.9
+  trajectory:
+    n_neighbors: 30
+    n_pcs: 50

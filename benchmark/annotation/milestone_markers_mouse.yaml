@@ -1,0 +1,76 @@
+# benchmark/annotation/milestone_markers_mouse.yaml
+# ---------------------------------------------------------------------------
+# Mouse milestone marker set for the cross-species robustness dataset GSE218855
+# (Chen et al. 2023, Nat Cell Biol, doi:10.1038/s41556-023-01193-x): fast
+# chemical reprogramming (FCR) of mouse embryonic fibroblasts (MEF) to iPSCs,
+# transiting through a diapause-like state.
+#
+# Format mirrors benchmark/annotation/milestone_markers.yaml. Marker matching is
+# case-insensitive (benchmark/annotation/marker_utils.build_gene_index_map
+# uppercases both the markers and adata.var_names), so the uppercase symbols here
+# match mouse Title-case var_names (Col1a1 -> COL1A1, Pou5f1 -> POU5F1, ...).
+#
+# PROVENANCE / SCOPE
+# ------------------
+# The trajectory STRUCTURE (MEF -> MET/epithelial -> diapause-like intermediate
+# -> iPSC) follows Chen et al. 2023. The per-milestone GENES are CANONICAL,
+# well-established mouse fibroblast / mesenchymal-to-epithelial-transition (MET)
+# / early-pluripotency / naive-pluripotency markers, not author-curated cluster
+# signatures. This is therefore a PROVISIONAL marker-defined milestone set to be
+# refined against the authors' annotations if/when they are obtained. The MEF
+# starting milestone is assigned primarily by source sample / abs_day == 0
+# (following the framework hADSCs convention), with the gene set as auxiliary
+# support only.
+# ---------------------------------------------------------------------------
+
+GSE218855:
+  primary_milestones:
+    - MEF
+    - epithelial_like
+    - intermediate_plastic
+    - iPSC
+  marker_sets:
+    MEF:
+      genes: [COL1A1, COL1A2, COL3A1, THY1, VIM, ZEB1, SNAI2, FN1, PDGFRA, S100A4, ACTA2, DCN, LUM, POSTN, MMP2]
+      role: primary
+      notes: >
+        Mouse embryonic fibroblast starting population (trajectory root).
+        PRIMARY ASSIGNMENT: source sample identity / abs_day == 0. This gene set
+        is an AUXILIARY fibroblast/mesenchymal support score only; do not use it
+        as the primary classifier.
+    epithelial_like:
+      genes: [CDH1, EPCAM, KRT8, KRT18, KRT19, KRT7, CLDN7, OCLN]
+      role: primary
+      notes: "Mesenchymal-to-epithelial transition (MET) milestone; canonical epithelial markers."
+    intermediate_plastic:
+      genes: [SALL4, LIN28A, DPPA3, ESRRB, ZSCAN4, UTF1, FBXO15, DPPA2, MYCN, LEFTY1, LEFTY2, SPP1]
+      role: primary
+      notes: >
+        Intermediate plastic / diapause-like milestone (Chen et al. 2023 report a
+        developmentally diapause-like state during FCR); markers are early-pluripotency
+        / 2C-like / diapause-associated factors.
+    iPSC:
+      genes: [POU5F1, SOX2, NANOG, ZFP42, DPPA4, DPPA5A, KLF4, KLF2, TFCP2L1, NR0B1, DNMT3B, TDGF1]
+      role: primary
+      notes: "Naive pluripotency / iPSC endpoint; canonical core pluripotency network."
+  reference_graph_edges:
+    - [MEF, epithelial_like]
+    - [epithelial_like, intermediate_plastic]
+    - [intermediate_plastic, iPSC]
+  expanded_trajectory_order:
+    - stage_00_MEF
+    - stage_01_MEF_to_epithelial_like
+    - stage_02_epithelial_like
+    - stage_03_epithelial_like_to_intermediate_plastic
+    - stage_04_intermediate_plastic
+    - stage_05_intermediate_plastic_to_iPSC
+    - stage_06_iPSC
+  excluded_from_official_metrics:
+    - ambiguous
+    - unknown_or_ood
+  notes: >
+    Mouse FCR reprogramming trajectory (Chen et al. 2023, Nat Cell Biol,
+    doi:10.1038/s41556-023-01193-x). Cross-species robustness dataset; cannot share
+    a label space with the human providers. Provisional marker-defined milestones
+    (canonical markers); refine against author annotations if available. MEF is the
+    abs_day == 0 starting sample and forms the trajectory root.

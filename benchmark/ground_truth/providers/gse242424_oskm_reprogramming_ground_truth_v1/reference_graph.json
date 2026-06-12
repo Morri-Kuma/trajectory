@@ -1,0 +1,180 @@
+{
+  "_meta": {
+    "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1",
+    "dataset_id": "GSE242424",
+    "label_mode": "ground_truth",
+    "label_type": "frozen_ground_truth",
+    "state_key": "final_milestone_label_coarse",
+    "graph_type": "author_cluster_defined_oskm_reprogramming_milestone_graph",
+    "version": "v1",
+    "generated_by": "scripts/build_gse242424_oskm_ground_truth_provider.py",
+    "analysis_role": "primary_report",
+    "deprecated": false,
+    "n_states": 10,
+    "n_edges": 9,
+    "policy": [
+      "Official frozen ground truth coarse milestone reference graph for GSE242424 OSKM reprogramming.",
+      "Nodes are the 10 author-defined coarse ATAC/RNA cluster milestones.",
+      "Graph topology reflects the OSKM reprogramming branching order from the original publication.",
+      "Two divergent arms: fibroblast->hOSK->partial_intermediate->partially_reprogrammed and fibroblast->xOSK->primary_intermediate->pre_iPSC->iPSC.",
+      "keratinocyte_like and fibroblast_like_stalled are stalled/off-target branches from fibroblast.",
+      "All edges have confidence=high; all nodes have status=confirmed.",
+      "Source: benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "fibroblast",
+      "label": "fibroblast",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 0
+    },
+    {
+      "id": "fibroblast_like_stalled",
+      "label": "fibroblast_like_stalled",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 1
+    },
+    {
+      "id": "keratinocyte_like",
+      "label": "keratinocyte_like",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 2
+    },
+    {
+      "id": "hOSK",
+      "label": "hOSK",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 3
+    },
+    {
+      "id": "partial_intermediate",
+      "label": "partial_intermediate",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 4
+    },
+    {
+      "id": "partially_reprogrammed",
+      "label": "partially_reprogrammed",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 5
+    },
+    {
+      "id": "xOSK",
+      "label": "xOSK",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 6
+    },
+    {
+      "id": "primary_intermediate",
+      "label": "primary_intermediate",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 7
+    },
+    {
+      "id": "pre_iPSC",
+      "label": "pre_iPSC",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 8
+    },
+    {
+      "id": "iPSC",
+      "label": "iPSC",
+      "status": "confirmed",
+      "role": "primary_milestone",
+      "order": 9
+    }
+  ],
+  "edges": [
+    {
+      "source": "fibroblast",
+      "target": "fibroblast_like_stalled",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "fibroblast",
+      "target": "keratinocyte_like",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "fibroblast",
+      "target": "hOSK",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "hOSK",
+      "target": "partial_intermediate",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "partial_intermediate",
+      "target": "partially_reprogrammed",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "fibroblast",
+      "target": "xOSK",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "xOSK",
+      "target": "primary_intermediate",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "primary_intermediate",
+      "target": "pre_iPSC",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    },
+    {
+      "source": "pre_iPSC",
+      "target": "iPSC",
+      "weight": 1.0,
+      "confidence": "high",
+      "source_status": "confirmed",
+      "target_status": "confirmed",
+      "edge_type": "author_cluster_oskm_reprogramming_milestone_order"
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "metric_protocol": "sctimebench_graph_sim",
+  "graph_metrics": {
+    "single_step": {
+      "threshold": 0.2347814941792314,
+      "threshold_type": "prc",
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "auc_roc": 1.0,
+      "auc_prc": 1.0,
+      "jaccard_similarity": 1.0
+    },
+    "multi_step": {
+      "threshold": 0.1269490999664134,
+      "threshold_type": "prc",
+      "accuracy": 0.9375,
+      "precision": 0.9090909090909091,
+      "recall": 1.0,
+      "f1": 0.9523809523809523,
+      "auc_roc": 0.5833333333333334,
+      "auc_prc": 0.8357142857142856,
+      "jaccard_similarity": 0.9090909090909091
+    }
+  },
+  "auroc": 1.0,
+  "auprc": 1.0,
+  "jaccard_similarity": 1.0,
+  "single_step_recovery": 1.0,
+  "multi_step_recovery": 1.0,
+  "legacy_jaccard_similarity_topk": 0.12,
+  "baseline": {
+    "graph_metrics": {
+      "single_step": {
+        "threshold": 0.0,
+        "threshold_type": "prc",
+        "accuracy": 0.4375,
+        "precision": 0.25,
+        "recall": 1.0,
+        "f1": 0.4,
+        "auc_roc": 0.5256410256410255,
+        "auc_prc": 0.2569444444444444,
+        "jaccard_similarity": 0.25
+      },
+      "multi_step": {
+        "threshold": 0.003956834532374101,
+        "threshold_type": "prc",
+        "accuracy": 0.625,
+        "precision": 0.625,
+        "recall": 1.0,
+        "f1": 0.7692307692307693,
+        "auc_roc": 0.19166666666666665,
+        "auc_prc": 0.5111111111111111,
+        "jaccard_similarity": 0.625
+      }
+    },
+    "auroc": 0.5256410256410255,
+    "auprc": 0.2569444444444444,
+    "jaccard_similarity": 0.25,
+    "single_step_recovery": 1.0,
+    "multi_step_recovery": 1.0,
+    "method": "correlation_baseline",
+    "baseline_style": "sctimebench_correlation",
+    "correlation_method": "spearmanr",
+    "averaging_method": "maximum",
+    "cell_state_key": "final_milestone_label_coarse",
+    "time_key": "dpt_pseudotime_bin_numeric",
+    "n_states_used": 4,
+    "n_timepoint_pairs_used": 7,
+    "n_source_cell_votes": 33922,
+    "note": "scTimeBench-style cell-level Spearman correlation baseline with maximum target-state aggregation and row-normalized source-state votes. Evaluated with sctimebench_graph_sim metric protocol."
+  },
+  "status": "completed",
+  "edge_confidence_mode": "all",
+  "n_reference_edges": 3,
+  "cell_state_key": "final_milestone_label_coarse",
+  "prediction_state_key": "final_milestone_label_coarse",
+  "prediction_label_source": "reference_graph_nodes_sctimebench_zero_filled",
+  "prediction_label_report": {
+    "reference_nodes": [
+      "hADSCs",
+      "epithelial_like",
+      "intermediate_plastic",
+      "hCiPS"
+    ],
+    "extra_source_states": [
+      "ambiguous"
+    ],
+    "extra_target_states": [
+      "ambiguous"
+    ],
+    "missing_source_reference_nodes": [],
+    "missing_target_reference_nodes": [],
+    "missing_reference_nodes": [],
+    "n_missing_source_reference_nodes": 0,
+    "n_missing_target_reference_nodes": 0,
+    "n_missing_reference_nodes": 0,
+    "n_reference_nodes": 4,
+    "n_source_states_in_matrix": 5,
+    "n_target_states_in_matrix": 5,
+    "label_space": "final_milestone_label_coarse/reference_graph_nodes",
+    "alignment_policy": "sctimebench_zero_fill_missing_reference_nodes",
+    "zero_filled_missing_reference_nodes": false
+  },
+  "time_key": "dpt_pseudotime_bin_numeric",
+  "ground_truth": {
+    "provider_id": "gse230659_marker_fm_transition_silver_v1",
+    "state_key": "final_milestone_label_coarse",
+    "label_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/state_labels.tsv",
+    "metadata_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/state_metadata.tsv",
+    "reference_graph_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json",
+    "reference_edges_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph_edges.csv",
+    "confidence_mode": "all",
+    "exclude_uncertain_states": false,
+    "status": "frozen_silver_standard_milestone_provider",
+    "n_states": 4,
+    "n_graph_edges": 3,
+    "source_h5ad": "benchmark\\inputs\\gse230659_marker_fm_transition_silver_hvg2000\\GSE230659_marker_fm_transition_silver_HVG2000_benchmark_input.h5ad",
+    "annotation_method": "marker_fm_transition_silver_provider",
+    "notes": "Official frozen silver-standard milestone provider for GSE230659. state_key=final_milestone_label_coarse. Frozen coarse labels from Stage 2 trajectory-aware annotation. Excluded from official metrics: ambiguous, unknown_or_ood.",
+    "label_mode": "official_silver",
+    "analysis_role": "primary_report"
+  },
+  "label_mode": "official_silver",
+  "provider_id": "gse230659_marker_fm_transition_silver_v1",
+  "reference_graph_path": "benchmark/ground_truth/providers/gse230659_marker_fm_transition_silver_v1/reference_graph.json",
+  "compatibility_note": "label_mode and provider_id are promoted from ground_truth for Step 10 output naming compatibility. See smoke_metadata.json for full evaluation context."
+}

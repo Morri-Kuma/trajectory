@@ -1,0 +1,23 @@
+{
+  "gse178325": {
+    "time_key": "stage_day_label",
+    "ood_by_marker_state": {
+      "xen_like": 0.0,
+      "hCiPS": 0.181,
+      "hADSCs": 0.2,
+      "ambiguous": 0.446,
+      "intermediate_plastic": 0.567,
+      "epithelial_like": 0.592
+    }
+  },
+  "gse230659": {
+    "time_key": "stage_day_label",
+    "ood_by_marker_state": {
+      "intermediate_plastic": 0.214,
+      "hADSCs": 0.361,
+      "hCiPS": 0.5,
+      "epithelial_like": 0.574,
+      "ambiguous": 0.783
+    }
+  }
+}

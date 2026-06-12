@@ -1,5 +1,5 @@
 {
-  "wasserstein_distance": 141699.73836790444,
+  "wasserstein_distance": 171167.53948895817,
   "gaussian_mmd": null,
   "energy_distance_mmd": null,
   "hausdorff_loss": null,
@@ -22,5 +22,6 @@
     30.0
   ],
   "scenario_type": "reconstruction",
+  "metric_sample_cells": 1000,
   "status": "completed"
 }

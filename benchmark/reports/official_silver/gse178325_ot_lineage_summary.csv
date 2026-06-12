@@ -1,0 +1,3 @@
+config,method,dataset,scenario,status,single_step_auc_roc,single_step_auc_prc,single_step_jaccard,multi_step_auc_roc,multi_step_auc_prc,multi_step_jaccard,missing_reference_nodes,n_missing_reference_nodes
+benchmark/configs/runtime/wot_gse178325_marker_fm_silver_A_hvg2000_formal.yaml,wot,GSE178325,A,completed,0.6071428571428572,0.23392857142857143,0.25,0.16666666666666666,0.46011355947114463,0.6,,0
+benchmark/configs/runtime/cellrank2_gse178325_marker_fm_silver_A_hvg2000_formal.yaml,cellrank2,GSE178325,A,completed,0.5833333333333334,0.23576388888888888,0.2222222222222222,0.15333333333333335,0.45862921191868555,0.6,,0

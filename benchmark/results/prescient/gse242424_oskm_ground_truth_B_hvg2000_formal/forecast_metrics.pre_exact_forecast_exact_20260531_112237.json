@@ -1,0 +1,58 @@
+{
+  "wasserstein_distance": 0.03801953762146009,
+  "gaussian_mmd": 1.027215069934032e-06,
+  "energy_distance_mmd": 0.0013110086369515252,
+  "hausdorff_loss": 18.790676252592167,
+  "n_eval_timepoints": 3,
+  "eval_timepoints": [
+    12.0,
+    14.0,
+    16.0
+  ],
+  "scenario_type": "forecast",
+  "max_cells_per_timepoint": 1000,
+  "metric_backend": "scTimeBench_geomloss",
+  "metric_definitions": {
+    "wasserstein_distance": {
+      "loss": "sinkhorn",
+      "p": 2,
+      "blur": 0.05,
+      "scaling": 0.5,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "gaussian_mmd": {
+      "loss": "gaussian",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "energy_distance_mmd": {
+      "loss": "energy",
+      "blur": 1.0,
+      "debias": true,
+      "backend": "tensorized",
+      "normalize_by_n_genes": true
+    },
+    "hausdorff_loss": {
+      "implementation": "torch.cdist_bidirectional_hausdorff",
+      "normalize_by_n_genes": false
+    }
+  },
+  "aggregation": "mean_over_eval_timepoints",
+  "status": "completed",
+  "result_class": "gse242424_oskm_ground_truth_formal",
+  "formal_benchmark": true,
+  "method_config": "benchmark/configs/prescient_gse242424_oskm_ground_truth_B_hvg2000_formal.yaml",
+  "label_mode": "ground_truth",
+  "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1",
+  "cell_state_key": "final_milestone_label_coarse",
+  "ground_truth": {
+    "provider_id": "gse242424_oskm_reprogramming_ground_truth_v1",
+    "label_mode": "ground_truth",
+    "state_key": "final_milestone_label_coarse",
+    "source_h5ad": "benchmark/inputs/gse242424_author_cluster_matched/GSE242424_author_cluster_matched_HVG2000_benchmark_input.h5ad"
+  }
+}

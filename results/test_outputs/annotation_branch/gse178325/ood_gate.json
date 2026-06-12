@@ -1,0 +1,19 @@
+{
+  "frac_ood_geometric": 0.06333333333333334,
+  "ood_threshold": 6.703714801332668,
+  "ref_median_knn_dist": 5.884166638327917,
+  "query_median_knn_dist": 5.8847887414502775,
+  "k": 15,
+  "quantile": 0.95,
+  "enrichment_vs_ref": 1.2666666666666657,
+  "gate_decision": "accept",
+  "ood_by_state": {
+    "ambiguous": 0.0,
+    "epithelial_like": 0.06811145510835913,
+    "hADSCs": 0.2512820512820513,
+    "hCiPS": 0.0,
+    "intermediate_plastic": 0.00906344410876133,
+    "xen_like": 0.02
+  },
+  "latent": "X_pca"
+}

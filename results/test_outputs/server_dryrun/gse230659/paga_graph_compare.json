@@ -1,0 +1,58 @@
+{
+  "graph_similarity": {
+    "edge_jaccard": 0.0,
+    "n_edges_a": 5,
+    "n_edges_b": 4,
+    "shared_edges": 0
+  },
+  "edges_marker_silver": [
+    [
+      "ambiguous",
+      "epithelial_like",
+      0.9591450216450217
+    ],
+    [
+      "ambiguous",
+      "hADSCs",
+      0.12445887445887448
+    ],
+    [
+      "ambiguous",
+      "hCiPS",
+      0.8901515151515151
+    ],
+    [
+      "epithelial_like",
+      "hADSCs",
+      0.6033504538939322
+    ],
+    [
+      "epithelial_like",
+      "hCiPS",
+      0.15109890109890112
+    ]
+  ],
+  "edges_scanvi_mapped": [
+    [
+      "epithelial_like",
+      "intermediate_plastic",
+      0.42857142857142855
+    ],
+    [
+      "epithelial_like",
+      "unknown_or_ood",
+      1.0
+    ],
+    [
+      "hADSCs",
+      "unknown_or_ood",
+      0.34534460352068047
+    ],
+    [
+      "intermediate_plastic",
+      "unknown_or_ood",
+      0.8603810318453623
+    ]
+  ],
+  "backend": "surrogate"
+}

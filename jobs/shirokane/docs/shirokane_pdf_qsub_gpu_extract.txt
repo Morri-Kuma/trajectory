@@ -1,0 +1,167 @@
+
+====================================================================================================
+D:\BaiduSyncdisk\中井研\linux.pdf
+pages 101
+
+====================================================================================================
+D:\BaiduSyncdisk\中井研\user.pdf
+pages 104
+
+--- page 11, hits=['job'] ---
+11 大量のジョブを計算ノードで実行 全部のパソコンを操作する 必要があり大変。 SHIROKANE は大量のプログラム (ジョブ) を実行することでスパコンらしく使うこ とができます。 SHIROKANE には大量のジョブを楽に実行するための仕組みが備 わっています。 少ない指示でジョブを計算ノード で順次実行する。 Job Job Job Job Job Job Job Job パソコン SHIROKANE ジョブとは計算する仕事の単位です
+
+--- page 12, hits=['job', 'AGE', 'Grid Engine'] ---
+バッチジョブシステム 大量のジョブを多くの計算ノードで 実行する仕組み 12 ユーザからジョブを受け付け、計算ノードにジョブを割り振る仕事を担うバッチ ジョブシステムという仕組みがあります。SHIROKANE では Altair Grid Engine (AGE) を 使用しています。AGE は実行の優先順位に基づき、負荷の少ない計算ノードにジョ ブを配布します。また AGE はユーザにジョブの実行状況を報告します。 Job 負荷高 負荷高 負荷低 負荷低 負荷低 Job Job Job Job Job Job Job 優先順位 高 低 Job Job Job Job Job Job Job
+
+--- page 13, hits=['job'] ---
+ジョブの同時実行数 13 Shirokane6 2.1 GＢのメモリを必要とする ジョブを約 7,000 個 同時に実行可能 Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job … SHIROKANE は、同時に約 28,000 個のジョブを 実行可能です。 Shirokane7 2.1 GＢのメモリを必要とする ジョブを約 21,000 個 同時に実行可能 Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job Job …
+
+--- page 15, hits=['job', 'AGE'] ---
+15 ノードの故障発生を前提とした設計 一つのパソコンが故障した場合、 他のパソコンで実行し直す必要が あります。 多くのノードがあれば必ず故障するノードがあります。 ノードが故障した場合、AGE が自 動で他のノードでジョブを実行し 直します。 パソコン SHIROKANE 故障 Job 故障 Job Job
+
+--- page 24, hits=['gpu'] ---
+計算ノード GPU (Shirokane7) 24 GPU を搭載した計算ノードです。 AI 処理や 並列計算に適しています。 計算ノード GPU (H100) ノード数: CPU: Memory: OS: 演算性能 : 2 Intel Xeon Platinum 8480+ (2.00 GHz) x2 合計 112 core 1.5 TB Red Hat Enterprise Linux 8 275 TFLOPS/node
+
+--- page 25, hits=['gpu'] ---
+計算ノード GPU (Shirokane5) 25 GPU を搭載した計算ノードです。 AI 処理や 並列計算に適しています。 計算ノード GPU (V100) ノード数: CPU: Memory: OS: 演算性能 : 2 Intel Xeon Gold 6248 (3.00 GHz) x2 合計 96 core 384 GB Rocky Linux 8 67 TFLOPS/node 2 Intel Xeon Gold 6248 (3.00 GHz) x2 合計 24 core 768 GB Rocky Linux 8 67 TFLOPS/node 6 Intel Xeon Gold 6126 (2.60GHz) x2 合計 24 core 384 GB Rocky Linux 8 64.4 TFLOPS/node 計算ノード GPU (A100) 1 AMD EPYC 7742 (2.25 GHz) x2 合計 128 core 1 TB Ubuntu 20.04 82.9 TFLOPS/node
+
+--- page 30, hits=['AGE'] ---
+ホームディスク ホームディスク 30 ホームディスク 容量 37.8 PB ファイルシステム Lustre ファイルシステム数 1 クラスタファイルシステム Lustre により、合計 180 GB/s のファイル I/Ｏ を実現。 数百 GB ～ 数十 TB の大きなデータ への高速アクセスに対応し、大規模 な同時並行のシークエンス解析が可 能です。 r os01 計算ノード データ実体 メタデータ r os02 r os03 r os04 r os05 r os06 r os07 ros40 MDS (Meta Data Server) OSS (Object Storage Server) r md01 rmd02 ・ ・ ・ ・ rmd008
+
+--- page 33, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への 接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 33
+
+--- page 34, hits=['qlogin'] ---
+SHIROKANE への接続 34 SHIROKANE に接続するにはログインを行う必要があります。ログイン には、SSH を使います。 Windows では Tera Term、PuTTY 、 ssh コマンド等を使用します。 ログイン後、$ qlogin を実行してください。 「サービス」は SSH を選択し、 OK ボタンをクリックします。
+
+--- page 40, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での 接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 40
+
+--- page 41, hits=['qsub'] ---
+Visual Studio Codeでの接続 41 • VSCode は軽量で高速なコードエディタ • VSCode の Remote SSH による接続先は ログインノード sutil を指定 • ジョブは計算ノード上で qsub にて実行する
+
+--- page 42, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へ のデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 42
+
+--- page 46, hits=['qlogin'] ---
+SHIROKANE への接続 46 SHIROKANE に接続するにはログインを行う必要があります。ログイン には、SSH を使います。 Windows では Tera Term、PuTTY 、 ssh コマンド等を使用します。 ログイン後、$ qlogin を実行してください。 「サービス」は SSH を選択し、 OK ボタンをクリックします。
+
+--- page 47, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 47
+
+--- page 48, hits=['qsub', 'qlogin', 'job', 'AGE'] ---
+ジョブが実行されるまでの流れ 48 Job ① ユーザがログインノードにログインする ② ユーザが qlogin コマンドを用い計算ノードにログインする ③ ユーザが qsub コマンドを用いジョブを AGE のキューに qsub する ④ AGE がキューにあるジョブをリソースがある計算ノードで実行する (ディスパッチ) ⑤ ジョブの実行結果は、ユーザのホームディレクトリに保存される Result Job Job Result Result Result Result ① ② ③ ⑤ /home/username/… 計算ノード ④ ログインノード QLOGIN 用の 計算ノード
+
+--- page 49, hits=['qlogin'] ---
+49 手元のパソコンから SHIROKANE に接続する際は、まずログインノー ドに接続します。外部から接続できるノードを限定することがセキュリ ティ上、好都合であるためです。 ログインノードは、ログインおよびインターネットから SHIROKANE へのデー タ転送に役割を特化したノードです。ジョブの実行や、 SHIROKANE からイン ターネットへのデータ転送は、計算ノードに qlogin し、行ってください。 パソコン SHIROKANE ログインノードにログインする ログインノード slogin.hgc.jp 計算ノード [slogin]$ qlogin
+
+--- page 50, hits=['qlogin'] ---
+50 qlogin コマンドで計算ノードにログインできます。 qlogin 後、コンパイルや、ジョブの実行が可能になります。 またオプションによって、ログインするノードを選ぶこともできます。 SHIROKANE 計算ノードにログインする $ qlogin $ qlogin –l lmem 計算ノード Fat 計算ノード Thin ログインノード slogin.hgc.jp 手元のパソコン インターネット $ qlogin -l arm 計算ノード Arm slogin
+
+--- page 51, hits=['job', 'AGE'] ---
+AGE は計算機の稼働・負荷状況を把握し、ジョブのスケジューリングを 自動に行います。そのためユーザは計算機の稼働・負荷状況を気にする ことなく、多くのジョブを実行できます。 SHIROKANE は AGE を利用してジョブを実行する ことが前提となっています。 AGE がジョブを実行する 51 優先順位 高 低 Job Job Job Job Job Job Job 負荷高 負荷高 負荷低 負荷低 負荷低 Job Job Job Job Job Job Job
+
+--- page 52, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の 基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 52
+
+--- page 53, hits=['qsub', 'gpu', 'AGE'] ---
+AGE の基本概念 53 ホスト （計算ノード） キュー スロット 物理的に存在する計算ノード。1 台のホ ストに複数のスロットが設定されている。 qsub されたジョブを実行する環境。 複数のホストを束ねる。 実行時間の上限や GPU などの有無に応 じて数種類のキューが存在する。 各ホストに設定されたジョブを実行する ための入れ物。スロット数は CPU コア 数に一致する。ジョブはキューに qsub され、スロットで実行される。
+
+--- page 54, hits=['qsub', 'job', 'AGE'] ---
+54 実行ホスト マスターホスト マスターホストからジョブの実行指 示を受けて、ジョブを実行する。 ジョブの受付、スケジューリング、 実行ホストへの配送、回収、AGE を統括するデーモン。 ジョブを qsub するホスト。 qmaster execd execd execd execd execd execd execd execd execd execd execd qmaster execd サブミットホスト submit host Job Job AGE の基本概念
+
+--- page 55, hits=['qsub', 'gpu', 'gpuh', 'qlogin', 'job', 'AGE'] ---
+55 AGE のキュー構成 実行 時間 上限 最大 メモリ 用途 呼び方 キューの 選択方法 スロット数 キュー名 rc001 -032 pc001 -060 pcl01 -03 gcg01 -10 gcga01 Pcg01 -02 Rca01 -38 Pca01 -33Shirokane 6 Shirokane 7 2 days 512G 768G 汎用 エムジョブズキュー qsub 2,432 9,984 - - - - - - mjobs.q mjobs_rerun.q 2 months エルジョブズキュー qsub -l ljob 512 1,536 - - - - - - ljobs.q 2 weeks 6T エルメムキュー qsub -l lmem - - 576 - - - - - lmem.q 制限なし 512G インタラクティブキュー qlogin 384 - - - - - - - intr.q 特定の グループ 専用 専有キュー qsub -l exclusive - グループ による - - - - - - groupname.q 制限なし 512G Web サービス ウェブキュー qsub -q web.q 128 - - - - - - - web.q データ コピー シーピーキュー qsub -l cp qlogin -l cp 54 - - - - - - - cp.q 2 weeks 512G Genomon 本体の実行 ゲノモンエムキュー - 12 - - - - - - - genomon_m.q 2 weeks 512G Genomon 解析ジョブ を実行 ゲノモンキュー - 128 - - - - - - genomon.q 7 days 384G Tesla V100 ジーピーユー ブイキュー qsub -l v100=1 - - - 432 - - - - gpuv.q 4 days 1T NVIDIA A100 ジーピーユーエー キュー qsub -l a100=1 - - - - 128 - - - gpua.q 4 days 1.5T NVIDIA H100 ジーピーユーエイチ キュー qsub -l h100=1 - - - - - 224 - - gpuh.q 制限なし 384 G 512 G GIGABYTE R152-P30 インタラクティブ アームキュー qlogin –l arm - - - - - - 160 - intra.q 2 days GIGABYTE R152-P30 アームキュー qsub -l arm - - - - - - 2,720 8,192 arm.q
+
+--- page 56, hits=['qsub', 'job', 'AGE'] ---
+ジョブ実行時間の上限 56 実行時間の上限を超えたジョブは kill される。 混雑時の実行待ちジョブの渋滞解消を目的として 設定している。 ジョブを qsub する前に、実行時間を把握する必要があ る。 Job 本来の実行時間 Job AGE における実行 KILL 実行時間の上限 未完了 実行 時間 は 、 ユーザ・システムタイムで はなく、実時間である $ time sleep 10 0.000u 0.000s 0:10.00 0.0% 0+0k 0+0io 0pf+0w $
+
+--- page 57, hits=['job'] ---
+実行優先度について 57 「チケット」でユーザのジョブ実行を順序づけてい る。 ジョブを実行して CPU が利用されると、チケット が減る。チケットの量は時間がたつと自動で元の 量に戻る。 優先度 チケット チケット チケット 高 中 低 優先度 優先度 ユーザ A ユーザ B ユーザ C グループ A グループ B グループ C ユーザ A ユーザ B ユーザ C 沢山ジョブを実行した少しジョブを 実行した 沢山ジョブを 実行していない Job Job Job Job Job Job Job Job Job Job Job Job
+
+--- page 58, hits=['job'] ---
+実行優先度について 58 チケットが枯渇してもジョブは実行できる 。 チケット は他のユーザとの相対的な比較指標として使用される。 優先順位 高 低 Job Job Job Job Job Job Job チケット チケット チケットの量に 応じて待ち行列 内のジョブを ソートする。 ユーザA ユーザB ユーザC Job Job Job Job Job Job Job Job Job Job チケット
+
+--- page 60, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用 してジョブを qsub して みよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 60
+
+--- page 61, hits=['qsub', 'qstat', 'qdel', 'job', 'AGE'] ---
+$ qsub <ジョブスクリプト> ジョブをキューに qsub するコマンド $ qstat ジョブの状況を表示するコマンド $ qdel <jobid> ジョブを削除するコマンド 61 AGE を利用してジョブをqsubしてみよう AGE でジョブを実行するための必須コマンドが まず 3 つあります。
+
+--- page 62, hits=['qsub', 'qstat', 'queue', 'job', 'AGE'] ---
+$ qstat job-ID prior name user state submit/start at queue slots ja-task-ID --------------------------------------------------------------------------------------------------------- 1152355 1.05000 test.sh username t 04/26/2017 16:17:00 mjobs.q@gc200i 1 $ state に「 t 」 ( トランスファー ) が表示される。 qstatコマンドによるジョブ状況の表示 62 AGE に qsub したジョブの状況は qstat コマンドで得られる。 ① 待ち行列にジョブが入る ② ジョブが実行ホストに転送される (短い) ③ ジョブが実行される $ qstat job-ID prior name user state submit/start at queue slots ja-task-ID -------------------------------------------------------------------------------------------------------- 1152354 0.00000 test.sh username qw 04/26/2017 16:15:02 1 $ state に「 qw 」 ( キューウェイト ) が表示される。 $ qstat job-ID prior name user state submit/start at queue slots ja-task-ID ------------------------------------------------------------------------------------------------------- 1152355 1.05000 test.sh username r 04/26/2017 16:17:00 mjobs.q@gc200i 1 $ state に「 r 」 ( ランニング ) が表示される。
+
+--- page 63, hits=['qstat', 'job'] ---
+確認時 (qstat) のオプション 63 $ qstat -f キューの利用状況を合わせて表示する $ qstat -u <username> 指定した username のジョブを表示する 「’*’」とすると全ユーザのジョブを表示する <ex.> $ qstat -u ’*’ $ qstat -j <jobid> 指定した jobid の詳細情報を表示する。 エラーステータス「Eqw」となった理由を確認できる。
+
+--- page 64, hits=['qsub', 's_vmem', 'AGE'] ---
+ジョブスクリプト 64 計算内容が書かれたジョブスクリプトを AGE のキューに qsub します。 講習では、以下のジョブスクリプト「blastn_vertebrate.sh」を使用 します。 #!/bin/bash #$ -S /bin/bash #$ -l s_vmem=16G # 変数を設定 query="${HOME}/sequence.fasta" database="/usr/local/db/blast/genbank/vertebrate“ # module コマンドで環境変数 PATH などを設定する module load /usr/local/package/modulefiles/blast+/2.15.0 # blast+ を実行 echo 実行コマンド: blastn -db $database -query $query blastn -db $database -query $query 「#$」 は、ジョブスクリプトの中で AGE オプションを指定するための接頭辞 「#$ -S」 によりこのスクリプトを実行するインタプリタを指定する。 常に必要 ruby の例:#$ -S /usr/local/package/ruby/current3.2/bin/ruby インタプリタとは、テキストで書かれたプログラムをコンピュータが実行できる形式に変換しながら、実行するソフトウェアの総称です。
+
+--- page 65, hits=['qsub', 'job'] ---
+qsub コマンドによるジョブのqsub 65 qsub コマンドでジョブスクリプトを qsub する。 実行待ち行列にジョブが入る。 $ qsub blastn_vertebrate.sh Your job 1152351 (“blastn_vertebrate.sh”) has been submitted $
+
+--- page 66, hits=['qsub', 'job'] ---
+qsub コマンドのオプション 66 $ qsub -S <インタプリタのパス> スクリプトファイルを実行する際のインタプリタを指定する ex.-S /usr/local/bin/perl $ qsub -cwd ワーキングディレクトリを qsub したときのディレクトリにす る (既定のワーキングディレクトリはホームディレクトリ) $ qsub -o <path A> -e <path B> 標準出力を path A に、標準エラー出力を path B に出力する 標準出力、標準エラー出力をファイルに出力させない場合は、 path A 、path B を /dev/null とする $ qsub -N <alternative job name> ジョブの名前を <alternative job name> と命名する
+
+--- page 67, hits=['qsub', 'qdel', 'qlogin', 'job'] ---
+ジョブの削除 67 ジョブの削除は qdel コマンドを使用する。 ①ジョブ ID を指定してジョブを削除する ②ユーザ名を指定してジョブを削除する $ qsub test.sh Your job 1152367 (“test.sh”) has been submitted $ qdel 1152367 username has registered the job 1152367 for deletion $ $ qsub test.sh Your job 1152373 (“test.sh”) has been submitted $ qsub test.sh Your job 1152374 (“test.sh”) has been submitted $ $ qdel -u username username has registered the job 1152373 for deletion username has registered the job 1152374 for deletion $ 注意！ ユーザ の QLOGIN ジョブも削除されます。
+
+--- page 70, hits=['qsub', 'AGE'] ---
+実 習 ① ジョブスクリプトの内容 ~/blastn_vertebrate.sh を表示・確認する ② AGE にジョブを qsub する ③ qsub したジョブの実行状況を表示・確認する ④ 実行結果を表示・確認する 70
+
+--- page 71, hits=['qsub', 'qstat', 'job', 'AGE'] ---
+実習解答 ① ジョブスクリプトの内容 ~/blastn_vertebrate.sh を表示・確認する ② AGE にジョブを qsub する ③ qsub したジョブの実行状況を表示・確認する ④ 実行結果を表示・確認する 71 $ qsub blastn_vertebrate.sh $ cat blastn_vertebrate.sh $ cat blastn_vertebrate.sh.o < jobid > $ qstat
+
+--- page 72, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 72
+
+--- page 73, hits=['qsub'] ---
+アレイジョブを実行しよう 73 アレイジョブは、環境変数 SGE_TASK_ID の値を、指定した範囲で変化さ せつつ同じジョブスクリプトを繰り返して実行するジョブです。 qsub コマンドの -t オプションで繰り返し範囲を指定することでアレイ ジョブになります。 ジョブを 3 回 qsub 3 回実行するジョブを 1 回 qsub 実行 実行 実行 3 回実行 X = 1 の場合を X = 2 の場合を X = 3 の場合を X = 1 ～ 3 の場合を
+
+--- page 74, hits=['qsub', 'qstat', 'queue', 'job'] ---
+アレイジョブ 74 $ qsub - t [SGE_TASK_FIRST - ]<SGE_TASK_LAST>[:SGE_TASK_STEPSIZE ] [ スクリプト ] < ex.> $ qsub - t 1 - 4:1 blastn_array.sh ・SGE_TASK_FIRST の値に 0 は指定できない ・SGE_TASK_STEPSIZE は整数 $ qsub -t 1-4:1 blastn_array.sh Your job-array 1153069.1-4:1 (“blastn_array.sh”) has been submitted $ $ qstat job-ID prior name user state submit/start at queue slots ja-task-ID ---------------------------------------------------------------------------------------------------------------------- 1153069 0.00000 blastn_array.sh username qw 04/26/2017 17:47:13 1 1-4:1 $ ja - task - ID に – t オプション にて 指定した 値が表示 される。
+
+--- page 75, hits=['qsub', 'AGE'] ---
+ジョブ数の上限とアレイジョブ 75 AGE が過負荷となることを防止するために、 1 ユーザが qsub 可能なジョブ数には上限がある。 1 ユーザのジョブ上限: 10,000 上限を上回るジョブを qsub しようとするとエ ラーになる。 アレイジョブとして qsub すると、AGE に与える 負荷を大幅に軽減できる。 10,000 個のアレイジョブを qsub すれば、 10,000 × SGE_TASK_ID 分のジョブを実行できる。SGE_TASK_ID の上限は 75,000 のため、最大で 7 億 5000 万のジョブを実行待ちにできる。
+
+--- page 76, hits=['qsub', 's_vmem', 'AGE'] ---
+アレイジョブのスクリプト 76 以下のアレイジョブ blastn_array.sh を qsub する。 #!/bin/bash #$ -S /bin/bash #$ -l s_vmem=16G # 変数を設定 query="${HOME}/sequence.fasta" division=([1]="viral" [2]="vertebrate" [3]="invertebrate" [4]="primate") database="/usr/local/db/blast/genbank/${division[$SGE_TASK_ID]}“ # module コマンドで環境変数などを設定する module load /usr/local/package/modulefiles/blast+/2.15.0 # AGE の環境変数を出力 echo SGE_TASK_ID:$SGE_TASK_ID # blast+ を実行 echo 実行コマンド: blastn -db $database -query $query blastn -db $database -query $query
+
+--- page 77, hits=['qsub', 'AGE'] ---
+実習 77 ① ジョブの内容 ~/blastn_array.sh を表示する ② AGE を利用せずにジョブを実行する (実行できる?) ③ AGE にジョブを qsub する (4 種類の blast を実行) ④ qsub したジョブの実行状況を表示する ⑤ 実行結果を確かめる ⑥ echo している 4 つの環境変数の値を確認する
+
+--- page 78, hits=['qsub', 'qstat', 'job', 'AGE'] ---
+実習回答 78 ① ジョブの内容 ~/blastn_array.sh を表示する ② AGE を利用せずにジョブを実行する (実行できる?) ③ AGE にジョブを qsub する (4 種類の blast を実行) ④ qsub したジョブの実行状況を表示する ⑤ 実行結果を確かめる ⑥ echo している 4 つの環境変数の値を確認する $ cat blastn_array.sh $ ./blastn_array.sh → 環境 変数が設定されて いない ため実行できない $ qsub - t 1 - 4:1 blastn_array.sh $ qstat $ cat blastn_array.sh.o [ jobid ].[ taskid ] $ cat blastn_array.sh.o [ jobid ].[ taskid ] → SGE_TASK_ID は各ジョブで異なる → 他の 3 つは 各ジョブ共通
+
+--- page 79, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブ を qsub する 際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 79
+
+--- page 80, hits=['qsub', 's_vmem'] ---
+2.1 GB 以上のメモリを使用するジョブを qsubする 1 80 ジョブが利用可能なメモリ量のデフォルト値は・・・ 要求する メモリ量を変更するには、 qsub 時に –l オプションの s_vmem パラメータを指定する e x. 要求メモリ量を 8 GB に設定する場合 要求メモリ量の変更は 慎重に 行っ てください。大規模なハングアッ プを発生させる恐れがあります SHIROKANE 2.1 GB まで $ qsub -l s_vmem=8G
+
+--- page 81, hits=['qsub', 's_vmem', 'job', 'AGE'] ---
+s_vmem=8G 2.1 GB 以上のメモリを使用するジョブを qsubする 2 81 メモリ要求量を宣言することで、計算ノードのメモリの 残容量を AGE が管理できる 空き Memory 768G Job 空き Memory 760G メモリ要求量を 8 GB と宣言し、ジョブを qsub する。 計算ノードの搭載メモリ量 768 GB から 8 GB を差し引かれ、残りが 760 GB が 空き Memory となる。  空き Memory がなくなる と、その計算ノードでは新たなジョブ が実行 されない s_vmem=8G Job
+
+--- page 82, hits=['qsub', 'qstat', 'qlogin', 'queue', 'job', 'AGE'] ---
+qreportコマンドを用いたメモリ利用量の確認1 82 AGE にバッチジョブを qsub する前には、メモリ使用量 の確認を行う。qreport を用いれば、過去に実行した ジョブの最大メモリ量を表示できる。 ① ジョブを実行する ② qstat を実行し、ジョブ ID を知る [lect94@rc005 ~]$ qsub test.sh Your job 12749200 ("test.sh") has been submitted [lect94@rc005 ~]$ qstat job-ID prior name user state submit/start at queue slots ja-task-ID ------------------------------------------------------------------------------------------------ 12736497 0.09862 QLOGIN lect94 r 04/21/2017 14:09:42 intr.q@rc005i 1 12749200 0.04931 test.sh lect94 r 04/21/2017 18:32:53 ljobs.q@pcl02i 1 後でメモリ利用量を確認するために jobID (12749200) をメモする
+
+--- page 83, hits=['job'] ---
+qreportコマンドを用いたメモリ利用量の確認2 83 ③ ジョブの終了を待つ ( 注意 : 終了しないと ⑤ で 出力が 得られない ) ⑤ qreport コマンドで利用した 最大メモリ量を表示する 。 $ qreport - j < jobID >  ps –aux コマンド等でも利用している実行中のメモリ量が表示される が、確認した時のメモリ量しかわからず、最大量を知るには やや手間がかかる  qreport コマンドであれば、最大メモリ量を手軽に知ることができる qreport[lect94@rc005 ~]$ qreport -j 12749200 | grep maxvmem maxvmem 0.2G [lect94@rc005 ~]$ test.sh 実行中に使用した最大メモリ 量は 0.2 G B であることがわかる ④ 最大で 5 分程度 待つ
+
+--- page 84, hits=['qsub', 'AGE'] ---
+目次２ 2. SHIROKANE へのログインとジョブの実行  SHIROKANE への接続  Visual Studio Code での接続  SHIROKANE へのデータ転送  ジョブが実行されるまでの流れ  AGE の基本概念  AGE を利用してジョブを qsub してみよう  アレイジョブを実行しよう  ジョブを qsub する際の注意点 と qreport コマンド  AGE のリソースクォータと qfree コマンド 84
+
+--- page 85, hits=['qsub', 'job', 'AGE'] ---
+AGE のリソースクォータ 85 AGE のキューは利用コースごとで割当量 (リソースクォータ) に上限がある。 ユーザは、グループの中でリソースをシェア することになる ユーザ A とユーザ B がいる D6 コースの場合、A の ジョブが 2500 ジョブ実行している状況で、B が 100 ジョブを qsub すると、その内の 60 ジョブはすぐ の実行が期待されるが、40 ジョブは待たされる。 ※他のグループの利用状況の影響もあります 例 ： D 6 コースの場合（ mjobs.q のスロット数： 2,560 ）
+
+--- page 86, hits=['AGE'] ---
+86  グループ内の誰が、いくつ、どのキューで  ジョブを実行しているか表示する $ qfree –hでヘルプを表示する グループの AGE リソースの確認 qfree コマンド SHIROKANE 独自コマンド
+
+--- page 87, hits=['job', 'AGE'] ---
+87 qfree コマンドの実行例 • mjobs.q で は • username ユーザ自身は … • 120 スロット 使用中 • グループ では … • 389 スロット 使用中 • AGE のリソースクォータの上限は … • 2,048 スロット ある と読み取れる • 同じグループのユーザがどの キューで何ジョブ実行している のかがわかる • q w で 実行待ちのジョブ数 が わかる → 234 ターミナル ー ssh [username-1@ngw05 ~]$ qfree SUMMARY OF RUNNING JOBS username group QUOTA ALL QNAME JOBS JOBS LIMIT JOBS AVAIL STDBY TOTAL ------------- ---------------------- -------------------------- cp.q 1 1 0 1 3 0 8 intr.q 2 4 96 17 12 0 144 ljobs.q 0 4 1152 62 18 992 1728 lljobs.q 0 0 192 12 32 0 256 lmem.q 0 0 132 15 15 0 132 mjobs.q 120 389 8696 1501 236 96 8604 mjobs_rerun.q 0 0 8696 0 0 1408 1408 sjobs.q 0 0 452 0 72 224 452 ------------- ---------------------- -------------------------- 123 404 19416 1608 388 2720 12732 THE NUMBER OF RUNNING JOBS BY USER IN THE GROUP (hgcusername) QNAME username-1 username-2 username-3 username-4 ------------- -------------------------------------------------- cp.q 0 1 0 0 intr.q 0 2 1 1 ljobs.q 4 0 0 0 lljobs.q 0 0 0 0 lmem.q 0 0 0 0 mjobs.q 0 120 2 0 mjobs_rerun.q 0 0 0 0 sjobs.q 0 0 0 0 qw 1901 234 0 0 ------------- -------------------------------------------------- [username-1@gc012 ~]$ qfree SUMMARY OF RUNNING JOBS username-1 group QUOTA ALL QNAME JOBS JOBS LIMIT JOBS AVAIL STDBY TOTAL ------------- ----------------- ------ --------------------------- arm.q 0 0 0 1080 1640 0 2720 cp.q 0 0 0 20 34 0 54 intr.q 1 1 0 96 136 0 288 intra.q 0 0 0 1 159 0 160 ljobs.q 0 0 0 1065 74 0 2248 lmem.q 0 0 0 85 59 0 144 mjobs.q 120 389 2048 3786 33 144 4852 mjobs_rerun.q 0 0 0 1139 3284 3888 8496 ------------- ----------------- ------ --------------------------- 121 390 2048 7272 5419 4032 18962 THE NUMBER OF RUNNING JOBS BY USER IN THE GROUP (group) QNAME username-1 username-2 username-3 ------------- -------------------------------------------------- arm.q 0 0 0 cp.q 0 0 0 intr.q 1 0 0 intra.q 0 0 0 ljobs.q 0 0 0 lmem.q 0 0 0 mjobs.q 120 200 69 mjobs_rerun.q 0 0 0 qw 234 ------------- -------------------------------------------------- [username-1@rc005 ~]$ qfree SUMMARY OF RUNNING JOBS username-1 group QUOTA ALL QNAME JOBS JOBS LIMIT JOBS AVAIL STDBY TOTAL ------------- ------------------ ------ ---------------------------- arm.q 0 0 0 4327 6095 320 10912 cp.q 0 0 0 12 42 0 54 genomon.q 0 0 0 3 233 0 236 genomon_m.q 0 0 0 5 7 0 12 intr.q 1 1 0 176 590 0 768 intra.q 0 0 0 5 155 0 160 ljobs.q 0 0 0 1769 12 0 1792 lmem.q 0 0 0 368 208 0 576 mjobs.q 120 389 2048 6481 190 128 7104 mjobs_rerun.q 0 0 0 981 56 4032 5184 ------------- ------------------ ------ ---------------------------- 121 390 2048 14127 7588 4480 26798 THE NUMBER OF RUNNING JOBS BY USER IN THE GROUP (group) QNAME username-1 username-2 username-3 ------------- -------------------------------------------------------- arm.q 0 0 0 cp.q 0 0 0 genomon.q 0 0 0 genomon_m.q 0 0 0 intr.q 1 0 0 intra.q 0 0 0 ljobs.q 0 0 0 lmem.q 0 0 0 mjobs.q 120 300 69 mjobs_rerun.q 0 0 0 qw 234 0 0 -------------- ------------------------------------------------------
+
+--- page 95, hits=['AGE'] ---
+補足資料  GUI による SHIROKANE への接続  AGE で必要な環境変数  SHIROKANE の利用申請方法 95
+
+--- page 96, hits=['qlogin'] ---
+GUI による SHIROKANE への接続 96 GUI による SHIROKANE へのログインが可能です。接続するノード (NoMachine Terminal Server) の名前は snx1.hgc.jp または snx2.hgc.jp です。 ここでは、NoMachine Client を使用して SHIROKANE へログインしま す。 snx.hgc.jp は GUI のログインノードです。ここでも、作業やジョブの 実行のときには qlogin をしてください。 デスクトップにある NoMachine を起動し、 Add をクリックします

@@ -1,6 +1,6 @@
 # method_capabilities.yaml
 # Per-method capability flags for the scTimeBench-aligned benchmark.
-# Framework reference: experimental framework v2.md §6
+# Framework reference: docs/framework/experimental_framework_v2.md §6
 #
 # These flags gate which benchmark dimensions each method is evaluated on.
 # Do NOT override these flags to force a method into unsupported dimensions.
@@ -79,9 +79,49 @@ methods:
       - embedding_coherence
       - lineage_fidelity
 
+  scimf:
+    label: "scIMF"
+    supports_unseen_timepoint_projection: true
+    supports_lineage_inference: true
+    # scIMF (Jiang et al. 2026): an interacting mean-field neural SDE with a
+    # Transformer encoder. scTimeBench's best overall forecaster. Generative and
+    # projection-capable -> eligible for all three dimensions.
+    eligible_dimensions:
+      - forecast_accuracy
+      - embedding_coherence
+      - lineage_fidelity
+
+  pisde:
+    label: "PI-SDE"
+    supports_unseen_timepoint_projection: true
+    supports_lineage_inference: true
+    # PI-SDE (Jiang & Wan 2024): a physics-informed neural SDE for cellular
+    # dynamics. Generative and projection-capable -> all three dimensions.
+    eligible_dimensions:
+      - forecast_accuracy
+      - embedding_coherence
+      - lineage_fidelity
+
+  squiddiff:
+    label: "Squidiff"
+    supports_unseen_timepoint_projection: true
+    supports_lineage_inference: true
+    # Squidiff (He et al. 2026): a conditional diffusion model predicting cellular
+    # development and perturbation responses. Generative and projection-capable
+    # -> all three dimensions. Run in PCA space (no native gene-expression decoder),
+    # consistent with the MIOFlow/PRESCIENT PCA convention in scTimeBench.
+    eligible_dimensions:
+      - forecast_accuracy
+      - embedding_coherence
+      - lineage_fidelity
+
 # =============================================================================
-# Template for future generative / forecasting models
+# Template for future generative / forecasting models (e.g. CellMNN, Moscot)
 # =============================================================================
+# CellMNN (Bassewitz et al. 2025, mechanistic NN / local ODEs) is a further
+# projection-capable candidate and can be added with the same three-dimension
+# template below. Moscot (Klein et al. 2025) is OT-based -> lineage-only, like WOT.
+#
 # future_model_template:
 #   supports_unseen_timepoint_projection: true
 #   supports_lineage_inference: true
