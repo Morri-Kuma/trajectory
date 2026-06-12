@@ -73,7 +73,7 @@ fall outside the 5-seed 95\% confidence interval; a diffusion-pseudotime axis ca
 sharpen recovery (most strikingly PRESCIENT on GSE230659) but the gain is method- and
 system-dependent. The practical message is that in this domain a method should be chosen
 per task and validated on a system close to the target biology --- a lineage result in
-particular should not be read off a single averaged leaderboard. All datasets are public;
+particular should not be read off a single averaged leaderboard. The central message is methodological: because rankings move with the task, the reference construction, and the random seed, a domain benchmark should report task-stratified results, an out-of-distribution check on reference transfer, and seed uncertainty rather than a single leaderboard. All datasets are public;
 reported numbers are read from synced result files, with multi-seed intervals provided as
 derived artifacts (Section~\ref{sec:repro}).
 \end{abstract}
@@ -104,7 +104,7 @@ cell-state reference, yet two of our primary datasets ship none. We address this
 scANVI/scArches label-transfer pipeline gated by a geometric out-of-distribution
 score, which lets the benchmark scale to unlabeled data while measuring when a
 transferred reference can be trusted. These are the two innovations that distinguish
-this work from scTimeBench.
+this work from scTimeBench. Concretely, four features set this benchmark apart from prior trajectory-inference comparisons: a single-domain (pluripotency) focus that makes cross-system ranking \emph{transfer} testable in the first place, scTimeBench-style task stratification, an out-of-distribution-gated reference-transfer step, and an explicit, quantified treatment of single-seed ranking instability.
 
 % ------------------------------------------------------------------
 \section{Methods}
@@ -243,7 +243,10 @@ picture is split (Table~\ref{tab:primary}): PRESCIENT has the most coherent embe
 and forecast accuracy has no single winner (scNODE wins Scenario~A on both datasets;
 PRESCIENT wins the harder B/C on GSE230659). The best forecaster is not the best
 lineage recoverer --- the central scTimeBench observation, reproduced on reprogramming
-data.
+data. The complete results matrix --- all five completed methods on all six systems, with
+forecast, embedding, and lineage side by side --- is given in Table~\ref{tab:master}; the
+main-text tables and figures are task- and role-stratified views of it (projection-capable
+methods only for forecast/embedding, OSKM kept on its own reference protocol).
 
 \begin{table}[ht]
 \centering
@@ -419,6 +422,17 @@ single-seed leader (MIOFlow).}
 \label{fig:robust}
 \end{figure}
 
+\subsection{A label-permutation negative control bounds the metric's chance level}
+\label{sec:negctrl}
+To show the lineage metric does not return a plausible score regardless of input, we recomputed the single-step graph-similarity AUROC (the production metric) on every real predicted transition matrix --- the three projection methods across all six systems and every available scenario (observed-time A/B/C and pseudotime D/E/F; $72$ runs) --- under two null inputs: a \emph{label-permutation} null that randomly relabels the predicted states (2000 draws) and a \emph{random row-stochastic matrix} control (2000 draws); Figure~\ref{fig:negctrl}. On the small reference graphs the empirical chance level is AUROC $\approx0.62$ (permutation) and $\approx0.63$ (random) --- above the nominal $0.5$, because a 4--5-node chain and a diagonal-heavy row-stochastic prediction are easy to match partially. Against this empirical null only $23$ of $72$ runs exceed the null's $95$th percentile. The OSKM system (GSE242424) is the clearest signal (above null at $p\le0.012$ across A/B/C), whereas the human hADSC silver systems (GSE178325, GSE230659) on observed time frequently are not --- scNODE on GSE230659~B (AUROC $0.44$) sits \emph{below} its permutation null ($p=0.91$). The pseudotime axis is method-specific: PRESCIENT's much-cited jump on GSE230659 is real --- it clears the null in every pseudotime scenario (D/E/F AUROC $0.95$--$1.00$, $p\le0.045$) --- but most other pseudotime gains do not exceed chance (only $4$ of $18$ pseudotime runs clear the null). The metric is therefore discriminating rather than permissive, and absolute lineage AUROC on the silver systems should be read against an empirical permutation floor near $0.62$, not against $0.5$ --- reinforcing the central caution that these silver-reference lineage scores are weak signal except where a permutation test confirms otherwise.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.95\linewidth]{figures_v2/figS1_negative_control.png}
+\caption{Lineage negative control across all $72$ method$\times$system$\times$scenario runs (observed A/B/C and pseudotime D/E/F). Each point is the real single-step AUROC (filled = above the label-permutation null's $95$th percentile; open = at/below it); grey marks the permutation-null mean ($2000$ permutations). The empirical chance level sits near $0.62$ on these small graphs; real scores clear it only where genuine lineage signal exists ($23/72$ runs), including PRESCIENT's pseudotime jump on GSE230659 but few other pseudotime gains.}
+\label{fig:negctrl}
+\end{figure}
+
 \subsection{The scANVI reference gate flags cross-modality transfers that confidence misses}
 The reference-construction pipeline (Section~\ref{sec:refval}) is validated against a
 positive and a negative control (Fig.~\ref{fig:refval}). The \textbf{positive control}
@@ -496,6 +510,55 @@ the two datasets.}
 \label{fig:embedding}
 \end{figure}
 
+\begin{table}[ht]
+\centering
+\caption{Complete results matrix: every \emph{completed} method on all six systems, observed-time scenarios A/B/C (means). Forecast = exact OT-loss Wasserstein (lower better; GSE230659 is on a different, unnormalised scale, cf.\ Fig.~\ref{fig:forecast}); Embed.\ = coherence ARI (higher better); Lineage = single-step graph-sim AUROC (higher better, read against the permutation floor $\approx0.62$, Section~\ref{sec:negctrl}). WOT/CellRank2 are lineage-only by construction; the three planned methods are not run. $^{\dagger}$GSE242424 (OSKM) uses the author-cluster reference protocol and is not pooled with the marker-silver systems.}
+\label{tab:master}
+\small
+\begin{tabular}{l l c c c}
+\toprule
+Method & System & Forecast WD $\downarrow$ & Embed.\ ARI $\uparrow$ & Lineage AUROC $\uparrow$ \\
+\midrule
+\multirow{6}{*}{scNODE} & GSE178325 & 0.038 & 0.115 & 0.599 \\
+ & GSE230659 & 204.8 & 0.067 & 0.594 \\
+ & GSE218855 & 0.075 & 0.077 & 0.872 \\
+ & GSE298212 & 0.045 & 0.000 & 0.735 \\
+ & GSE175634 & 0.047 & 0.350 & 0.946 \\
+ & GSE242424$^{\dagger}$ & 0.035 & 0.147 & 0.795 \\
+\midrule
+\multirow{6}{*}{PRESCIENT} & GSE178325 & 0.042 & 0.080 & 0.619 \\
+ & GSE230659 & 157.7 & 0.219 & 0.641 \\
+ & GSE218855 & 0.075 & 0.070 & 0.778 \\
+ & GSE298212 & 0.044 & 0.017 & 0.863 \\
+ & GSE175634 & 0.042 & 0.184 & 0.523 \\
+ & GSE242424$^{\dagger}$ & 0.027 & 0.199 & 0.786 \\
+\midrule
+\multirow{6}{*}{MIOFlow} & GSE178325 & 0.046 & 0.096 & 0.667 \\
+ & GSE230659 & 260.5 & 0.021 & 0.658 \\
+ & GSE218855 & 0.076 & 0.117 & 0.761 \\
+ & GSE298212 & 0.054 & 0.044 & 0.803 \\
+ & GSE175634 & 0.038 & 0.366 & 0.970 \\
+ & GSE242424$^{\dagger}$ & 0.028 & 0.156 & 0.856 \\
+\midrule
+\multirow{6}{*}{WOT} & GSE178325 & --- & --- & 0.607 \\
+ & GSE230659 & --- & --- & 0.513 \\
+ & GSE218855 & --- & --- & 0.872 \\
+ & GSE298212 & --- & --- & 0.795 \\
+ & GSE175634 & --- & --- & 1.000 \\
+ & GSE242424$^{\dagger}$ & --- & --- & 0.939 \\
+\midrule
+\multirow{6}{*}{CellRank2} & GSE178325 & --- & --- & 0.583 \\
+ & GSE230659 & --- & --- & 0.564 \\
+ & GSE218855 & --- & --- & 0.923 \\
+ & GSE298212 & --- & --- & 0.821 \\
+ & GSE175634 & --- & --- & 1.000 \\
+ & GSE242424$^{\dagger}$ & --- & --- & 0.934 \\
+\midrule
+\multicolumn{5}{l}{\emph{scIMF, PI-SDE, Squidiff --- planned extensions, not run (see Table~\ref{tab:methods}).}}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
 % ------------------------------------------------------------------
 \section{Discussion}
 % ------------------------------------------------------------------
@@ -521,11 +584,15 @@ entirely misses --- decides when a transferred reference may be used. The two
 contributions reinforce each other: the cross-modality generalization result is the
 empirical reason the OOD gate refuses cross-modality references.
 
+\paragraph{No single best method is the finding, not a gap.} That winners differ by task --- PRESCIENT for embedding coherence, MIOFlow or scNODE for lineage depending on the system, the forecasters splitting by scenario --- is a positive result for practitioners, not a weakness of the study: method choice should be driven by the analytical objective rather than by a headline leaderboard, and a benchmark that reported only an averaged rank would hide exactly the information a user needs.
+
+\paragraph{Practical guidance.} For \emph{forecasting}, prioritise the exact OT-loss metrics (Wasserstein/MMD) and treat scNODE/PRESCIENT as strong defaults, since forecast rankings are the most portable across systems ($W=0.75$). For \emph{lineage}, do not read recovery off embedding ARI --- the two tasks rank methods differently --- and interpret absolute AUROC against the empirical permutation floor ($\approx0.61$ on these small graphs, Section~\ref{sec:negctrl}), not against $0.5$. For \emph{reference transfer}, reject a transferred reference when the geometric OOD gate flags a large fraction of query cells, enriched over the reference's own self-flag baseline (here cross-modality transfers, $6.5$--$9.7\times$); accept only within-modality, gate-passing transfers. And read any \emph{single-seed} leaderboard as one draw: where 5-seed intervals exist the leader can change, so rank gaps inside a confidence interval should not be over-interpreted.
+
 \paragraph{Scope of the claims.} We frame this work as a \emph{silver-reference benchmark and cautionary analysis}, not a biological-ground-truth study. Every lineage and embedding number is scored against marker-defined or scANVI-transferred references, so the results establish how method rankings behave --- and how fragile they are --- under a transparent, reproducible reference construction, rather than a definitive biological ordering of methods or a mechanism-discovery claim. ``Recovery'' throughout denotes agreement with these frozen coarse reference graphs, not recovery of ground-truth lineage. The three additional generative methods (scIMF, PI-SDE, Squidiff) are planned extensions whose model code is not vendored, raise an explicit \code{VendoringRequired} contract, and contribute to no result in this paper.
 
 \paragraph{Limitations.} Silver references are marker-defined or scANVI-transferred,
 not author-validated, so lineage fidelity measures alignment with a coarse reference
-graph rather than ground-truth biology; the reference graphs are small (3--4 edges for
+graph rather than validated biological lineage; the reference graphs are small (3--4 edges for
 the marker-silver systems, 9 for the OSKM author-cluster protocol), so the lineage
 metrics are reported with this structural sparsity in mind and the OSKM system, built
 under a different reference protocol, is shown stratified rather than pooled with the

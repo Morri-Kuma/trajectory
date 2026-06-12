@@ -1,0 +1,26 @@
+{
+  "k_permutations": 2000,
+  "r_random": 2000,
+  "metric": "single_step graph-sim AUROC (production _auc_metrics path)",
+  "overall": {
+    "n_runs": 72,
+    "perm_null_mean": 0.6151,
+    "random_mat_mean": 0.6253,
+    "n_real_above_null_p95": 23
+  },
+  "by_axis": {
+    "observed": {
+      "n_runs": 54,
+      "perm_null_mean": 0.6083,
+      "random_mat_mean": 0.6218,
+      "n_real_above_null_p95": 19
+    },
+    "pseudotime": {
+      "n_runs": 18,
+      "perm_null_mean": 0.6354,
+      "random_mat_mean": 0.6358,
+      "n_real_above_null_p95": 4
+    }
+  },
+  "interpretation": "Both null inputs collapse the metric toward an empirical chance level near 0.6 on these small graphs; real predictions exceed the permutation null only where genuine lineage signal exists, so the metric is discriminating, not permissive."
+}

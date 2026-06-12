@@ -32,6 +32,7 @@ maps the headline numbers to their source and the script that regenerates them.
 | Multi-seed CI (Fig 8) — **derived artifact** | 5-seed mean ± 95% CI, 3 methods × 2 datasets × A/B/C | `multiseed_ci.csv` (derived); provenance in `multiseed_manifest.csv` (config sha256 + run log per run); run logs `logs/run_multiseed_benchmark.122804086.{1..90}.log`; checksums `multiseed_config_checksums.sha256` | rerun recipe above (`run_multiseed_benchmark_array.sh` → `aggregate_multiseed_ci.py` → `make_multiseed_figure.py`) |
 | OOD gate (k,q) sensitivity | reject decision stable; query flagged 6.5–9.7× ref baseline (k∈{5,15,30,50}, q∈{0.90,0.95}) | `results/test_outputs/ood_recalibration/ood_sensitivity_sweep.{csv,json}` | `scripts/ood_sensitivity_sweep.py` (PCA-latent proxy) |
 | OOD per-state breakdown | per marker-state OOD fraction | `results/test_outputs/ood_recalibration/ood_by_group_summary.json` | pipeline `ood_gate` / `scripts/demo_ood_recalibration.py` |
+| Lineage negative control (Fig S1) | label-perm null AUROC ≈0.62, random ≈0.63; 23/72 real runs (all scenarios A–F) > null p95 | `results/test_outputs/negative_control/lineage_negative_control.{csv,json}` | `scripts/negative_control_lineage.py` → `scripts/make_negative_control_figure.py` |
 
 ## Figure regeneration
 

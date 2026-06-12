@@ -1,51 +1,134 @@
-"""benchmark/methods/PISDE/run.py — PI-SDE benchmark runner (contract template).
+"""benchmark/methods/PISDE/run.py — PISDE benchmark runner.
 
-PI-SDE (Jiang & Wan 2024, Bioinformatics 40(Suppl 2):ii120-ii127; "A physics-informed
-neural SDE network for learning cellular dynamics from time-series scRNA-seq data") is a
-physics-informed neural SDE, projection-capable -> all three benchmark dimensions.
+PI-SDE (Jiang & Wan 2024, Bioinformatics 40(Suppl.2):ii120) — physics-informed neural SDE.
 
-This is the integration CONTRACT. The adapter (benchmark/adapters/pisde_adapter.py)
-calls the same five functions as benchmark/methods/scNODE/run.py — see that file as the
-structural template and the scIMF run.py docstring for the full I/O contract:
-
-    prepare_data, train_or_load, run_forecast_accuracy, run_embedding_coherence,
-    run_lineage_fidelity
-
-TO IMPLEMENT (Shirokane): vendor the PI-SDE source under
-benchmark/methods/PISDE/PISDE_module/ and wire train_or_load() + the SDE forward
-simulation; reuse scNODE/run.py's output/metric/STM helpers (method-agnostic once the
-model can project cells to held-out time points). Config params block: pisde_params.
-Note: PI-SDE was CPU-bound in scTimeBench (GPU/OOM) — budget runtime accordingly.
+The model-AGNOSTIC Forecast/Embedding/Lineage artifact construction lives in
+benchmark/methods/_generative_common.py. This file implements only the PISDE engine:
+data plumbing + caching are real; the neural-SDE train / simulate / encode calls are
+confined to _fit_model() / _simulate() / _encode() and MUST be confirmed against the
+vendored source under benchmark/methods/PISDE/PISDE_module/ (git clone the authors' repo). They
+fail loudly with precise guidance rather than emit anything fabricated.
 """
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 
-class VendoringRequired(NotImplementedError):
-    pass
+import numpy as np
+
+_MOD = Path(__file__).parent / "PISDE_module"
+if _MOD.exists() and str(_MOD) not in sys.path:
+    sys.path.insert(0, str(_MOD))
+
+from benchmark.methods import _generative_common as _common  # noqa: E402
+
+_DEFAULTS = dict(latent_dim=50, epochs=10, iters=100, pretrain_iters=200, batch_size=32,
+                 lr=1e-3, seed=42, n_sim_cells=None, n_sim_cells_cap=2000,
+                 metric_sample_cells=1000, use_cuda=True)
 
 
-_MSG = (
-    "PI-SDE method source is not vendored yet. Place it under "
-    "benchmark/methods/PISDE/PISDE_module/ and wire benchmark/methods/PISDE/run.py "
-    "(use benchmark/methods/scNODE/run.py as the structural template)."
-)
+def _g(cfg, k):
+    return cfg.get(k, _DEFAULTS[k])
 
 
-def prepare_data(train_adata, time_key, train_times):
-    raise VendoringRequired(_MSG)
+class PISDEEngine:
+    """Neural-SDE engine implementing the _generative_common Engine protocol.
+    The model trains on per-timepoint expression and can (a) encode cells to a
+    latent and (b) simulate the SDE forward from t0 to arbitrary target tps."""
+
+    def __init__(self, n_genes, cfg, cache_path):
+        self.n_genes = n_genes
+        self.cfg = cfg
+        self.cache_path = Path(cache_path)
+        self.model = None
+        self.train_tps = None
+
+    def fit(self, train_data, train_tps):
+        self.train_tps = [float(t) for t in train_tps]
+        self.model = self._fit_model([np.asarray(x, np.float32) for x in train_data],
+                                     self.train_tps)
+        return self
+
+    # ---- Engine protocol -----------------------------------------------------
+    def embed(self, X):
+        return np.asarray(self._encode(np.asarray(X, np.float32)))
+
+    def project(self, X0, target_tps, n_sim_cells):
+        target_tps = [float(t) for t in target_tps]
+        n = int(n_sim_cells) if n_sim_cells else int(np.asarray(X0).shape[0])
+        # _simulate returns gene-space recon (n, T, g) and latent (n, T, d)
+        recon, latent = self._simulate(np.asarray(X0, np.float32), target_tps, n)
+        return np.asarray(recon), np.asarray(latent)
+
+    # ---- model-specific hooks: CONFIRM against the vendored pisde source ------
+    def _require_source(self):
+        try:
+            import pisde  # noqa: F401
+            return
+        except Exception:
+            pass
+        if not _MOD.exists():
+            raise RuntimeError(
+                "PISDE source not vendored. git clone the authors' repository into "
+                "benchmark/methods/PISDE/PISDE_module/ (see benchmark/methods/VENDORING.md), "
+                "then wire PISDEEngine._fit_model/_simulate/_encode to it.")
+
+    def _fit_model(self, data_by_tp, sorted_tps):
+        """Train the PISDE SDE on per-timepoint expression. VERIFY against vendored source.
+        Template:
+            from pisde import Model, train         # confirm names against the repo
+            model = Model(n_genes=self.n_genes, latent_dim=_g(self.cfg,'latent_dim'),
+                          use_cuda=_g(self.cfg,'use_cuda'))
+            train(model, data_by_tp, sorted_tps, epochs=_g(self.cfg,'epochs'),
+                  iters=_g(self.cfg,'iters'), lr=_g(self.cfg,'lr'),
+                  pretrain_iters=_g(self.cfg,'pretrain_iters'), seed=_g(self.cfg,'seed'))
+            return model
+        """
+        self._require_source()
+        raise NotImplementedError(
+            "VERIFY: wire PISDEEngine._fit_model() to the vendored PISDE training API "
+            "(template in this method's docstring). data_by_tp + sorted_tps are ready.")
+
+    def _simulate(self, X0, target_tps, n):
+        """Simulate the SDE forward from t0 cells X0 to each target tp.
+        Must return (recon[n,T,g] in gene space, latent[n,T,d]). VERIFY:
+            states = self.model.simulate(x0=X0, t_grid=[t0]+target_tps, n=n)
+            recon  = states.gene_space            # decode if model is latent-space
+            latent = states.latent
+        """
+        self._require_source()
+        raise NotImplementedError(
+            "VERIFY: wire PISDEEngine._simulate() to the vendored PISDE forward-simulation API "
+            f"(target_tps ready; return gene-space recon + latent).")
+
+    def _encode(self, X):
+        """Encode cells to the model latent (for centroids/ARI). VERIFY:
+            return self.model.encode(X)
+        If PISDE has no encoder, fall back to PCA(50) on X (document the choice)."""
+        self._require_source()
+        raise NotImplementedError(
+            "VERIFY: wire PISDEEngine._encode() to the vendored PISDE encoder, or use a PCA(50) "
+            "fallback if the model is gene-space only.")
+
+
+# --------------------------------------------------------------------------- #
+# 5-function contract (delegates to _generative_common)
+# --------------------------------------------------------------------------- #
+def prepare_data(adata, time_key, train_times=None):
+    return _common.prepare_data(adata, time_key, train_times)
 
 
 def train_or_load(train_data, train_tps, n_genes, cfg, model_cache):
-    raise VendoringRequired(_MSG)
+    return PISDEEngine(n_genes, cfg or {}, model_cache).fit(train_data, train_tps)
 
 
-def run_forecast_accuracy(*args, **kwargs):
-    raise VendoringRequired(_MSG)
+def run_forecast_accuracy(model, **kw):
+    return _common.run_forecast_accuracy(model, **kw)
 
 
-def run_embedding_coherence(*args, **kwargs):
-    raise VendoringRequired(_MSG)
+def run_embedding_coherence(model, **kw):
+    return _common.run_embedding_coherence(model, **kw)
 
 
-def run_lineage_fidelity(*args, **kwargs):
-    raise VendoringRequired(_MSG)
+def run_lineage_fidelity(model, **kw):
+    return _common.run_lineage_fidelity(model, **kw)

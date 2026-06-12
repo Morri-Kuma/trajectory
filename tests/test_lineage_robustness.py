@@ -39,3 +39,24 @@ def test_bootstrap_ci_brackets_point():
     assert out["n_boot_valid"] > 100
     assert out["lo"] <= out["mean"] <= out["hi"]
     assert 0.0 <= out["lo"] <= 1.0 and 0.0 <= out["hi"] <= 1.0
+
+def test_auroc_flat_matches_sklearn():
+    from benchmark.evaluation.lineage_robustness import auroc_flat
+    from sklearn.metrics import roc_auc_score
+    rng = np.random.default_rng(0)
+    for _ in range(5):
+        y = (rng.random(40) > 0.6).astype(int)
+        if len(set(y)) < 2:
+            continue
+        s = rng.random(40)
+        assert abs(auroc_flat(y, s) - roc_auc_score(y, s)) < 1e-9
+
+def test_label_permutation_null_below_perfect_signal():
+    from benchmark.evaluation.lineage_robustness import lineage_auroc_from_matrix, label_permutation_null
+    # perfect chain prediction A->B->C->D matching reference -> high AUROC
+    B = np.array([[0,1,0,0],[0,0,1,0],[0,0,0,1],[0,0,0,0]])
+    W = B.astype(float) * 0.9 + 0.01
+    real = lineage_auroc_from_matrix(W, B)
+    null = label_permutation_null(W, B, k=500, seed=1)
+    assert real > null.mean()          # permuting identities destroys the signal
+    assert 0.0 <= null.mean() <= 1.0

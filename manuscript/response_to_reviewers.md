@@ -210,3 +210,92 @@ from "author-cluster ground-truth protocol" to "author-cluster reference protoco
 regeneration script in `manuscript/REPRODUCIBILITY.md`; single-seed numbers are read directly
 from result files, and the multi-seed CIs are labeled a derived artifact with the provenance
 above.
+
+---
+
+# Response to Reviewers — Round 3
+
+We thank the reviewers; this round was the most useful yet. The headline addition is a
+**negative control** for the lineage metric; the rest sharpen framing and guidance.
+
+## Reviewer 1 — technical evidence
+
+- **Negative control (prioritized #1) — done, and informative.** `scripts/negative_control_lineage.py`
+  recomputes the *production* single-step graph-similarity AUROC on every real predicted
+  transition matrix (all scenarios A–F, 3 methods × 6 systems, 72 runs) under two null inputs: a
+  **label-permutation null** (2000 draws) and a **random row-stochastic matrix** control
+  (2000 draws). Result (new Results subsection + Fig. S1): the empirical chance level is
+  AUROC ≈ **0.62** (permutation) / ≈ **0.63** (random), *above* the nominal 0.5 because the
+  4–5-node reference chains are easy to match partially. Against this empirical null, the
+  strong-signal systems (OSKM, cardiac) are clearly above chance (permutation p ≤ 0.005),
+  while the human hADSC silver systems frequently are **not** — only **23/72** method×system×scenario
+  runs exceed the null's 95th percentile, and scNODE on GSE230659-B (0.44) sits below its own null. Notably PRESCIENT's pseudotime jump on GSE230659 is real (clears the null at p≤0.045, AUROC 0.95–1.00) while most other pseudotime gains do not (4/18). So the metric is
+  discriminating (not permissive), and absolute lineage AUROC on the silver systems must be
+  read against a permutation floor near 0.6, not 0.5. The tie-correct AUROC helper is unit-
+  tested against sklearn (`tests/test_lineage_robustness.py`).
+- **Tighten the central message — done.** The abstract now closes on one methodological
+  claim: *because rankings move with the task, the reference construction, and the random
+  seed, a domain benchmark should report task stratification, an OOD check on reference
+  transfer, and seed uncertainty rather than a single leaderboard.*
+- **Reduce "ground truth" — done.** The OSKM protocol is now "author-cluster reference
+  protocol"; the only remaining uses of the phrase are explicit disclaimers in the
+  Limitations/Scope paragraphs. Terminology is consistently silver/proxy/reference.
+
+## Reviewer 2 — novelty and impact
+
+- **Distinguish from prior benchmarks — done.** The Introduction now names the four
+  distinctive features: single-domain (pluripotency) focus that makes ranking *transfer*
+  testable, task stratification, OOD-gated reference transfer, and quantified single-seed
+  instability.
+- **"No single best method" as a positive — done.** A new Discussion paragraph ("No single
+  best method is the finding, not a gap") frames task-dependent winners as actionable
+  guidance for practitioners rather than a shortcoming.
+- **Don't let planned methods dilute — confirmed.** scIMF/PI-SDE/Squidiff appear in no
+  title/abstract/results table/figure; they remain only in the labeled "Planned extensions"
+  block and the Scope paragraph.
+
+## Reviewer 3 — writing and figures
+
+- **Practical guidance — done.** A "Practical guidance" Discussion paragraph now states:
+  prioritise OT-loss metrics for forecasting (the most portable task, W = 0.75); do not judge
+  lineage by embedding ARI (the tasks rank methods differently); read absolute lineage AUROC
+  against the permutation floor; reject cross-modality reference transfer by the enriched OOD
+  flag and accept only within-modality gate-passing transfers; treat single-seed leaderboards
+  as draws.
+- **Abstract less engineering, more conclusions — done.** The abstract is organised around
+  three findings plus the methodological central message; component-directory phrasing was
+  removed in the earlier round.
+- **One-conclusion-per-figure — layout plan provided.** `figure_plan.md` gives a concrete
+  consolidation to five main figures (design / reference-OOD / primary tasks / cross-system
+  instability / seed robustness + metric validity), with pseudotime and detailed tables moved
+  to the Supplement. This is a montage/layout pass over existing PNGs; underlying numbers and
+  regeneration scripts are unchanged.
+
+## Status
+26 unit tests pass; the manuscript compiles (14 pp, 0 undefined references); every new
+number is traceable via `manuscript/REPRODUCIBILITY.md`.
+
+---
+
+# Follow-up: "why don't the tables/figures show all 6 datasets and all 8 methods together?"
+
+Three reasons, two structural and one we have now fixed:
+
+1. **Capability gating.** Of the 8-method roster only scNODE, PRESCIENT and MIOFlow are
+   projection-capable *and* completed, so only those three can populate a forecast/embedding
+   table. WOT and CellRank2 are lineage-only (optimal transport / fate mapping — no projected
+   expression or embedding), and scIMF/PI-SDE/Squidiff are planned (not run). Table 3 therefore
+   has 3 methods by construction.
+2. **Role / protocol stratification.** Table 3 / Fig. 2 are the *primary* chemical-reprogramming
+   benchmark (2 hADSC systems); the other systems appear in the cross-system table/figure, and
+   OSKM (GSE242424) is kept on its **author-cluster** reference protocol rather than pooled with
+   the marker-silver systems — a stratification an earlier reviewer explicitly requested, and one
+   the paper's "rankings don't transfer" thesis requires (a single pooled average would hide the
+   main result). Forecast Wasserstein is also on very different scales across systems (≈0.04 vs
+   ≈160–260 on GSE230659), so a single forecast axis is not meaningful.
+3. **The fixable gap — now addressed.** We added **Table~\ref{tab:master}, a complete results
+   matrix**: all five completed methods × all six systems × the three tasks (forecast WD,
+   embedding ARI, lineage AUROC), with lineage-only and planned methods marked and OSKM flagged
+   as a separate protocol. The main-text tables/figures are task- and role-stratified views of
+   this one matrix. Source: `benchmark/reports/official_silver/master_results_matrix.csv`
+   (regenerated from the per-run metric JSONs).

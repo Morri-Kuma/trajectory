@@ -1,16 +1,23 @@
 cff-version: 1.2.0
-message: "If you use this code, please cite it as below."
-title: "Annotation-robustness of single-cell reference mapping for human reprogramming trajectories"
+message: "If you use this software, please cite it as below."
+title: "Does it transfer? A pluripotency-domain benchmark of temporal trajectory-inference methods across iPSC reprogramming systems, with scANVI-validated cell-state references"
+version: v1.0.0-rc1
 authors:
   - family-names: Kuma
     affiliation: "Graduate School of Frontier Sciences, The University of Tokyo"
     email: morri0723@gmail.com
     # orcid: "https://orcid.org/0000-0000-0000-0000"   # TODO
-date-released: "2026-06-09"
+date-released: "2026-06-12"
 license: MIT
-keywords: [single-cell, trajectory inference, scANVI, reference mapping, reprogramming, out-of-distribution]
+keywords: [single-cell, trajectory inference, benchmarking, scANVI, scArches, reference mapping, out-of-distribution, induced pluripotency, reprogramming, reproducibility]
 abstract: >
-  Code and analysis for testing whether cross-protocol single-cell reference
-  mapping (scANVI/scArches) is a trustworthy annotation strategy for human
-  chemical-reprogramming trajectories, including a geometric out-of-distribution
-  score that recovers the cross-protocol mismatch scANVI confidence misses.
+  Code, manuscript, and reproducibility materials for a single-domain
+  (induced-pluripotency) benchmark of temporal single-cell trajectory-inference
+  methods, built on the scTimeBench three-task design (forecast accuracy, embedding
+  coherence, lineage fidelity). Contributes a reference-construction-and-validation
+  pipeline in which silver cell-state references are built by scANVI/scArches label
+  transfer and screened by a geometric out-of-distribution gate integrated into the
+  main pipeline, and an analysis showing that lineage method rankings do not transfer
+  across reprogramming systems and that single-seed leaderboards are unstable. Framed
+  as a silver-reference benchmark and cautionary analysis rather than biological
+  ground truth.

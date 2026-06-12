@@ -121,3 +121,24 @@ Updated main figures, grounded in the real run:
 - **Fig 5 — What works (validation):** positive control (GSE175634, labels known) + same-protocol transfer (GSE230659↔GSE178325) showing sensible recovery/agreement, isolating the failure to the cross-protocol gap. *(pending one GPU run — `docs/validation_runbook.md`)*
 
 Supplements: dataset QC; correspondence map; ablations (k, OOD quantile, HVG count, reference label key); count-reconstruction validation (corr = 1.0000).
+
+---
+
+## Reviewer-r3 figure-logic consolidation (proposed layout — one conclusion per figure)
+
+Current draft carries 8 result figures + 1 supplementary (figS1). Reviewer 3 asks that
+each *main* figure serve one conclusion and that detailed tables move to the Supplement.
+Proposed main-text set (5 figures), mapping existing assets:
+
+| Main fig | Conclusion | Built from current assets |
+|---|---|---|
+| Fig 1 — Benchmark design | datasets, tasks, scenarios, reference/OOD pipeline schematic | new schematic (Table 1 + a flow diagram) |
+| Fig 2 — Reference / OOD validation | the gate flags cross-modality transfers confidence misses | current fig5 (scANVI gate) + OOD k/q sweep panel |
+| Fig 3 — Primary task results | no method dominates all three tasks | current fig1 (lineage) + fig2 (forecast) + fig3 (embedding) as a 3-panel |
+| Fig 4 — Cross-system instability | lineage rankings do not transfer (Kendall's W) | current fig4 (cross-system) + fig7 (rank concordance) |
+| Fig 5 — Seed robustness + metric validity | single-seed leaderboards are draws; metric is discriminating | current fig8 (multi-seed CI) + figS1 (negative control) |
+
+Supplement: pseudotime panel (current fig6), the per-method/per-dataset tables
+(Tables 3–4 detail), and the full negative-control table. This is a layout/montage pass
+on existing PNGs; the underlying numbers and scripts are unchanged. Figure files and their
+regeneration scripts are listed in `manuscript/REPRODUCIBILITY.md`.

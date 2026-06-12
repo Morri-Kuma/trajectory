@@ -97,3 +97,42 @@ def bootstrap_edge_metric(y_true: np.ndarray, y_score: np.ndarray,
     return {"point": point, "mean": float(boots.mean()),
             "lo": float(np.quantile(boots, a)), "hi": float(np.quantile(boots, 1 - a)),
             "n_boot_valid": int(boots.size)}
+
+
+def auroc_flat(y_true, y_score):
+    """Tie-correct AUROC matching sklearn.roc_auc_score (Mann-Whitney U form).
+
+    Used by the lineage negative control so the permutation null can be drawn
+    thousands of times without sklearn's per-call overhead. Matches
+    sklearn.metrics.roc_auc_score to ~1e-9 (asserted in the control script).
+    """
+    from scipy.stats import rankdata
+    yt = np.asarray(y_true).astype(bool)
+    n_pos = int(yt.sum()); n_neg = yt.size - n_pos
+    if n_pos == 0 or n_neg == 0:
+        return float("nan")
+    ranks = rankdata(np.asarray(y_score, float))
+    return float((ranks[yt].sum() - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg))
+
+
+def lineage_auroc_from_matrix(W, B):
+    """single-step graph-sim AUROC: diagonal-zeroed prediction W vs binary ref B.
+
+    Mirrors lineage_graphsim_sctimebench._compute_simple_metrics (auc_roc).
+    """
+    W = np.asarray(W, float).copy()
+    np.fill_diagonal(W, 0.0)
+    return auroc_flat(np.asarray(B).astype(int).flatten(), W.flatten())
+
+
+def label_permutation_null(W, B, k=2000, seed=0):
+    """Null AUROC distribution from permuting predicted state identities (rows+cols of W)."""
+    W = np.asarray(W, float); n = W.shape[0]
+    rng = np.random.default_rng(seed)
+    out = []
+    for _ in range(k):
+        p = rng.permutation(n)
+        a = lineage_auroc_from_matrix(W[np.ix_(p, p)], B)
+        if not np.isnan(a):
+            out.append(a)
+    return np.asarray(out)

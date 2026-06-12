@@ -1,0 +1,34 @@
+method,dataset,protocol,projection_capable,forecast_wd_meanABC,embedding_ari_meanABC,lineage_auroc_meanABC
+scnode,GSE178325,marker-silver,yes,0.0379,0.115,0.5992
+scnode,GSE230659,marker-silver,yes,204.8308,0.0669,0.594
+scnode,GSE218855,marker-silver,yes,0.075,0.0775,0.8718
+scnode,GSE298212,marker-silver,yes,0.0449,0.0,0.735
+scnode,GSE175634,marker-silver,yes,0.0468,0.3501,0.9462
+scnode,GSE242424,author-cluster,yes,0.0355,0.1469,0.7949
+prescient,GSE178325,marker-silver,yes,0.0416,0.0803,0.619
+prescient,GSE230659,marker-silver,yes,157.7281,0.2191,0.641
+prescient,GSE218855,marker-silver,yes,0.0754,0.0702,0.7778
+prescient,GSE298212,marker-silver,yes,0.0437,0.0172,0.8632
+prescient,GSE175634,marker-silver,yes,0.0422,0.1845,0.5226
+prescient,GSE242424,author-cluster,yes,0.0272,0.1989,0.7863
+mioflow,GSE178325,marker-silver,yes,0.0461,0.0959,0.6667
+mioflow,GSE230659,marker-silver,yes,260.4777,0.0213,0.6581
+mioflow,GSE218855,marker-silver,yes,0.0765,0.117,0.7607
+mioflow,GSE298212,marker-silver,yes,0.0541,0.0436,0.8034
+mioflow,GSE175634,marker-silver,yes,0.038,0.366,0.9699
+mioflow,GSE242424,author-cluster,yes,0.0282,0.1559,0.8559
+wot,GSE178325,marker-silver,no (lineage-only),,,0.6071
+wot,GSE230659,marker-silver,no (lineage-only),,,0.5128
+wot,GSE218855,marker-silver,no (lineage-only),,,0.8718
+wot,GSE298212,marker-silver,no (lineage-only),,,0.7949
+wot,GSE175634,marker-silver,no (lineage-only),,,1.0
+wot,GSE242424,author-cluster,no (lineage-only),,,0.9389
+cellrank2,GSE178325,marker-silver,no (lineage-only),,,0.5833
+cellrank2,GSE230659,marker-silver,no (lineage-only),,,0.5641
+cellrank2,GSE218855,marker-silver,no (lineage-only),,,0.9231
+cellrank2,GSE298212,marker-silver,no (lineage-only),,,0.8205
+cellrank2,GSE175634,marker-silver,no (lineage-only),,,1.0
+cellrank2,GSE242424,author-cluster,no (lineage-only),,,0.9341
+scIMF,(all),-,planned (not run),,,
+PI-SDE,(all),-,planned (not run),,,
+Squidiff,(all),-,planned (not run),,,
